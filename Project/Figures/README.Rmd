@@ -1,0 +1,9 @@
+---
+title: "Figures"
+output: github_document
+---
+
+## Description
+
+Figures created for the `README` and report, all saved as PNG files.
+

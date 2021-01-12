@@ -1,0 +1,6 @@
+---
+title: "Notes"
+output: github_document
+---
+
+Keep your personal notes here. It is recommended to do so as an organized series of R Markdown files (e.g., `Rethinking-Chapter-01.Rmd`).
