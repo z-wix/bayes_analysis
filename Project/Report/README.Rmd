@@ -1,9 +1,9 @@
 ---
-title: "Report"
+title: "Zack's Awesome Project"
 output: github_document
 ---
 
 ## Description
 
-The report, without any PDF knits.
+This is going to be the best project ever!
 

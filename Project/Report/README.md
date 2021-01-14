@@ -1,6 +1,6 @@
-Report
+Zack’s Awesome Project
 ================
 
 ## Description
 
-The report, without any PDF knits.
+This is going to be the best project ever\!
