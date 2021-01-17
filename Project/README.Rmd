@@ -1,5 +1,6 @@
 ---
 title: "Project"
+author: "Zack Wixom"
 output: github_document
 ---
 
