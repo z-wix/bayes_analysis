@@ -1,20 +1,45 @@
 ---
 title: "Week 2 Notes"
+author: "Zack Wixom"
 output: github_document
 ---
 
-## Chapter 1 Notes
+## Golem of Prague
 
-__point__ is _important_
+Computers are like _Golems_. They do what we tell them but can end up destroying things because it doesn't know our intent. 
 
-I am using tidyverse package :)
+## Installing STAN
+
+```{r install stan}
+# # we recommend running this is a fresh R session or restarting your current session
+# install.packages("cmdstanr", repos = c("https://mc-stan.org/r-packages/", getOption("repos")))
+```
+
+Now that Stan is installed we can call `cmdstanr` package to use Stan, as well as `posterior` and `bayesplot`
 
 ```{r}
+# Packages
 library(tidyverse)
+library(cmdstanr)
+library(posterior)
+library(bayesplot)
+color_scheme_set("brightblue")
 
-mpg
+# Use check_cmdstan_toolchain() to see if cmdstanr is working
 
-head(mpg)
-
+# then install cmdstanr with
+install_cmdstan(cores = 2)
 ```
+
+## Statistical Rethinking package
+
+Now to install the package that goes along with the book we are using
+
+```{r}
+install.packages(c("coda", "mvtnorm", "devtools", "loo"))
+devtools::install_github("rmcelreath/rethinking")
+```
+
+
+
 
