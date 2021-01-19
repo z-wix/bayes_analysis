@@ -4,7 +4,7 @@ author: "Zack Wixom"
 output: github_document
 ---
 
-## Golem of Prague
+## Chapter 2: _Golem of Prague_
 
 Computers are like _Golems_. They do what we tell them but can end up destroying things because it doesn't know our intent. 
 
@@ -70,6 +70,79 @@ __Common uses__
 - Phlyogenetics, factor and path analysis, networks and spatial models
 
 Natural Bayesian strategy
+
+
+## Notes from Class on Golem of Prague
+
+### Epistemology
+
+We learn from _data_. and update what we believe about the world around us. It isn't a binary condition. We have varying levels of certainty and uncertainty.
+
+We are offered pre-constructed golems known as "test". What we need is a theory of golem engineering, a set of principles of designing, building, and refinidng special-purpose statistical procedures
+
+From the book:
+
+- Models are needed to learn about something that is unobserved _and most likely unobservable_.
+- If we contruct models explicitly we can compare models to evaluate evidence for competiting theories. Isn't of one way that is specific way you use multiple models to answer a question.
+- Bayesian inference is a "single method for building"
+
+### Bayesian Data Analysis
+
+is no more than counting the numbers of ways the data could happen according to our assumptions
+
+Bayesian Inference is what happens when you take probability theory seriously
+
+### The Bayesian Triptych
+
+__Three steps__
+
+- Prior 
+  + the assumptions
+- Fit Model
+  + observe data
+- Posterior
+  + update assumptions
+  
+
+### Model Comparison and Prediction
+
+Inferential Models are used to understand the underlying process that resulted in the data we observed.
+- We call predictive models predictive because that's all they do - no inference.
+
+Scientific terms...
+- Think of a model as a theory. a competing model is therefore a competing theory. Comparing theories/models and learning as we develop a theory
+
+Business terms...
+- think of a model as our paradigm of the underlying choice. use it to determine which choice is preferred. 
+
+### Multi-level/Hierarchical Models
+
+The regression models we are used to are single-level flat or aggregate. 
+
+Hierarchical models should be default because they recognize that heterogeneity exists (different people make different choices)
+
+
+We need to get information of group differences for our project
+- segment a person is in
+- treat each individual as a group
+
+Need to have some info in the data that allows you to split the data into groups
+
+
+### Graphical Causal models
+
+Successful prediction does not require correct casaul identification. 
+
+Casual identification fits within realm of inference. PRedictive models are constructed to ignore causality and inference in service of prediction
+
+
+## Chapter 2: _Garden of Forking_
+
+
+
+
+
+
 
 
 
