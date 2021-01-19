@@ -131,10 +131,13 @@ Need to have some info in the data that allows you to split the data into groups
 
 ### Graphical Causal models
 
-Successful prediction does not require correct casaul identification. 
+Successful prediction does not require correct casual identification. 
 
-Casual identification fits within realm of inference. PRedictive models are constructed to ignore causality and inference in service of prediction
+Casual identification fits within realm of inference. Predictive models are constructed to ignore causality and inference in service of prediction.
 
+### Ending comments
+
+Truth comes from consensus, there is always a degree of uncertainty. The more experiences, or data the smaller the degree but science doesn't make truth. Same goes for faith. 
 
 ## Chapter 2: _Garden of Forking_
 
