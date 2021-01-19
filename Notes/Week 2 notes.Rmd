@@ -41,5 +41,38 @@ devtools::install_github("rmcelreath/rethinking")
 ```
 
 
+# What is Bayesian Data Analysis
+
+Using probability as a language to describe uncertainty
+
+- Extends ordinary binary logic (True/False) to continuous plausibilities
+
+Difficult to do so we use MCMC (Markov chain Monte Carlo)
+
+Used to be controversial in the stats world
+
+Into one statement:
+
+__Count all the ways data can happen, according to your assumptions. The assumptions with more ways that are consistent with data are more plausible.__
+
+## Multi-level Models
+
+__Models within models__
+
+- Models with multiple levels of uncertainty
+- Replace parameters with models
+
+__Common uses__
+
+- Repeat & Imbalance sampling
+- Study variation
+- Avoid averaging
+- Phlyogenetics, factor and path analysis, networks and spatial models
+
+Natural Bayesian strategy
+
+
+
+
 
 
