@@ -276,17 +276,29 @@ Computation:
 
 ```{r}
 # Define the Grid (all values you will consider)
-p_grid <- seq(0, 1, length.out = 1000)
+p_grid <- seq(0, 1, length.out = 20)
 
 # Define Prior (unifrom distrubtion of 1's)
-prob_p <- rep(1, 1000)
+prior <- rep(1, 20)
 
 # Probability of the data
-prob_data <- dbinom(6, size = 9, prob = p_grid)
+likelihood <- dbinom(6, size = 9, prob = p_grid)
 
-# Define the posterior multiplicaiton give it the shape
-posterior <- prob_data * prob_p
-posterior <- posterior / sum(posterior)
+# Compute Product of likelhood and prior
+unstd_posterior <- likelihood * prior
+
+# standardized the posterior so it sums to 1
+posterior <- unstd_posterior / sum(posterior)
+
+plot(p_grid, posterior, type = "b", xlab = "probability of water", ylab = "posterior probability")
+
+mtext("20 points")
+
+## To update the prior Having some issues with the code
+prior <- ifelse( p_grid < 0.5 , < , 1) 
+
+prior <- exp( -5*abs( p_grid - 0.5 ) )"
+
 
 ```
 
@@ -339,6 +351,8 @@ Two kinds of intervals
   
 ```{r}
 # in rethinking package couldn't get it to work though
+
+library(rethinking)
 
 PI(samples, prob = 0.5)
 
