@@ -4,7 +4,7 @@ author: "Zack Wixom"
 output: github_document
 ---
 
-## Chapter 2: _Golem of Prague_
+## Chapter 1: _Golem of Prague_
 
 Computers are like _Golems_. They do what we tell them but can end up destroying things because it doesn't know our intent. 
 
@@ -139,13 +139,15 @@ Casual identification fits within realm of inference. Predictive models are cons
 
 Truth comes from consensus, there is always a degree of uncertainty. The more experiences, or data the smaller the degree but science doesn't make truth. Same goes for faith. 
 
+
+
 ## Chapter 2: _Garden of Forking_ 
 
 ### Building a Model
 
 How to use probability to do typical statistical modeling?
 
-1. __Design__ the model, _data story_
+1. __Design__ the model, _data story_ or _data generation_
 
 2. __Condition__ on the data, _update_
 
@@ -165,15 +167,19 @@ How do we use this information?
 ### Design
 
 Data story motivates the model
-- how do the data arise?
+- how does the data arise?
+
+Creates a model that generates data.
+
+Descriptive vs. Casual
 
 For W L W W W L W L W:
 
-- Some true proporation of water, _p_
-- toss the globe, probably _p_ of observting W, 1-p of L
-- Each toss therefore indepent of other tosses
+- Some true proportion of water, _p_
+- toss the globe, probably _p_ of observing W, 1-p of L
+- Each toss therefore independent of other tosses
 
-Translate data story into probability statments
+Translate data story into probability statements
 
 ### Condition
 
@@ -189,10 +195,11 @@ Each posterior becomes new prior as you update.
 
 Each additional information contributes less marginal change in the model at some point.
 
+Bad initial plausibility lead to misleading inference. small samples doesn't discredit. 
+
 Order is irrelevant. since each observation is independent.
 
 Sample size automatically embodied in posterior.
-
 
 ### Evaluate
 
@@ -233,7 +240,7 @@ px(1-p)xp = p^2(1-p)^1
 
 Sequence doesn't matter so you need to pay attention to the different orders of the WLW: LWW, WWL, WLW
 
-So let's code this math. Not sure what this is telling me though, is this the likelihood of W occuring or of L? or something different?
+So let's code this math. Not sure what this is telling me though, is this the likelihood of W occurring or of L? or something different?
 
 `dbinom()` is distribution binomial
 
@@ -258,7 +265,7 @@ Bayesian estimate is always posterior distribution over parameters (not a point)
 
 Take it or leave it you don't have a choice.
 
-Posterior = ( (pro observed variables) x (prior) )/ Normalizing constant
+Posterior = ( (pro observed variables) x (prior) )/ Normalizing constant, _average probability of data_
 
 ### Computing the posterior 
 
@@ -342,10 +349,11 @@ Summary tasks
 
 Two kinds of intervals
 
-- Percentile Intervals (PI)
+- __Percentile Intervals__ (PI)
   + equal area in each tail
+  + Good at communicating the shape of distribution if it isn't too asymmetrical.
 
-- Highest posterior density intervals (HPDI)
+- __Highest posterior density intervals__(HPDI)
   + narrowest interval containing mass
   + always includes highest point
   
@@ -392,8 +400,32 @@ _Compatibility interval_
 nw <- rbinom(1e4, size = 9, prob = samples)
 
 ```
-
   
+## Notes from Class on Garden of Forking
+
+### Building a Model
+
+Questions: what is the proportion of earth's surface
+
+- Simple goals is good
+
+Data: Sequence of observations
+
+Assumptions help constitute our model, then try to condense the "large world" into the "small world".
+
+### Sampling the Imaginary
+
+Bayes is unique because it's distinct view of probability
+
+Frequencies can be confusing - we don't encounter them naturally
+
+Sampling helps us avoid messy math (integrals)
+
+Many of our motors produce samples Like MCMC
+
+
+
+
   
 
 
