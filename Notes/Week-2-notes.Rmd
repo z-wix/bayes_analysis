@@ -141,6 +141,249 @@ Truth comes from consensus, there is always a degree of uncertainty. The more ex
 
 ## Chapter 2: _Garden of Forking_ 
 
+### Building a Model
+
+How to use probability to do typical statistical modeling?
+
+1. __Design__ the model, _data story_
+
+2. __Condition__ on the data, _update_
+
+3. __Evaluate__ the model, _critique_
+
+
+### Throwing the Globe
+
+Nine tosses of the globe:
+
+__W L W W W L W L W__
+
+Goal : Attempt to estimate the percent of water there is on the earth. 
+
+How do we use this information?
+
+### Design
+
+Data story motivates the model
+- how do the data arise?
+
+For W L W W W L W L W:
+
+- Some true proporation of water, _p_
+- toss the globe, probably _p_ of observting W, 1-p of L
+- Each toss therefore indepent of other tosses
+
+Translate data story into probability statments
+
+### Condition
+
+Bayesian updating defines optimal learning in small world, converts prior (old assumption) into posterior (new assumption)
+- Give your golem an information state, before the data:
+  + Here , and initial confidence in each possible value of _p_ is between zero and one
+
+- Condition on data to update information: 
+  + New confidence in each value
+  + Slicing the non plausible values
+  
+Each posterior becomes new prior as you update.
+
+Each additional information contributes less marginal change in the model at some point.
+
+Order is irrelevant. since each observation is independent.
+
+Sample size automatically embodied in posterior.
+
+
+### Evaluate
+
+Bayesian Inference: __Logical Answer to a question in the form of a model__
+
+"How plausible is each proporation of water, give these data?"
+
+Golem must be supervised.
+
+- biases can happen
+
+- use posterior checks
+
+### Construction Perspective
+
+__Build joint model__:
+
+1. List variables
+2. Define generate relations
+3. ???
+4. Profit
+
+__Input__: Joint Prior
+
+__Deduce__: Joint Posterior
+
+### Globe example
+
+1. W, N, _p_
+
+#### W
+
+Relative number of ways to see W given N and _p_?
+
+WLW
+
+px(1-p)xp = p^2(1-p)^1
+
+Sequence doesn't matter so you need to pay attention to the different orders of the WLW: LWW, WWL, WLW
+
+So let's code this math. Not sure what this is telling me though, is this the likelihood of W occuring or of L? or something different?
+
+`dbinom()` is distribution binomial
+
+```{r}
+
+# Find likelihood? W = 6, N = 9, p = 0.5 
+dbinom(6, size = 9, prob = 0.5)
+
+```
+
+### Prior Probability
+
+### the Joint Model
+
+W ~ Binomial (N,p)
+
+p ~ Uniform (0,1)
+
+### Posterior Probability
+
+Bayesian estimate is always posterior distribution over parameters (not a point).
+
+Take it or leave it you don't have a choice.
+
+Posterior = ( (pro observed variables) x (prior) )/ Normalizing constant
+
+### Computing the posterior 
+
+1. Analytics approach (impossible)
+2. Grid approximation (very intensive)
+3. Quadratic or Laplace approximation (limited)
+4. Markov Chain Monte Carlo (intensive) 
+
+### Grid approximation
+- Posterior probably is standardized product of 1) probability of the data 2) prior probability
+
+Standardized = add up all the products and divide each by the sum
+
+Computation:
+
+```{r}
+# Define the Grid (all values you will consider)
+p_grid <- seq(0, 1, length.out = 1000)
+
+# Define Prior (unifrom distrubtion of 1's)
+prob_p <- rep(1, 1000)
+
+# Probability of the data
+prob_data <- dbinom(6, size = 9, prob = p_grid)
+
+# Define the posterior multiplicaiton give it the shape
+posterior <- prob_data * prob_p
+posterior <- posterior / sum(posterior)
+
+```
+
+### Random Numbers
+
+We use computers to make random numbers and then make inferences from them.
+
+Sampling from the posterior
+
+- Incredible useful sample randomly from posterior
+  + Visualize uncertainty
+  + Compute confidence intervals
+  + Simulate observations
+  
+- MCMC produces only samples
+
+- Above all, _easier to think with samples_
+
+- Transform a hard calculus problem into an easy data summary problem. 
+
+__Recipe__
+
+1. Compute or approximate posterior
+
+2. Sample with replacement from posterior
+
+3. Compute stuff from samples
+
+
+```{r}
+# not sure if p is prob_p or not
+samples <- sample(prob_p, prob = posterior, size = 1e4, replace = TRUE)
+
+```
+
+### Compute stuff
+
+Summary tasks
+- how much posterior prob is above or below zero
+- which pararmeter value contains...
+
+Two kinds of intervals
+
+- Percentile Intervals (PI)
+  + equal area in each tail
+
+- Highest posterior density intervals (HPDI)
+  + narrowest interval containing mass
+  + always includes highest point
+  
+```{r}
+# in rethinking package couldn't get it to work though
+
+PI(samples, prob = 0.5)
+
+HPDI(samples, prob = 0.5)
+
+
+```
+
+Point estimates not the point
+
+Don't usually want point estimates
+- entire posterior contains more information
+- best point depends on purpose
+- mean nearly always more sensible than mode
+
+Intervals
+
+_Confidence Intervals_
+- A non-Bayesian term that doesn't even mean what it says
+
+_Credible Interval_
+- The values are not "credible" unless you trust the model & data
+
+_Compatibility interval_
+- Interval contains values compatible with model and data as provided
+- Small World interval
+
+
+### Predictive Checks
+- Posterior Probability never enough
+- Even the best model might make terrible predictions
+- Check model assumptions
+- Predictive Checks: Can use samples from posterior to simulate observations
+  + NB: Assumption about sampling is assumption
+  
+```{r}
+nw <- rbinom(1e4, size = 9, prob = samples)
+
+```
+
+  
+  
+
+
+
 
 
 
