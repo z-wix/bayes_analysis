@@ -295,7 +295,7 @@ likelihood <- dbinom(6, size = 9, prob = p_grid)
 unstd_posterior <- likelihood * prior
 
 # standardized the posterior so it sums to 1
-posterior <- unstd_posterior / sum(posterior)
+posterior <- unstd_posterior / sum(unstd_posterior)
 
 plot(p_grid, posterior, type = "b", xlab = "probability of water", ylab = "posterior probability")
 
@@ -337,7 +337,7 @@ __Recipe__
 
 ```{r}
 # not sure if p is prob_p or not
-samples <- sample(prob_p, prob = posterior, size = 1e4, replace = TRUE)
+samples <- sample(prior, prob = posterior, size = 1e4, replace = TRUE)
 
 ```
 
