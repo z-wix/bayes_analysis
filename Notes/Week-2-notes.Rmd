@@ -302,9 +302,8 @@ plot(p_grid, posterior, type = "b", xlab = "probability of water", ylab = "poste
 mtext("20 points")
 
 ## To update the prior Having some issues with the code
-prior <- ifelse( p_grid < 0.5 , < , 1) 
+prior <- ifelse( p_grid < 0.5 , 0 , 1) 
 
-prior <- exp( -5*abs( p_grid - 0.5 ) )"
 
 
 ```
