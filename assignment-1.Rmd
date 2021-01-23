@@ -13,9 +13,7 @@ library(rethinking)
 ```
 
 
-1. Suppose the globe tossing data (Chapter 2) had turned out to be 4 water
-in 15 tosses. Construct the posterior distribution, using grid approximation.
-Use the same flat prior as in the book.
+1. _Suppose the globe tossing data (Chapter 2) had turned out to be 4 water in 15 tosses. Construct the posterior distribution, using grid approximation. Use the same flat prior as in the book._
 
 ```
 L W L W W L L W L L L L W L L 
@@ -41,7 +39,7 @@ ggplot(grid_appr, aes(x = grid, y = posterior)) +
 
 ```
 
-2. Start over in 1, but now use a prior that is zero below p = 0.5 and a constant above p = 0.5. This corresponds to prior information that a majority of the Earth’s surface is water. What difference does the better prior make?
+2. _Start over in 1, but now use a prior that is zero below p = 0.5 and a constant above p = 0.5. This corresponds to prior information that a majority of the Earth’s surface is water. What difference does the better prior make?_
 
 ```{r}
 
@@ -65,10 +63,7 @@ ggplot(grid_appr, aes(x = grid, y = posterior)) +
 ```
 
 
-3. For the posterior distribution from 2, compute 89% percentile and HPDI
-intervals. Compare the widths of these intervals. Which is wider? Why? If
-you had only the information in the interval, what might you misunderstand
-about the shape of the posterior distribution?
+3. _For the posterior distribution from 2, compute 89% percentile and HPDI intervals. Compare the widths of these intervals._
 
 ```{r}
 
@@ -81,14 +76,25 @@ grid_appr_sample <- sample(
 )
 
 # Percentile
-PI(grid_appr_sample, prob = 0.89)
+pi_int <- PI(grid_appr_sample, prob = 0.89)
+
+pi_int
 
 # HPDI
-HPDI(grid_appr_sample, prob = 0.89)
+hpdi_int <- HPDI(grid_appr_sample, prob = 0.89)
+
+hpdi_int
 
 
 ```
 
+_Which is wider? Why? _
+
+- The Percentile Interval is wider and I think that is because the HPDI takes a denser interval by including the highest point.
+
+_If you had only the information in the interval, what might you misunderstand about the shape of the posterior distribution?_
+
+Since both the PI and HPDI are pretty similar that that means that the shape is more or less bell-shaped (or at least that's what it sounded like happens in the book), however, I am sure that the shape can be misunderstood by just looking at these numbers, you would need to plot them to figure out the true shape.
 
 _Questions from the assignment:_
 
@@ -97,6 +103,8 @@ _Questions from the assignment:_
 - Does the size matter when sampling form the posterior?
 
 - How do you plot the PI and HPDI on a existing graph? Is there a way to add the shading?
+
+- I am slightly confused about how the PI and HPDI can help you determine the shape of the distrubtion. Maybe there is something I missed from the reading.
 
 
 
