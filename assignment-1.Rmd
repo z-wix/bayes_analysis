@@ -4,9 +4,7 @@ author: "Zack Wixom"
 output: github_document
 ---
 
-### WEEK 1 PROBLEMS
-
-```{r}
+```{r, include=FALSE}
 # Load Packages
 library(tidyverse)
 library(rethinking)
@@ -90,7 +88,7 @@ hpdi_int
 
 _Which is wider? Why? _
 
-- The Percentile Interval is wider and I think that is because the HPDI takes a denser interval by including the highest point.
+The Percentile Interval is wider and I think that is because the HPDI takes a denser interval by including the highest point.
 
 _If you had only the information in the interval, what might you misunderstand about the shape of the posterior distribution?_
 
