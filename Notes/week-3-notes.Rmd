@@ -1,0 +1,341 @@
+---
+title: "Week 3 Notes"
+author: "Zack Wixom"
+output: github_document
+---
+
+
+```{r}
+# Packages
+library(tidyverse)
+library(cmdstanr)
+library(posterior)
+library(bayesplot)
+library(rethinking)
+```
+
+## Geocentric Circles
+
+Linear Regression is like the Geocentric cirlces model of Ptolemy. It can be reliable on some instances and depending on your use case, but if you look into it more than it can be inaccurate. 
+
+Linear regressions uses a normal distribution to describe our golem's uncertainty on a subject. It is foundational for Bayesian procedures for probability interpretation. 
+
+## Normal Distributions
+
+__Addition__
+
+simulating the experiment of coin flips on the soccer field. 
+
+```{r}
+
+pos <- replicate(1000, sum(runif(16, -1, 1)))
+
+hist(pos)
+```
+
+
+Any process that adds together random values form the same distribution converges to a normal distribution.
+
+fluctuations will cancel each other out. Depending on underlaying distribution convergence might be slow but will be inevitable.
+
+__Multiplication__
+
+```{r}
+
+growth <- replicate(1000, prod(1+runif(12,0,0.1)))
+
+dens(growth, norm.comp = TRUE)
+
+```
+
+
+```{r}
+
+big <- replicate(1000, prod(1+runif(12,0,0.5)))
+
+small <- replicate(1000, prod(1+runif(12,0,0.01)))
+
+dens(big, norm.comp = TRUE)
+
+dens(small, norm.comp = TRUE)
+```
+
+__Log-multiplicaiton__
+
+
+```{r}
+
+log.big <- replicate(1000, log(prod(1+runif(12,0,0.5))))
+
+dens(log.big, norm.comp = TRUE)
+```
+
+All of these methods give us a normal distributions.
+
+### Describing Models
+
+1. Recognize set of variables to work with.
+
+_Observable_ variables are __data__. 
+
+_Unobservable_ variables are __parameters__.
+
+2. Define each variable in terms of other variables or of a probability distribution.
+
+3. Define the _joint generative mdoel_ which is combination of variables and probability distributions.
+
+Used to simulate hypothetical observations and analyze real observations. 
+
+### Re-describing the globe tossing model
+
+The way you read the model statements is:
+
+W ~ Binomial(N, p)
+
+_The count of W is distibuted binomially with sample size N and probability p_
+
+p ~ Uniform(0,1)
+
+_The prior for p is assumed to be uniform between zero and one_
+
+```{r}
+w <- 6
+
+n <- 9
+
+p_grid <- seq(0, 1, length.out = 100)
+
+unst.posterior <- dbinom(w, n, p_grid) * dunif(p_grid, 0, 1)
+
+posterior <- unst.posterior/sum(unst.posterior)
+
+```
+
+
+```{r}
+
+data(Howell1)
+
+d <- Howell1
+
+str(d)
+
+# useful function
+precis(d)
+
+```
+
+```{r}
+
+d2 <- d[d$age >= 18,]
+
+dens(d2$height)
+
+```
+
+The distribution _looks_ to be normal but there could be underlying causes and mixture of different normal distributions that you are missing by just eyeballing it. 
+```{r}
+
+curve(dnorm(x, 178, 20), from = 100, to = 250)
+
+curve(dnorm(x, 0, 50), from = -10, to = 60)
+```
+
+
+### Prior Predictive Simulation
+
+```{r}
+sample_mu <- rnorm(1e4, 178, 20)
+
+sample_sigma <- runif(1e4, 0, 50)
+
+prior_h <- rnorm(1e4, sample_mu, sample_sigma)
+
+dens(prior_h)
+
+
+```
+
+```{r}
+mu.list <- seq(150, 160, length.out = 100)
+
+sigma.list <- seq(7, 9, length.out = 100)
+
+post <- expand.grid(mu = mu.list, sigma = sigma.list)
+
+post$LL <- sapply(1:nrow(post), function(i) sum(
+  dnorm(d2$height, post$mu[i], post$sigma[i], log = TRUE)
+))
+
+post$prod <- post$LL + dnorm(post$mu, 178, 20, TRUE) +
+  dunif(post$sigma, 0, 50, TRUE)
+
+post$prob <- exp(post$prod - max(post$prod))
+
+contour_xyz(post$mu, post$sigma, post$prob)
+
+image_xyz(post$mu, post$sigma, post$prob)
+
+```
+
+### Sampling from the posterior
+
+```{r}
+sample.rows <- sample(1:nrow(post), size = 1e4, replace = TRUE, prob = post$prob)
+
+sample.mu <- post$mu[sample.rows]
+
+sample.sigma <- post$sigma[sample.rows]
+
+plot(sample.mu, sample.sigma, cex = 0.5, pch = 16, col = col.alpha(rangi2, 0.1))
+```
+
+
+```{r}
+
+dens(sample.mu)
+
+dens(sample.sigma)
+```
+
+```{r}
+PI(sample.mu)
+
+PI(sample.sigma)
+
+```
+
+
+#### Sample zise and the normality of sigma's posterior
+
+```{r}
+# Sample 20 random heights from original list
+d3 <- sample(d2$height, size = 20)
+
+mu.list <- seq( from=150, to=170 , length.out=200 )
+sigma.list <- seq( from=4 , to=20 , length.out=200 )
+post2 <- expand.grid( mu=mu.list , sigma=sigma.list )
+post2$LL <- sapply( 1:nrow(post2) , function(i)
+  sum( dnorm( d3 , mean=post2$mu[i] , sd=post2$sigma[i] ,
+  log=TRUE ) ) )
+post2$prod <- post2$LL + dnorm( post2$mu , 178 , 20 , TRUE ) +
+  dunif( post2$sigma , 0 , 50 , TRUE )
+post2$prob <- exp( post2$prod - max(post2$prod) )
+sample2.rows <- sample( 1:nrow(post2) , size=1e4 , replace=TRUE ,
+  prob=post2$prob )
+sample2.mu <- post2$mu[ sample2.rows ]
+sample2.sigma <- post2$sigma[ sample2.rows ]
+plot( sample2.mu , sample2.sigma , cex=0.5 ,
+  col=col.alpha(rangi2,0.1),
+  xlab= "mu" , ylab= "sigma" , pch=16 )
+
+
+
+```
+
+```{r}
+dens(sample2.sigma, norm.comp = TRUE)
+```
+
+
+### Finding Posterior with quap
+
+```{r}
+
+# Define the Model
+flist <- alist(
+  height ~ dnorm(mu, sigma),
+  mu ~ dnorm(178, 20), 
+  sigma ~ dunif(0, 50)
+)
+
+# Fit the Model
+m4.1 <- quap(flist, data = d2)
+
+# Look at Posterior Distribution
+precis(m4.1)
+```
+
+THis gives the normal distribution approximations for each paramters marginal distribution.
+
+### Start values for quap
+
+Good guesses for the rough location of the MAP values
+
+```{r}
+
+start <- list(
+  mu = mean(d2$height),
+  sigma = sd(d2$height)
+)
+
+m4.1 <- quap(flist, data = d2, start = start)
+
+```
+
+
+Priors used before are very week. This time we will build formula right in to the call of quap
+```{r}
+
+m4.2 <- quap(
+  alist(
+    height ~ dnorm(mu, sigma),
+    mu ~ dnorm(178, 0.1),
+    sigma ~ dunif(0, 50)
+  ), data = d2
+)
+
+precis(m4.2)
+
+```
+
+### Sampling from quap
+
+Matrix of variances and covariances
+
+```{r}
+# Variance Covariance function
+vcov(m4.1)
+
+```
+
+Variance Covariance matrix is flue of a quadratic approximation because it tells us how each parameter relates to every other parameter in the posterior. factored two ways:
+
+1. vector of variances for the parameters
+
+2. correlation matrix that tells us how changes in any parameter lead to correlated chages in the others.
+
+```{r}
+# Vector of Variances for paramters
+diag(vcov(m4.1))
+
+# Correlation Matrix
+cov2cor(vcov(m4.1))
+
+```
+
+Getting samples
+
+```{r}
+
+post <- extract.samples(m4.1, n = 1e4)
+
+head(post)
+
+```
+
+`extract.samples` gives you a data frame with mu and sigma sampled form posterior so the mean and sd of column will be close to teh MAP values from before. 
+
+```{r}
+
+precis(post)
+```
+#### Under the hood of multivariate sampling
+
+```{r}
+
+library(MASS)
+
+post <- mvrnorm(n = 1e4, mu = coef(m4.1), Sigma = vcov(m4.1))
+```
+
