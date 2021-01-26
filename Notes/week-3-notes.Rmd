@@ -4,8 +4,14 @@ author: "Zack Wixom"
 output: github_document
 ---
 
+```{r opts, echo = FALSE}
+# puts any figures made into this folder
+knitr::opts_chunk$set(
+  fig.path = "../Figures/"
+)
+```
 
-```{r}
+```{r packages, echo = FALSE}
 # Packages
 library(tidyverse)
 library(cmdstanr)
@@ -16,11 +22,38 @@ library(rethinking)
 
 ## Geocentric Circles
 
-Linear Regression is like the Geocentric cirlces model of Ptolemy. It can be reliable on some instances and depending on your use case, but if you look into it more than it can be inaccurate. 
+Linear Regression is like the Geocentric circles model of Ptolemy. It can be reliable on some instances and depending on your use case, but if you look into it more than it can be inaccurate. 
 
-Linear regressions uses a normal distribution to describe our golem's uncertainty on a subject. It is foundational for Bayesian procedures for probability interpretation. 
+Linear regressions uses a normal distribution to describe our golem's uncertainty on a subject. It is foundations for Bayesian procedures for probability interpretation. 
+
+Linear regression is useful but it is like looking at averages. 
 
 ## Normal Distributions
+
+Canceling out each other creates the bell curve. Examples of this in life:
+
+- ACT scores, some people score really high but there is also someone who scores really low.
+- Height
+- Baby Weights
+
+__Describing Normal Distributions__
+
+Mean --> Center
+
+SD --> Spread
+
+Bayesian Inference looks at every single possible mean and SD and scores their probability (based on that probability)
+
+This series of probabilities makes up the posterior distribution.
+
+We aren't really concerned with the raw data as a normal distribution but as the posterior distribution as normal.
+
+__Make a Prior Simulation (Prior Predictive Check)__
+
+- Doesn't have to be normal but has a mean and SD.
+- Sample from the prior to simulate.
+- Helps you see bad choices. _(like making sure you have unlikely possibilities like people under 0 feet tall)_
+- Do this before estimating the posterior.
 
 __Addition__
 
@@ -36,7 +69,7 @@ hist(pos)
 
 Any process that adds together random values form the same distribution converges to a normal distribution.
 
-fluctuations will cancel each other out. Depending on underlaying distribution convergence might be slow but will be inevitable.
+Fluctuations will cancel each other out. Depending on underlaying distribution convergence might be slow but will be inevitable.
 
 __Multiplication__
 
@@ -92,7 +125,7 @@ The way you read the model statements is:
 
 W ~ Binomial(N, p)
 
-_The count of W is distibuted binomially with sample size N and probability p_
+_The count of W is distributed binomially with sample size N and probability p_
 
 p ~ Uniform(0,1)
 
@@ -153,7 +186,6 @@ prior_h <- rnorm(1e4, sample_mu, sample_sigma)
 
 dens(prior_h)
 
-
 ```
 
 ```{r}
@@ -212,22 +244,36 @@ PI(sample.sigma)
 # Sample 20 random heights from original list
 d3 <- sample(d2$height, size = 20)
 
-mu.list <- seq( from=150, to=170 , length.out=200 )
-sigma.list <- seq( from=4 , to=20 , length.out=200 )
-post2 <- expand.grid( mu=mu.list , sigma=sigma.list )
-post2$LL <- sapply( 1:nrow(post2) , function(i)
-  sum( dnorm( d3 , mean=post2$mu[i] , sd=post2$sigma[i] ,
-  log=TRUE ) ) )
+mu.list <- seq(from=150, to=170, length.out=200)
+
+sigma.list <- seq(from=4, to=20, length.out=200)
+
+post2 <- expand.grid(mu=mu.list, sigma=sigma.list)
+
+post2$LL <- sapply( 1:nrow(post2), function(i)
+  sum(
+    dnorm(d3, mean=post2$mu[i], sd=post2$sigma[i], log=TRUE) 
+  )
+)
+
 post2$prod <- post2$LL + dnorm( post2$mu , 178 , 20 , TRUE ) +
-  dunif( post2$sigma , 0 , 50 , TRUE )
-post2$prob <- exp( post2$prod - max(post2$prod) )
-sample2.rows <- sample( 1:nrow(post2) , size=1e4 , replace=TRUE ,
-  prob=post2$prob )
-sample2.mu <- post2$mu[ sample2.rows ]
-sample2.sigma <- post2$sigma[ sample2.rows ]
-plot( sample2.mu , sample2.sigma , cex=0.5 ,
-  col=col.alpha(rangi2,0.1),
-  xlab= "mu" , ylab= "sigma" , pch=16 )
+  dunif(post2$sigma, 0, 50, TRUE)
+
+post2$prob <- exp(post2$prod - max(post2$prod))
+
+sample2.rows <- sample(1:nrow(post2), size=1e4, replace=TRUE, prob=post2$prob)
+
+sample2.mu <- post2$mu[sample2.rows]
+
+sample2.sigma <- post2$sigma[sample2.rows]
+
+plot(sample2.mu, 
+     sample2.sigma, 
+     cex=0.5,
+     col=col.alpha(rangi2,0.1),
+     xlab= "mu",
+     ylab= "sigma",
+     pch=16 )
 
 
 
@@ -254,6 +300,7 @@ m4.1 <- quap(flist, data = d2)
 
 # Look at Posterior Distribution
 precis(m4.1)
+
 ```
 
 THis gives the normal distribution approximations for each paramters marginal distribution.
@@ -275,6 +322,7 @@ m4.1 <- quap(flist, data = d2, start = start)
 
 
 Priors used before are very week. This time we will build formula right in to the call of quap
+
 ```{r}
 
 m4.2 <- quap(
@@ -299,14 +347,16 @@ vcov(m4.1)
 
 ```
 
-Variance Covariance matrix is flue of a quadratic approximation because it tells us how each parameter relates to every other parameter in the posterior. factored two ways:
+Variance Covariance matrix is flue of a quadratic approximation because it tells us how each parameter relates to every other parameter in the posterior.
+
+Factored two ways:
 
 1. vector of variances for the parameters
 
-2. correlation matrix that tells us how changes in any parameter lead to correlated chages in the others.
+2. correlation matrix that tells us how changes in any parameter lead to correlated changes in the others.
 
 ```{r}
-# Vector of Variances for paramters
+# Vector of Variances for parameters
 diag(vcov(m4.1))
 
 # Correlation Matrix
@@ -329,7 +379,9 @@ head(post)
 ```{r}
 
 precis(post)
+
 ```
+
 #### Under the hood of multivariate sampling
 
 ```{r}
@@ -337,5 +389,6 @@ precis(post)
 library(MASS)
 
 post <- mvrnorm(n = 1e4, mu = coef(m4.1), Sigma = vcov(m4.1))
+
 ```
 

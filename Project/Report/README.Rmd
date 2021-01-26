@@ -24,3 +24,9 @@ I am still deciding on what I want to do. I have a few ideas of what would be re
 
 - __Other__
   + I am also open to other ideas. I think I need to read around these topics to see if there is any gaps in research that I could work on.
+  
+  
+
+### Data Story for eSports
+
+Going off of my eSports idea for the project the data story would be consistently of data that I can get groups out of. There are some stats on professional Fortnite players and recently the game has come out with an _Icon Series_ Skins that are of professional players. Right now there are four _icon_ skins out, it would be interesting to be able to build a model that shows what features are going into determining these skins and which players get them or not. SO there might be a way to group the data into the type of player (competitive players, YT content creators, etc.)
