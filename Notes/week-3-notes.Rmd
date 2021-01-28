@@ -392,3 +392,226 @@ post <- mvrnorm(n = 1e4, mu = coef(m4.1), Sigma = vcov(m4.1))
 
 ```
 
+### Second Half of Week
+
+## Priors
+
+```{r}
+set.seed(2971)
+
+N <- 100  # 100 number of Lines
+
+# Priors for a
+a <- rnorm(N, 178, 20)
+
+# Priors for b
+b <- rnorm(N, 0, 50)
+
+```
+
+Now we have 100 pairs of a and b values. now plot the lines
+
+```{r}
+# This didn't work for some reason. His coding sytnax is a little weird.
+plot(NULL, xlim = range(d2$height), ylim = c(-100, 400), xlab = "weight", ylab = "height")
+abline(h = 0, lty = 2)
+abline(h = 272, lty = 2)
+mtext("b ~ dnorm(0, 10)")
+xbar <- mean(d2$weight)
+for (i in 1:N) curve(a[i] + b[i] * (x - xbar), from = min(d2$weight), to = max(d2$weight), add = TRUE, col = col.alpha("black", 0.2))
+
+```
+
+
+## Log Normal
+
+```{r}
+
+b <- rlnorm(1e4, 0, 1)
+
+dens(b, xlim = c(0,5), adj = 0.1)
+
+```
+
+Now we know a better prior for b. between 0 and 1
+
+## Finding posterior distribution
+
+```{r}
+# define the average weight, x-bar
+xbar <- mean(d2$weight)
+
+# Fit model
+m4.3 <- quap(
+  alist(
+    height ~ dnorm(mu, sigma),
+    mu <- a + b * (weight - xbar),    # Why do you do this?? is this from the linear regression equation???
+    a ~ dnorm(178, 20),
+    b ~ dlnorm(0, 1),
+    sigma ~ dunif(0, 50)
+  ) , data = d2
+)
+
+```
+
+## Interpreting the Posterior distribution
+
+Plotting the implication of your models will allow you to check things out:
+
+1. Whether or not the model fitting worked
+
+2. the absolute magnitute of relationship
+
+3. Uncertaintiy surrounding an average relationship
+
+4. Uncertiainty surrounding the implied predictions of the model
+
+```{r}
+
+precis(m4.3)
+```
+
+quadratic approximation for the parameters. 
+
+b --> is a slope with value 0.90 so this means:
+
+*a person 1 kg heavier is expected to be 0.90 cm taller*
+
+with a probability between 84% and 97% suggesting that b values that are close to 0 or greatly above 1 are highly incompatible with the data and model. So look for lines with slopes around 0.90 which are plausible.
+
+```{r}
+round(vcov(m4.3), 3)
+
+```
+
+Very little covariation among parameters. 
+
+## Ploting posterior inference against the data
+
+Plotting the posterior inference is useful because it helps two things:
+
+1. interpret the posterior.
+
+2. provides informal check on model assumptions.
+
+```{r}
+plot(height ~ weight, data = d2, col = rangi2)
+
+post <- extract.samples(m4.3)
+
+a_map <- mean(post$a)
+
+b_map <- mean(post$b)
+
+curve(a_map + b_map * (x - xbar), add = TRUE)
+
+
+```
+
+
+### Adding uncertainty around the mean
+
+The posterior mean line is just the posterior mean. These plots are useful in getting an impression of the magnitude of the estimated influence of variance. But they don't show uncertainty.
+
+By combination of a and b to define a line so we can sample a bunch of lines from posterior distribution then display those lines on the plot to show uncertainty in the regression relationship.
+
+```{r}
+N <- 10
+
+dN <- d2[1:N,]
+
+mN <- quap(
+  alist(
+    height ~ dnorm(mu, sigma),
+    mu <- a + b * (weight - mean(weight)),
+    a ~ dnorm(178, 20),
+    b ~ dlnorm(0, 1),
+    sigma ~ dunif(0, 50)
+  ), data = dN
+)
+
+
+```
+
+Now let's plot 20 of these lines
+
+```{r}
+# extract 20 samples form posterior
+post <- extract.samples(mN, n = 20)
+
+# display raw data and sample size
+plot(dN$weight, dN$height,
+     xlim = range(d2$weight), ylim = range(d2$height),
+     col = rangi2, xlab = "weight", ylab = "height")
+mtext(concat("N = ", N))
+
+# Plot the lines with transparency
+for (i in 1:20)
+  curve(post$a[i] + post$b[i] * (x - mean(dN$weight)),
+        col = col.alpha("black", 0.3), add = TRUE)
+
+```
+
+Look at the equation for mu
+
+
+```{r}
+post <- extract.samples(m4.3)
+
+mu_at_50 <- post$a + post$b * (50 - xbar)
+
+dens(mu_at_50, col = rangi2, lwd = 2, xlab = "mu | weight = 50")
+```
+
+Since this is a distribution you can find the intervals for it
+
+```{r}
+PI(mu_at_50, prob = .89)
+
+```
+
+Now using link() to compute the mu for each sample from posterior and for each weight in weight.seq
+
+```{r}
+# Define sequence of weights to compute predictions for
+weight.seq <- seq(25, 70, by = 1)
+
+# use link to compute mu's for each sample
+mu <- link(m4.3, data = data.frame(weight = weight.seq))
+
+str(mu)
+
+```
+
+Now we visualize what we have
+
+```{r}
+# Use type = n to hide raw data
+plot(height ~ weight, d2, type = "n")
+
+# loop over samples
+
+for(i in 1:100)
+  points(weight.seq, mu[i, ], pch = 16, col = col.alpha(rangi2, 0.1))
+
+```
+
+Summarize the distribution of mu and then plot it with raw data
+
+```{r}
+
+mu.mean <- apply(mu, 2, mean)
+
+mu.PI <- apply(mu, 2, PI, prob = .89)
+
+# Plot raw data
+plot(height ~ weight, data = d2, col = col.alpha(rangi2, 0.5))
+
+# Plot the MAP lines aka the mean mu for each weight
+lines(weight.seq, mu.mean)
+
+# plot a shaded region for 89% PI
+shade(mu.PI, weight.seq)
+
+```
+
