@@ -18,6 +18,8 @@ set.seed(42)
 # Get Data
 data(Howell1)
 d <- Howell1
+
+d2 <- d[d$age >= 18, ]
 ```
 
 1.  The weights listed below were recorded in the !Kung census, but heights were not recorded for these individuals. Provide predicted heights and 89% compatibility intervals for each of these individuals.
@@ -27,11 +29,30 @@ That is, fill in the table below, using model-based predictions.
 Individual weight expected height 89% interval 1 45 2 40 3 65 4 31
 
 ```{r}
+# define average weight
+xbar <- mean(d2$weight)
+
+# Fit Model
+m1 <- quap(
+  alist(
+    height ~ dnorm(mu, sigma),
+    mu <- a + b*(weight - xbar),
+    a ~ dnorm(178, 20),
+    b ~ dnorm(0, 1),
+    sigma ~ dunif(0, 50)
+  ), data = d2
+)
 
 # Define Sequence
 weight.seq <- as.vector(c(45, 40, 65, 31))
 
+# Simulate height
+sim.height <- sim(m1, data = list(weight = weight.seq))
 
+# summarize heights
+height.PI <- apply(sim.height, 2, PI, prob = 0.89)
+
+# plt
 
 ```
 
