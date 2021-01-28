@@ -1,0 +1,50 @@
+---
+title: "Assignment 2"
+author: "Zack Wixom"
+output: html_document
+---
+
+```{r, echo=FALSE}
+# Packages
+library(tidyverse)
+library(cmdstanr)
+library(posterior)
+library(bayesplot)
+library(rethinking)
+
+# Set seed
+set.seed(42)
+
+# Get Data
+data(Howell1)
+d <- Howell1
+```
+
+1.  The weights listed below were recorded in the !Kung census, but heights were not recorded for these individuals. Provide predicted heights and 89% compatibility intervals for each of these individuals.
+
+That is, fill in the table below, using model-based predictions.
+
+Individual weight expected height 89% interval 1 45 2 40 3 65 4 31
+
+```{r}
+
+# Define Sequence
+weight.seq <- as.vector(c(45, 40, 65, 31))
+
+
+
+```
+
+2.  Model the relationship between height (cm) and the natural logarithm of weight (log-kg): log(weight). Use the entire Howell1 data frame, all 544 rows, adults and non-adults. Use any model type from Chapter 4 that you think useful: an ordinary linear regression, a polynomial or a spline. I recommend a plain linear regression, though. Plot the posterior predictions against the raw data.
+
+```{r}
+
+
+```
+
+3.  Plot the prior predictive distribution for the polynomial regression model in Chapter 4. You can modify the the code that plots the linear regression prior predictive distribution. 20 or 30 parabolas from the prior should suffice to show where the prior probability resides. Can you modify the prior distributions of α, β1, and β2 so that the prior predictions stay within the biologically reasonable outcome space? That is to say: Do not try to fit the data by hand. But do try to keep the curves consistent with what you know about height and weight, before seeing these exact data.
+
+```{r}
+
+
+```

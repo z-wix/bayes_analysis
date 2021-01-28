@@ -29,4 +29,26 @@ I am still deciding on what I want to do. I have a few ideas of what would be re
 
 ### Data Story for eSports
 
-Going off of my eSports idea for the project the data story would be consistently of data that I can get groups out of. There are some stats on professional Fortnite players and recently the game has come out with an _Icon Series_ Skins that are of professional players. Right now there are four _icon_ skins out, it would be interesting to be able to build a model that shows what features are going into determining these skins and which players get them or not. SO there might be a way to group the data into the type of player (competitive players, YT content creators, etc.)
+**Fortnite**
+
+Going off of my eSports idea for the project the data story would be consistently of data that I can get groups out of. There are some stats on professional Fortnite players and recently the game has come out with an _Icon Series_ Skins that are of professional players. 
+
+Right now there are four _icon_ skins out, it would be interesting to be able to build a model that shows what features are going into determining these skins and which players get them or not. 
+
+SO there might be a way to group the data into the type of player (competitive players, YT content creators, etc.)
+
+I need to get data on player statistics and also either find a time series of when the icon series came out or just mutate my own data into it for that. 
+
+**Smash**
+
+As far as getting data for Smash Bros. I do have this website with frame data for every character
+
+[frame data](https://ultimateframedata.com/stats.php#0)
+
+I can't download this but perhaps I can translate it into my own excel file. If I want to use this data I could then also find some player stats on which characters are used the most in tournaments and then join those so that there is a frequency column on how many times they are used in tournaments as well as how many games they win. Frame data to help predict what characters win more often. 
+
+As far as groupings, there are groups of types of characters as Heavy, Med and Light. Perhaps this can be used as well in the data, but there aren't that many charcters that perhaps a futher grouping isn't necessary. 
+
+This can be developed into a tier list that is more accurate than what people usually make from their own opinion. 
+
+
