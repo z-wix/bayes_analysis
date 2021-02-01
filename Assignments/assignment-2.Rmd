@@ -285,7 +285,7 @@ m2 <- quap(
 )
 
 # Weight sequence
-weight.seq <- seq(25, 70)
+weight.seq <- seq(-2.2, 2, length.out = 30)
 
 pred_dat <- list(weight_s = weight.seq, weight_s2 = weight.seq^2)
 
@@ -303,41 +303,41 @@ shade(mu.PI, weight.seq)
 shade(height.PI, weight.seq)
 ```
 
-Not sure why I couldn't get the lines to appear on the graph.
-
-Im going to look at Marc's code now
-
-```{r}
-# Define the average weight avg_weight.
-avg_weight <- mean(d$weight)
-# Fit the model with quadratic approximation.
-m4_2 <- quap(
-  alist(
-    height ~ dnorm(mu, sigma),                   # height_i ∼ Normal(mu_i, sigma)
-    mu <- beta0 + beta1 * (weight - avg_weight), # mu_i = beta0 + beta1 * (x_i - avg_weight)
-    beta0 ~ dnorm(178, 20),                      # beta0 ∼ Normal(178, 20)
-    beta1 ~ dlnorm(0, 1),                        # beta1 ~ Log-Normal(0, 1)
-    sigma ~ dunif(0, 50)                         # sigma ∼ Uniform(0, 50)
-  ),
-  data = d
-)
-
-# Sample form Post
-posterior <- extract.samples(m4_2, n = 10000)
-
-# 1. Specify the new data we'd like to predict new heights.
-new_weights <- seq(from = 25, to = 70)
-# 2. Simulate predicted heights using the likelihood height_i ∼ Normal(mu_i, sigma).
-posterior_pd <- sim(m4_2, data = list(weight = new_weights))
-# Plot the posterior prediction distribution and compare with the data.
-hist(posterior_pd)
-hist(d$height)
-
-```
 
 3.  Plot the prior predictive distribution for the polynomial regression model in Chapter 4. You can modify the the code that plots the linear regression prior predictive distribution. 20 or 30 parabolas from the prior should suffice to show where the prior probability resides. Can you modify the prior distributions of α, β1, and β2 so that the prior predictions stay within the biologically reasonable outcome space? That is to say: Do not try to fit the data by hand. But do try to keep the curves consistent with what you know about height and weight, before seeing these exact data.
 
 ```{r}
 
+set.seed(42)
+
+N <- 30 # 30 lines
+a <- rnorm(N, 178, 20)
+b1 <- dlnorm(N, 0, 1)
+b2 <- rnorm(N, 0, 1)
+
+d$weight_s <- (d$weight - mean(d$weight)) / sd(d$weight)
+
+d$weight_s2 <- d$weight_s^2
+
+xbar <- mean(d$weight)
+
+plot( NULL, xlim=range(d$weight), ylim=c(-100,400),
+  xlab="weight", ylab= "height" )
+
+abline( h=0 , lty=2 )
+
+abline( h=272 , lty=1 , lwd=0.5 )
+
+
+for ( i in 1:N ) curve( a[i] + b1[i]*((x - xbar)/sd(x)) + b2[i]*(((x - xbar)/sd(x))^2),
+  from=min(d$weight), to=max(d$weight), add=TRUE,
+  col=col.alpha("black", 0.2))
+
+
+
+
 
 ```
+
+
+Well I thought I modified the code from the linear regression to make parabols but it didn't seem to work. 
