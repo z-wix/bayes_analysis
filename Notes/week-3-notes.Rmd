@@ -4,8 +4,14 @@ author: "Zack Wixom"
 output: github_document
 ---
 
+```{r opts, echo = FALSE}
+# puts any figures made into this folder
+knitr::opts_chunk$set(
+  fig.path = "../Figures/"
+)
+```
 
-```{r}
+```{r packages, echo = FALSE}
 # Packages
 library(tidyverse)
 library(cmdstanr)
@@ -16,11 +22,38 @@ library(rethinking)
 
 ## Geocentric Circles
 
-Linear Regression is like the Geocentric cirlces model of Ptolemy. It can be reliable on some instances and depending on your use case, but if you look into it more than it can be inaccurate. 
+Linear Regression is like the Geocentric circles model of Ptolemy. It can be reliable on some instances and depending on your use case, but if you look into it more than it can be inaccurate. 
 
-Linear regressions uses a normal distribution to describe our golem's uncertainty on a subject. It is foundational for Bayesian procedures for probability interpretation. 
+Linear regressions uses a normal distribution to describe our golem's uncertainty on a subject. It is foundations for Bayesian procedures for probability interpretation. 
+
+Linear regression is useful but it is like looking at averages. 
 
 ## Normal Distributions
+
+Canceling out each other creates the bell curve. Examples of this in life:
+
+- ACT scores, some people score really high but there is also someone who scores really low.
+- Height
+- Baby Weights
+
+__Describing Normal Distributions__
+
+Mean --> Center
+
+SD --> Spread
+
+Bayesian Inference looks at every single possible mean and SD and scores their probability (based on that probability)
+
+This series of probabilities makes up the posterior distribution.
+
+We aren't really concerned with the raw data as a normal distribution but as the posterior distribution as normal.
+
+__Make a Prior Simulation (Prior Predictive Check)__
+
+- Doesn't have to be normal but has a mean and SD.
+- Sample from the prior to simulate.
+- Helps you see bad choices. _(like making sure you have unlikely possibilities like people under 0 feet tall)_
+- Do this before estimating the posterior.
 
 __Addition__
 
@@ -36,7 +69,7 @@ hist(pos)
 
 Any process that adds together random values form the same distribution converges to a normal distribution.
 
-fluctuations will cancel each other out. Depending on underlaying distribution convergence might be slow but will be inevitable.
+Fluctuations will cancel each other out. Depending on underlaying distribution convergence might be slow but will be inevitable.
 
 __Multiplication__
 
@@ -92,7 +125,7 @@ The way you read the model statements is:
 
 W ~ Binomial(N, p)
 
-_The count of W is distibuted binomially with sample size N and probability p_
+_The count of W is distributed binomially with sample size N and probability p_
 
 p ~ Uniform(0,1)
 
@@ -153,7 +186,6 @@ prior_h <- rnorm(1e4, sample_mu, sample_sigma)
 
 dens(prior_h)
 
-
 ```
 
 ```{r}
@@ -212,22 +244,36 @@ PI(sample.sigma)
 # Sample 20 random heights from original list
 d3 <- sample(d2$height, size = 20)
 
-mu.list <- seq( from=150, to=170 , length.out=200 )
-sigma.list <- seq( from=4 , to=20 , length.out=200 )
-post2 <- expand.grid( mu=mu.list , sigma=sigma.list )
-post2$LL <- sapply( 1:nrow(post2) , function(i)
-  sum( dnorm( d3 , mean=post2$mu[i] , sd=post2$sigma[i] ,
-  log=TRUE ) ) )
+mu.list <- seq(from=150, to=170, length.out=200)
+
+sigma.list <- seq(from=4, to=20, length.out=200)
+
+post2 <- expand.grid(mu=mu.list, sigma=sigma.list)
+
+post2$LL <- sapply( 1:nrow(post2), function(i)
+  sum(
+    dnorm(d3, mean=post2$mu[i], sd=post2$sigma[i], log=TRUE) 
+  )
+)
+
 post2$prod <- post2$LL + dnorm( post2$mu , 178 , 20 , TRUE ) +
-  dunif( post2$sigma , 0 , 50 , TRUE )
-post2$prob <- exp( post2$prod - max(post2$prod) )
-sample2.rows <- sample( 1:nrow(post2) , size=1e4 , replace=TRUE ,
-  prob=post2$prob )
-sample2.mu <- post2$mu[ sample2.rows ]
-sample2.sigma <- post2$sigma[ sample2.rows ]
-plot( sample2.mu , sample2.sigma , cex=0.5 ,
-  col=col.alpha(rangi2,0.1),
-  xlab= "mu" , ylab= "sigma" , pch=16 )
+  dunif(post2$sigma, 0, 50, TRUE)
+
+post2$prob <- exp(post2$prod - max(post2$prod))
+
+sample2.rows <- sample(1:nrow(post2), size=1e4, replace=TRUE, prob=post2$prob)
+
+sample2.mu <- post2$mu[sample2.rows]
+
+sample2.sigma <- post2$sigma[sample2.rows]
+
+plot(sample2.mu, 
+     sample2.sigma, 
+     cex=0.5,
+     col=col.alpha(rangi2,0.1),
+     xlab= "mu",
+     ylab= "sigma",
+     pch=16 )
 
 
 
@@ -254,6 +300,7 @@ m4.1 <- quap(flist, data = d2)
 
 # Look at Posterior Distribution
 precis(m4.1)
+
 ```
 
 THis gives the normal distribution approximations for each paramters marginal distribution.
@@ -275,6 +322,7 @@ m4.1 <- quap(flist, data = d2, start = start)
 
 
 Priors used before are very week. This time we will build formula right in to the call of quap
+
 ```{r}
 
 m4.2 <- quap(
@@ -299,14 +347,16 @@ vcov(m4.1)
 
 ```
 
-Variance Covariance matrix is flue of a quadratic approximation because it tells us how each parameter relates to every other parameter in the posterior. factored two ways:
+Variance Covariance matrix is flue of a quadratic approximation because it tells us how each parameter relates to every other parameter in the posterior.
+
+Factored two ways:
 
 1. vector of variances for the parameters
 
-2. correlation matrix that tells us how changes in any parameter lead to correlated chages in the others.
+2. correlation matrix that tells us how changes in any parameter lead to correlated changes in the others.
 
 ```{r}
-# Vector of Variances for paramters
+# Vector of Variances for parameters
 diag(vcov(m4.1))
 
 # Correlation Matrix
@@ -329,7 +379,9 @@ head(post)
 ```{r}
 
 precis(post)
+
 ```
+
 #### Under the hood of multivariate sampling
 
 ```{r}
@@ -337,5 +389,296 @@ precis(post)
 library(MASS)
 
 post <- mvrnorm(n = 1e4, mu = coef(m4.1), Sigma = vcov(m4.1))
+
 ```
+
+### Second Half of Week
+
+## Priors
+
+```{r}
+set.seed(2971)
+
+N <- 100  # 100 number of Lines
+
+# Priors for a
+a <- rnorm(N, 178, 20)
+
+# Priors for b
+b <- rnorm(N, 0, 50)
+
+```
+
+Now we have 100 pairs of a and b values. now plot the lines
+
+```{r}
+# This didn't work for some reason. His coding sytnax is a little weird.
+plot(NULL, xlim = range(d2$height), ylim = c(-100, 400), xlab = "weight", ylab = "height")
+abline(h = 0, lty = 2)
+abline(h = 272, lty = 2)
+mtext("b ~ dnorm(0, 10)")
+xbar <- mean(d2$weight)
+for (i in 1:N) curve(a[i] + b[i] * (x - xbar), from = min(d2$weight), to = max(d2$weight), add = TRUE, col = col.alpha("black", 0.2))
+
+```
+
+
+## Log Normal
+
+```{r}
+
+b <- rlnorm(1e4, 0, 1)
+
+dens(b, xlim = c(0,5), adj = 0.1)
+
+```
+
+Now we know a better prior for b. between 0 and 1
+
+## Finding posterior distribution
+
+```{r}
+# define the average weight, x-bar
+xbar <- mean(d2$weight)
+
+# Fit model
+m4.3 <- quap(
+  alist(
+    height ~ dnorm(mu, sigma),
+    mu <- a + b * (weight - xbar),    # Why do you do this?? is this from the linear regression equation???
+    a ~ dnorm(178, 20),
+    b ~ dlnorm(0, 1),
+    sigma ~ dunif(0, 50)
+  ) , data = d2
+)
+
+```
+
+## Interpreting the Posterior distribution
+
+Plotting the implication of your models will allow you to check things out:
+
+1. Whether or not the model fitting worked
+
+2. the absolute magnitute of relationship
+
+3. Uncertaintiy surrounding an average relationship
+
+4. Uncertiainty surrounding the implied predictions of the model
+
+```{r}
+
+precis(m4.3)
+```
+
+quadratic approximation for the parameters. 
+
+b --> is a slope with value 0.90 so this means:
+
+*a person 1 kg heavier is expected to be 0.90 cm taller*
+
+with a probability between 84% and 97% suggesting that b values that are close to 0 or greatly above 1 are highly incompatible with the data and model. So look for lines with slopes around 0.90 which are plausible.
+
+```{r}
+round(vcov(m4.3), 3)
+
+```
+
+Very little covariation among parameters. 
+
+## Ploting posterior inference against the data
+
+Plotting the posterior inference is useful because it helps two things:
+
+1. interpret the posterior.
+
+2. provides informal check on model assumptions.
+
+```{r}
+plot(height ~ weight, data = d2, col = rangi2)
+
+post <- extract.samples(m4.3)
+
+a_map <- mean(post$a)
+
+b_map <- mean(post$b)
+
+curve(a_map + b_map * (x - xbar), add = TRUE)
+
+
+```
+
+### Adding uncertainty around the mean
+
+The posterior mean line is just the posterior mean. These plots are useful in getting an impression of the magnitude of the estimated influence of variance. But they don't show uncertainty.
+
+By combination of a and b to define a line so we can sample a bunch of lines from posterior distribution then display those lines on the plot to show uncertainty in the regression relationship.
+
+```{r}
+N <- 10
+
+dN <- d2[1:N,]
+
+mN <- quap(
+  alist(
+    height ~ dnorm(mu, sigma),
+    mu <- a + b * (weight - mean(weight)),
+    a ~ dnorm(178, 20),
+    b ~ dlnorm(0, 1),
+    sigma ~ dunif(0, 50)
+  ), data = dN
+)
+
+
+```
+
+Now let's plot 20 of these lines
+
+```{r}
+# extract 20 samples form posterior
+post <- extract.samples(mN, n = 20)
+
+# display raw data and sample size
+plot(dN$weight, dN$height,
+     xlim = range(d2$weight), ylim = range(d2$height),
+     col = rangi2, xlab = "weight", ylab = "height")
+mtext(concat("N = ", N))
+
+# Plot the lines with transparency
+for (i in 1:20)
+  curve(post$a[i] + post$b[i] * (x - mean(dN$weight)),
+        col = col.alpha("black", 0.3), add = TRUE)
+
+```
+
+Look at the equation for mu
+
+
+```{r}
+post <- extract.samples(m4.3)
+
+mu_at_50 <- post$a + post$b * (50 - xbar)
+
+dens(mu_at_50, col = rangi2, lwd = 2, xlab = "mu | weight = 50")
+```
+
+Since this is a distribution you can find the intervals for it
+
+```{r}
+PI(mu_at_50, prob = .89)
+
+```
+
+Now using link() to compute the mu for each sample from posterior and for each weight in weight.seq
+
+```{r}
+# Define sequence of weights to compute predictions for
+weight.seq <- seq(25, 70, by = 1)
+
+# use link to compute mu's for each sample
+mu <- link(m4.3, data = data.frame(weight = weight.seq))
+
+str(mu)
+
+```
+
+Now we visualize what we have
+
+```{r}
+# Use type = n to hide raw data
+plot(height ~ weight, d2, type = "n")
+
+# loop over samples
+
+for(i in 1:100)
+  points(weight.seq, mu[i, ], pch = 16, col = col.alpha(rangi2, 0.1))
+
+```
+
+Summarize the distribution of mu and then plot it with raw data
+
+```{r}
+
+mu.mean <- apply(mu, 2, mean)
+
+mu.PI <- apply(mu, 2, PI, prob = .89)
+
+# Plot raw data
+plot(height ~ weight, data = d2, col = col.alpha(rangi2, 0.5))
+
+# Plot the MAP lines aka the mean mu for each weight
+lines(weight.seq, mu.mean)
+
+# plot a shaded region for 89% PI
+shade(mu.PI, weight.seq)
+
+```
+
+```{r}
+
+post <- extract.samples(m4.3)
+mu.link <- function(weight) post$a + post$b*( weight - xbar )
+weight.seq <- seq( from=25 , to=70 , by=1 )
+mu <- sapply( weight.seq , mu.link )
+mu.mean <- apply( mu , 2 , mean )
+mu.CI <- apply( mu , 2 , PI , prob=0.89 )
+```
+
+## Predicition Intervals
+
+sim() simulates posterior observations. 
+
+```{r}
+sim.height <- sim( m4.3 , data=list(weight=weight.seq))
+
+height.PI <- apply(sim.height, 2, PI, prob = 0.89)
+
+plot(height ~ weight, d2, col = col.alpha(rangi2, 0.5))
+
+lines()
+
+```
+
+
+## Polynomial Regression
+
+1. interpretation will be easier
+
+3. there are advantages for fitting the model to the data espcially when predictor variables are large
+
+```{r}
+library(rethinking)
+data(Howell1)
+d <- Howell1
+
+# Standardize the predictor variable
+d$weight.s <- (d$weight - mean(d$weight))/sd(d$weight)
+
+```
+
+
+```{r}
+d$weight.s2 <- d$weight.s^2
+
+flist2 <- alist(
+  height ~ dnorm(mu, sigma),
+  mu <- a + b1*weight.s + b2*weight.s2,
+  a ~ dnorm(156, 100),
+  b1 ~ dnorm(0, 10),
+  b2 ~ dnorm(0, 10),
+  sigma ~ dunif(0, 50)
+)
+
+m4.5 <- quap(flist2, data = d)
+
+precis(m4.5)
+```
+
+Polynomials are good for a few terms but you should try to fit the phenomenon the best not the data, the underlying process is the goal.
+
+## Spline 
+
+Adds anchors into the data that will cut data into segments that. 
+
+
 
