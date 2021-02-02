@@ -4,7 +4,8 @@ Zack Wixom
 
 ## Waffles and Divorce
 
-![waffles and divorce](Figures/wafflesanddivorce.png)
+![waffles and
+divorce](Home/School/Marketing/'Quant%20Analytics'/Repo/zack-wixom/Figures/wafflesanddivorce.png)
 
 ## Correlations
 
