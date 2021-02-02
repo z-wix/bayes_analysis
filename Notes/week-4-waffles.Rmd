@@ -4,6 +4,13 @@ author: "Zack Wixom"
 output: github_document
 ---
 
+```{r opts, echo = FALSE}
+# puts any figures made into this folder
+knitr::opts_chunk$set(
+  fig.path = "../Figures/"
+)
+```
+
 ## Waffles and Divorce
 
 ![waffles and divorce](/Users/zwixom/School/Marketing/Quant Analytics/Repo/zack-wixom/Figures/wafflesanddivorce.png)
@@ -49,17 +56,17 @@ Causation implies *conditional* correlation
 3. Interactions.
 
 
-## Confounds
+**Confounds**
 
 Misleads us about a causal influence, such as the Waffle House correlation with Divorce. Makes some variables with no real importance look important. 
 
 Sometimes confounds hide important effects as well.
 
-## Complex Causation
+**Complex Causation**
 
 must measure causes simultaneously becuase there can be multiple causes happening at the same time and cascading in complex ways.
 
-## Interactions 
+**Interactions**
 
 Importance of one variable can depend on another. Interactions happen often so must consider others to get correct effective inference.
 
@@ -124,7 +131,7 @@ m5.1 <- quap(
 
 What is dexp() doing here?
 
-## Simulating from the priors
+### Simulating from the priors
 
 Using `extract.prior` and `link` then plot lines over the range of 2 standard deviatiosn for both the outcome and predictor.
 
@@ -142,7 +149,7 @@ for (i in 1:50) {
 
 ```
 
-## Posterior Predictions
+### Posterior Predictions
 
 ```{r median age and divorce pt3}
 # Compute percentile interval of mean
@@ -266,7 +273,7 @@ impliedConditionalIndependencies(DMA_dag2)
 
 ```
 
-## Left DAG
+### Left DAG
 
 No conditional independecies
 
@@ -282,7 +289,7 @@ The question we want to answer:
 *After I already know Variable A, what addiitonal value is there in also knowing Variable B?*
 
 
-### Multiple Regression Notation
+## Multiple Regression Notation
 
 1. Nominate the predictor variables.
 
@@ -293,9 +300,9 @@ The question we want to answer:
 
 ![formulaimage](/Users/zwixom/School/Marketing/Quant Analytics/Repo/zack-wixom/Figures/formulapic.png)
 
-## Approximating the posterior
-
 ![formul2aimage](/Users/zwixom/School/Marketing/Quant Analytics/Repo/zack-wixom/Figures/formulcode.png)
+
+### Approximating the posterior
 
 Code to approximate the posterior distribution
 
@@ -409,7 +416,7 @@ for (i in 1:nrow(d)) {
 Not sure how this works
 
 ```{r}
-identify(x = d$D, y = mu_mean, labels = d$Loc)
+# identify(x = d$D, y = mu_mean, labels = d$Loc)
 ```
 
 *Shoutout to Mormons*
