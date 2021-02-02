@@ -48,7 +48,7 @@ Causation implies *conditional* correlation
 
 3.  Interactions.
 
-## Confounds
+**Confounds**
 
 Misleads us about a causal influence, such as the Waffle House
 correlation with Divorce. Makes some variables with no real importance
@@ -56,12 +56,12 @@ look important.
 
 Sometimes confounds hide important effects as well.
 
-## Complex Causation
+**Complex Causation**
 
 must measure causes simultaneously becuase there can be multiple causes
 happening at the same time and cascading in complex ways.
 
-## Interactions
+**Interactions**
 
 Importance of one variable can depend on another. Interactions happen
 often so must consider others to get correct effective inference.
@@ -177,7 +177,7 @@ m5.1 <- quap(
 
 What is dexp() doing here?
 
-## Simulating from the priors
+### Simulating from the priors
 
 Using `extract.prior` and `link` then plot lines over the range of 2
 standard deviatiosn for both the outcome and predictor.
@@ -197,7 +197,7 @@ for (i in 1:50) {
 
 ![](../Figures/median%20age%20and%20divorce%20pt2-1.png)<!-- -->
 
-## Posterior Predictions
+### Posterior Predictions
 
 ``` r
 # Compute percentile interval of mean
@@ -222,9 +222,9 @@ precis(m5.1)
 ```
 
     ##                mean         sd       5.5%      94.5%
-    ## a     -2.179682e-08 0.09737874 -0.1556301  0.1556300
-    ## bA    -5.684034e-01 0.10999977 -0.7442042 -0.3926025
-    ## sigma  7.883254e-01 0.07801126  0.6636483  0.9130025
+    ## a     -1.717587e-08 0.09737874 -0.1556300  0.1556300
+    ## bA    -5.684031e-01 0.10999976 -0.7442040 -0.3926022
+    ## sigma  7.883253e-01 0.07801125  0.6636483  0.9130024
 
 ## Marriage rate and Divorce
 
@@ -342,7 +342,7 @@ impliedConditionalIndependencies(DMA_dag2)
 
     ## D _||_ M | A
 
-## Left DAG
+### Left DAG
 
 No conditional independecies
 
@@ -360,7 +360,7 @@ The question we want to answer:
 *After I already know Variable A, what addiitonal value is there in also
 knowing Variable B?*
 
-### Multiple Regression Notation
+## Multiple Regression Notation
 
 1.  Nominate the predictor variables.
 
@@ -370,9 +370,9 @@ knowing Variable B?*
 
 ![formulaimage](/Users/zwixom/School/Marketing/Quant%20Analytics/Repo/zack-wixom/Figures/formulapic.png)
 
-## Approximating the posterior
-
 ![formul2aimage](/Users/zwixom/School/Marketing/Quant%20Analytics/Repo/zack-wixom/Figures/formulcode.png)
+
+### Approximating the posterior
 
 Code to approximate the posterior distribution
 
