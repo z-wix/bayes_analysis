@@ -1,5 +1,6 @@
 ---
 title: "Spurious Waffles"
+subtitle: "Week 4"
 author: "Zack Wixom"
 output: github_document
 ---
