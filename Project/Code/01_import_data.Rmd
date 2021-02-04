@@ -1,0 +1,57 @@
+---
+title: "Connecting to Fortnite API"
+author: "Zack"
+output: github_document
+---
+
+```{r opts, echo = FALSE}
+# puts any figures made into this folder
+knitr::opts_chunk$set(
+  fig.path = "../Figures/"
+)
+```
+
+I am going to try to connect to an API for [Fortnite Tracker](https://fortnitetracker.com/). This API gives you stats on every player you have the gamertag of. It updates frequently with current matches played.
+
+Hopefully I can connect to this API becuase it seems like the best option for getting the most relevant data I want to analyze. 
+
+However, I couldn't find any documentation on connecting to it with R. So I am going to use similar code for a different API that uses `httr` package to connect to an API and see if I can connect to Fortnite Tracker that way.
+
+## Attempt to Connect
+
+the `httr` package has documentation to connect to many different API's from website called RapidAPI. I am using this [example](https://rapidapi.com/elreco/api/fortnite-api?endpoint=apiendpoint_a787830a-94d7-4d1b-a625-031462c97605) of a different Forntie API call.
+
+```{r httr-example}
+# Packages
+library(tidyverse)
+library(httr)
+
+url <- "https://fortnite-api.p.rapidapi.com/stats/zRotation"
+
+response <- VERB("GET", url, add_headers(x_rapidapi_key = '751fdcf83amshb438c02e00cb7f9p189025jsne07cf0e465d3', x_rapidapi_host = 'fortnite-api.p.rapidapi.com'), content_type("application/octet-stream"))
+
+content(response, "text")
+
+```
+
+After some messing around I wasn't able to get it to work so I found another resource [here](https://www.dataquest.io/blog/r-api-tutorial/). This says I can use a package called `jsonlite` along with httr to access API's. So I will try that out, for simplicity I am just going to get data from the store.
+
+```{r httr-jsonlite}
+# Packages
+library(httr)
+library(jsonlite)
+
+url <- "https://api.fortnitetracker.com/v1/store"
+
+res <- GET(url, add_headers(Authorization = "4b634310-9f4e-48c2-be8b-41e9e7a8c236"))
+
+
+
+
+```
+
+
+
+
+
+
