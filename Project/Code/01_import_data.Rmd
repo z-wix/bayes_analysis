@@ -95,9 +95,9 @@ http_error(resp)
 str(resp)
 
 # Get content use "parsed" to make it an r object
-result <- httr::content(resp, as = "raw")
+result <- httr::content(resp, as = "parse")
 
-result$stats$
+result$stats
 
 # Convert to dataset
 data <- data.frame(result)
