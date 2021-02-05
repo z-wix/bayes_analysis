@@ -50,6 +50,30 @@ res <- GET(url, add_headers(Authorization = "4b634310-9f4e-48c2-be8b-41e9e7a8c23
 
 ```
 
+I am going to try to use some python code to call the Fortine API using this [fortnite-python](https://github.com/xcodinas/fortnite-python) github.
+
+```{r}
+library(reticulate)
+use_virtualenv("myenv")
+
+import("fortnite-python")
+
+```
+
+
+```{python}
+
+print("hello python")
+
+# pip install fortnite-python
+
+# from python import fortnite_python
+
+from fortnite_python import Fortnite
+# 
+# fortnite = Fortnite('4b634310-9f4e-48c2-be8b-41e9e7a8c236')
+
+```
 
 
 
