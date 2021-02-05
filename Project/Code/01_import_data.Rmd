@@ -21,7 +21,7 @@ However, I couldn't find any documentation on connecting to it with R. So I am g
 
 the `httr` package has documentation to connect to many different API's from website called RapidAPI. I am using this [example](https://rapidapi.com/elreco/api/fortnite-api?endpoint=apiendpoint_a787830a-94d7-4d1b-a625-031462c97605) of a different Forntie API call.
 
-```{r httr-example}
+```{r httr-example, include = FALSE}
 # Packages
 library(tidyverse)
 library(httr)
@@ -34,48 +34,75 @@ content(response, "text")
 
 ```
 
-After some messing around I wasn't able to get it to work so I found another resource [here](https://www.dataquest.io/blog/r-api-tutorial/). This says I can use a package called `jsonlite` along with httr to access API's. So I will try that out, for simplicity I am just going to get data from the store.
+After some messing around I wasn't able to get it to work so I found another resource [here](https://www.dataquest.io/blog/r-api-tutorial/). This says I can use a package called `jsonlite` along with httr to access API's. So I will try that out, for simplicity I am just going to get data from the in game store. 
 
-```{r httr-jsonlite}
+```{r setup, eval = FALSE}
 # Packages
+library(tidyverse)
 library(httr)
 library(jsonlite)
 
+# Url of API
 url <- "https://api.fortnitetracker.com/v1/store"
 
-res <- GET(url, add_headers(Authorization = "4b634310-9f4e-48c2-be8b-41e9e7a8c236"))
+# # Save API Key to Private Folder
+# saveRDS(api_key, here::here("Private", "api_key.rds"))
 
-
-
-
-```
-
-I am going to try to use some python code to call the Fortine API using this [fortnite-python](https://github.com/xcodinas/fortnite-python) github.
-
-```{r}
-library(reticulate)
-use_virtualenv("myenv")
-
-import("fortnite-python")
+# Read in API Key
+api_key <- readRDS(here::here("Private", "api_key.rds"))
 
 ```
 
+Now that I have my packages loaded, key saved, and url added I can run the `httr` code.
 
-```{python}
+```{r httr practice}
 
-print("hello python")
+# Connect to API
+resp <- httr::GET(url,
+    add_headers('TRN-API-Key' = api_key))
 
-# pip install fortnite-python
+# Check for any errors
+http_error(resp) 
 
-# from python import fortnite_python
+# Get content use "parsed" to make it an r object
+result <- httr::content(resp, as = "parsed")
 
-from fortnite_python import Fortnite
-# 
-# fortnite = Fortnite('4b634310-9f4e-48c2-be8b-41e9e7a8c236')
+# Convert to dataset
+data <- data.frame(result)
 
 ```
 
+It worked!! So now let me test getting some player stats. Eventually I will need to make a list of player names that I can look through and create a dataset of data for players.
+
+```{r player stat test}
+
+# base Url of API
+url <- "https://api.fortnitetracker.com/v1/profile"
+
+# Platform
+platform <- "kbm"
+
+# GamerTag
+gamertag <- "ninja"
+
+# Connect to API
+resp <- httr::GET(url = paste(url, platform, gamertag, sep = "/"),
+    add_headers('TRN-API-Key' = api_key))
+
+# Check for any errors
+http_error(resp) 
+
+str(resp)
+
+# Get content use "parsed" to make it an r object
+result <- httr::content(resp, as = "raw")
+
+result$stats$
+
+# Convert to dataset
+data <- data.frame(result)
 
 
+```
 
 
