@@ -10,7 +10,398 @@ output: github_document
 knitr::opts_chunk$set(
   fig.path = "../Figures/"
 )
+
+# Packages
+library(tidyverse)
+library(dagitty)
+library(rethinking)
 ```
 
-## Haunted DAGS
+# My Notes
+
+## Multicollinearity
+
+*definition:* a very strong association between two or more predictor variables
+
+*consequence:* the posterior distribution will seem to suggest that none of the variables are reliably associated with the outcome, even if the variables are in reality strongly associated with the outcome.
+
+### Leg Example
+
+trying to predict height using the length of legs as predictors
+
+```{r mc legs}
+# Number of individuals
+N <- 100
+
+set.seed(909)
+
+# Sim total height of each individual
+height <- rnorm(N, 10, 2)
+
+# leg as proportion of height
+leg_prop <- runif(N, 0.4, 0.5)
+
+# sim left leg as proportion + error
+leg_left <- leg_prop * height + rnorm(N, 0, 0.02)
+
+# Right leg
+leg_right <- leg_prop * height + rnorm(N, 0, 0.02)
+
+# combine into data set
+d <- data.frame(height, leg_left, leg_right)
+
+```
+
+Now we fit the model
+
+```{r fit legs}
+m6.1 <- quap(
+  alist(
+    height ~ dnorm(mu, sigma),
+    mu <- a + bl * leg_left + br * leg_right,
+    a ~ dnorm(10, 100),
+    bl ~ dnorm(2, 10),
+    br ~ dnorm(2, 10),
+    sigma ~ dexp(1)
+  ), data = d
+)
+
+precis(m6.1)
+plot(precis(m6.1))
+
+```
+
+graphical view displays the posterior means and 89% intervals in a way that lets us glance to see that something has gone wrong.
+
+```{r extract samples legs}
+post <- extract.samples(m6.1)
+
+plot(bl ~ br, post, col = col.alpha(rangi2, 0.1), pch = 16)
+
+```
+
+Very correlated between right leg and left leg. When left leg is large, right leg is small. So we are going to drop one of the variables since there is equivalence. Marc's code follow the right leg, this code will follow the left.
+
+Let's fit a regression with the left leg.
+
+```{r left leg}
+
+m6.2 <- quap(
+  alist(
+    height ~ dnorm(mu, sigma),
+    mu <- a + bl * leg_left,
+    a ~ dnorm(10, 100),
+    bl ~ dnorm(2, 10),
+    sigma ~ exp(1)
+  ), data = d
+)
+
+precis(m6.2)
+
+plot(precis(m6.2))
+
+```
+
+
+the posterior mean of bl is almost identical to the mean of the value of sum_blbr. So the lesson is that when there are two predictors that are very strongly correlated, including both may lead to confusion
+
+## Milk Multicollinearlity
+
+```{r milk}
+data(milk)
+d <- milk
+
+# Standardize the variables
+d$K <- standardize(d$kcal.per.g)
+d$F <- standardize(d$perc.fat)
+d$L <- standardize(d$perc.lactose)
+
+```
+
+We will compare two models and see that the two variables are mirror images. As bF is postive, bL is negative. So we are going to include them together in a model
+
+```{r fit milk}
+m6.5 <- quap(
+  alist(
+    K ~ dnorm(mu, sigma),
+    mu <- a + bF*F + bL*L,
+    a ~ dnorm(0, 0.2),
+    bF ~ dnorm(0, 0.5),
+    bL ~ dnorm(0, 0.5),
+    sigma ~ dexp(1)
+  ), data = d
+)
+
+precis(m6.5)
+```
+
+Both posterior means are close to zero and the sd for both paramters are twice as large as in their stand alone models. Using pairs plot you can see how both F and L contain the same information
+
+```{r milk pairs}
+
+pairs(~ kcal.per.g + perc.fat + perc.lactose, data = d, col = rangi2)
+
+```
+
+
+
+# Marc's Notes
+
+## Chapter 6
+
+If we only cared about prediction, we could just add everything into the model and let it run. Additionally, we may be especially worried about **omitted variable bias**, or not getting good estimates of the parameters because we've left out some important variable. However, when we care about making inferences -- specifically, we want to use the posterior distribution to inform some decision. And that requires more thought. There has to be a reason for adding predictors, otherwise we will run into various flavors of **included variable bias**. This is part of [telling the story](https://clever-kepler-fe8df7.netlify.com/).
+
+This chapter also provides a more detailed use of the idea of **simulating (or generating) data**. We've done this with prior predictive checks and posterior predictive check. Since our model is generative, we can simulate data from it. In the context of this chapter, when we'd like to demonstrate or explore certain behaviors in the data that we wouldn't know were present in real data, we can simply simulate data that behaves that way. Once again, when in doubt, *simulate*.
+
+### Multicollinearity
+
+> "Multicollinearity means very strong correlation between two or more predictor variables."
+This problem should be clear from how we interpret the parameters in a multiple regression: *The effect of one predictor, controlling for all other predictors.* How do we control for another variable that is essentially identical (read: very strongly correlated)? The example is a simple illustration of simulating data:
+
+```{r}
+# Set the number of individuals.
+N <- 100
+# Set the seed so we get the same simulated values when we re-knit.
+set.seed(45)
+# Simulate the data and store as data frame (tibble).
+data <- tibble(height = rnorm(N, 10, 2)) %>% 
+  mutate(leg_prop = runif(N, 0.4, 0.5)) %>% 
+  mutate(
+    leg_left = leg_prop * height + rnorm(N, 0, 0.02),
+    leg_right = leg_prop * height + rnorm(N, 0, 0.02)
+  )
+data
+```
+
+Note that unlike a prior predictive check, we aren't drawing from a prior of possible values -- we are assuming we know the truth; for example, we set the population mean height at 10. This is our simulation and we can do as we please. We will see later that simulating data where we know the truth is used for more than just exploring selection bias, it is actually very helpful for making sure the model is working as intended.
+
+```{r sim-posterior-01}
+# Fit the model using simulated data.
+fit_01 <- quap(
+  alist(
+    height ~ dnorm(mu, sigma),
+    mu <- beta0 + betal * leg_left + betar * leg_right,
+    beta0 ~ dnorm(10, 100),
+    betal ~ dnorm(2, 10),
+    betar ~ dnorm(2, 10),
+    sigma ~ dexp(1)
+  ),
+  data = data
+)
+# Summarize the posterior.
+precis(fit_01)
+plot(precis(fit_01))
+```
+
+The estimates are strange. Looking at the posterior distribution for the two betas is illustrative.
+
+```{r sim-posterior-02}
+# Draw samples from the posterior and plot.
+post_01 <- extract.samples(fit_01)
+plot(betal ~ betar, post_01, col = col.alpha(rangi2, 0.1), pch = 16)
+```
+
+Correlated much?!
+
+> "The posterior distribution for these two parameters is very highly correlated, with all of the plausible values of [betal] and [betar] lying along a narrow ridge. When [betal] is large, then [betar] must be small. What has happened here is that since both leg variables contain almost exactly the same information, if you insist on including both in a model, then there will be a practically infinite number of combinations of [betal] and [betar] that produce the same predictions."
+One way to think of this "infinite number of combinations" that produce the same prediction is that these two parameters are **not identified**. However, their sum is, as described on p. 165.
+
+We typically need to drop one of these predictors. We'll use the leg he doesn't in the book to demonstrate equivalence when choosing which predictor to drop.
+
+```{r sim-posterior-03}
+# Fit the model again using just the right leg.
+fit_02 <- quap(
+  alist(
+    height ~ dnorm(mu, sigma),
+    mu <- beta0 + betar * leg_right,
+    beta0 ~ dnorm(10, 100),
+    betar ~ dnorm(2, 10),
+    sigma ~ dexp(1)
+  ),
+  data = data
+)
+# Summarize the posterior.
+precis(fit_02)
+plot(precis(fit_02))
+```
+
+Back to the sum being identified, we can compare the two marginal posteriors.
+
+```{r sim-posterior-04}
+# The sum of the two unidentified parameters are identified.
+sum_blbr <- post_01$betal + post_01$betar
+dens(sum_blbr, col = rangi2, lwd = 2, xlab="sum of betal and betar")
+# The single identified parameter from the second model looks the same.
+post_02 <- extract.samples(fit_02)
+dens(post_02$betar, col = rangi2, lwd = 2, xlab="betar")
+```
+
+See how similar they are? The moral of the story:
+
+> "When two predictor variables are very strongly correlated, including both in a model may lead to confusion."
+And yet again we get a highlight of the difference between modeling for inference and prediction:
+
+> "The posterior distribution isn’t wrong, in such cases. It’s telling you that the question you asked cannot be answered with these data. And that’s a great thing for a model to say, that it cannot answer your question. And if you are just interested in prediction, you'll find that this leg model makes fine predictions. It just doesn't make any claims about which leg is more important."
+Finally, the inevitable question:
+
+> "How strong does a correlation have to get, before you should start worrying about multicollinearity? There’s no easy answer to that question. Correlations do have to get pretty high before this problem interferes with your analysis. And what matters isn’t just the correlation between a pair of variables. Rather, what matters is the correlation that remains after accounting for any other predictors. So really what you need, as always, is some conceptual model for how these variables produce observations... We always need conceptual models, based upon scientific background, to do useful statistics. The data themselves just aren’t enough."
+### Post-Treatment Bias
+
+> "[M]istaken inferences arising from including variables that are consequences of other variables."
+Treating soil to reduce fungus and improve plant health (e.g., height) is a nice example, but very biological. Instead of plants, let's consider consumers where we measure their likelihood to purchase a product. The treatment is an advertisement and the post-treatment effect is their brand recall. If we include brand recall (the fungus, if you follow me), we can attribute possible change in likelihood to purchase to the brand recall rather than the treatment -- the advertisement.
+
+We can follow along with the simulation example and superimpose this new application.
+
+```{r}
+# Set the number of individuals.
+N <- 100
+# Set the seed so we get the same simulated values when we re-knit.
+set.seed(45)
+# Simulate the data and store as data frame (tibble).
+data <- tibble(rating_pre = rnorm(N, 10, 2)) %>% 
+  mutate(treatment = rep(0:1, each = N/2)) %>% 
+  mutate(
+    recall = rbinom(N, size = 1, prob = 0.5 - treatment * 0.4),
+    rating_post = rating_pre + rnorm(N, 5 - 3 * recall)
+  )
+
+precis(data)
+```
+
+> "When designing the model, it helps to pretend you don’t have the data generating process just above. In real research, you will not know the real data generating process. But you will have a lot of scientific information to guide model construction."
+Remember that when we are simulating data in this way we *know* the truth -- we decide what is true -- and we *never* know the truth with real data. However, we need to be able to think clearly through the conceptual story of our data and how we translate that into a statistical model. The discussion in the book around how to create this model is a helpful illustration of applying domain expertise to create a more thoughtful model.
+
+```{r bias-posterior-01}
+# Fit the model.
+fit_03 <- quap(
+  alist(
+    rating_post ~ dnorm(mu, sigma),
+    mu <- rating_pre * p,
+    p <- beta0 + betat * treatment + betar * recall,
+    beta0 ~ dlnorm(0, 0.2),
+    betat ~ dnorm(0, 0.5),
+    betar ~ dnorm(0, 0.5),
+    sigma ~ dexp(1)
+  ), 
+  data = data
+)
+# Summarize the marginal posteriors.
+precis(fit_03)
+plot(precis(fit_03))
+```
+
+Including both the treatment and the post-treatment effect (recall) makes it appear that the treatment has no effect and recall actually reduces the likelihood of purchase, which we know isn't true (we simulated the data, remember). Let's drop the post-treatment variable that's causing the problem.
+
+```{r bias-posterior-02}
+# Fit the model.
+fit_04 <- quap(
+  alist(
+    rating_post ~ dnorm(mu, sigma),
+    mu <- rating_pre * p,
+    p <- beta0 + betat * treatment,
+    beta0 ~ dlnorm(0, 0.2),
+    betat ~ dnorm(0, 0.5),
+    sigma ~ dexp(1)
+  ), 
+  data = data
+)
+# Summarize the marginal posteriors.
+precis(fit_04)
+plot(precis(fit_04))
+```
+
+The treatment now has the positive impact we specified when simulating the data. This illustrates what he calls **d-separation** in the book. An equivalent (and perhaps more useful) term is **conditional independence**. In this case, the outcome is independent of the treatment conditioned on the post-treatment bias.
+
+> "The problem of post-treatment variables applies just as well to observational studies as it does to experiments. But in experiments, it can be easy to tell which variables are pre-treatment, like [rating_pre], and which are post-treatment, like [recall]. In observational studies, it is harder to know. But that just makes having a clear causal model even more important. Just tossing variables into a regression model, without pausing to think about path relationships, is a bad idea."
+
+### Collider Bias
+
+> "When you condition on a collider, it creates statistical -- but not necessarily causal -- associations among its causes."
+In the happiness study:
+
+> "Happiness (H) and age (A) both cause marriage (M). Marriage is therefore a collider. Even though there is no causal association between happiness and age, if we condition on marriage -- which means here, if we include it as a predictor in a regression -- then it will induce a statistical association between age and happiness. And this can mislead us to think that happiness changes with age, when in fact it is constant."
+To demonstrate, we turn again to a simulation. This time we have an even more thought-out model using agent-based theory. We can see how the conceptual model plays out by looking at the inner workings of the function.
+
+```{r}
+sim_happiness
+```
+
+Now, to use the function to simulate data.
+
+```{r}
+# Simulate the data using the sim_happiness function.
+data <- sim_happiness(seed = 1977, N_years = 1000) %>%
+  filter(age > 17) %>%                   # Only keep adults (18 and older).
+  mutate(A = (age - 18) / (65 - 18)) %>% # Recode age as 0 for 18 and 1 for 65.
+  mutate(mid = married + 1)              # Married status index.
+precis(data)
+```
+
+Now to compare models.
+
+```{r happy-posterior-01}
+# Fit the model.
+fit_05 <- quap(
+  alist(
+    happiness ~ dnorm(mu, sigma),
+    mu <- a[mid] + bA * A,
+    a[mid] ~ dnorm(0, 1),
+    bA ~ dnorm(0, 2),
+    sigma ~ dexp(1)
+  ), 
+  data = data
+)
+# Summarize the marginal posteriors.
+precis(fit_05)
+plot(precis(fit_05))
+```
+
+Age clearly has a negative effect on happiness.
+
+```{r happy-posterior-02}
+# Fit the model.
+fit_06 <- quap(
+  alist(
+    happiness ~ dnorm(mu, sigma),
+    mu <- a + bA * A,
+    a ~ dnorm(0, 1),
+    bA ~ dnorm(0, 2),
+    sigma ~ dexp(1)
+  ), 
+  data = data
+)
+
+# Summarize the marginal posteriors.
+precis(fit_06)
+plot(precis(fit_06))
+```
+
+And when we remove marriage status, age clearly doesn't effect happiness.
+
+> "The pattern above is exactly what we should expect when we condition on a collider. The collider is marriage status. It a common consequence of age and happiness. As a result, when we condition on it, we induce a spurious association between the two causes."
+So just don't include the collider, right?
+
+> "But it isn’t always so easy to see a potential collider, because there may be unmeasured causes. Unmeasured causes can still induce collider bias. So I’m sorry to say that we also have to consider the possibility that our DAG may be haunted."
+
+### Confronting Confounding
+
+> "Confounding is any context in which the association between an outcome Y and a predictor of interest X is not the same as it would be, if we had experimentally determined the values of X."
+
+How do we deal with it? We need to isolate the causal path of interest so that information only flows along that path. We do that by blocking *confounding paths*, this is known as **shutting the back door.**
+
+> "The metaphor in play is that we don’t want any spurious correlation sneaking in through the back."
+
+Here's what we do once we have a DAG.
+
+1. List all the paths connecting `X` (the potential cause of interest) and `Y` (the outcome). When identifying paths we ignore the direction of the arrows in the DAG.
+2. Classify each path by whether it is a backdoor path. Any path connecting `X` and `Y` that isn't the path of interest is a backdoor path.
+3. Classify each path as open or closed and close any open backdoor paths if possible.
+
+Here are the four elemental confounds and how we close them.
+
+1. Fork: `X <- Z -> Y`, the classic confounder. Condition on `Z` to close it.
+2. Pipe: `X -> Z -> Y` as shown with post-treatment bias. Condition on `Z` to close it.
+3. Collider: `X -> Z <- Y`. Already closed. Don't condition on `Z` to keep it closed.
+4. Descendant: `X -> Z -> Y` where `Z -> K` and `K` is a proxy. Condition on `Z`, or `K` if `Z` is unobserved, to partially close it.
+
 

@@ -1,0 +1,263 @@
+---
+title: "Assignment 3"
+author: "Zack Wixom"
+output: github_document
+---
+
+```{r opts, echo = FALSE, include = FALSE}
+# puts any figures made into this folder
+knitr::opts_chunk$set(
+  fig.path = "../Figures/"
+)
+
+# Packages
+library(tidyverse)
+library(dagitty)
+library(rethinking)
+
+data("foxes")
+```
+
+1. Use a model to infer the total causal influence of **area on weight**. Would increasing the area available to each fox make it heavier (healthier)? 
+
+*You might want to standardize the variables. Regardless, use prior predictive simulation to show that your model’s prior predictions stay within the possible outcome range.*
+
+**Step 1:** list all possible paths
+
+1. area --> avgfood --> weight
+
+2. area --> avgfood --> groupsize --> weight
+
+**Step 2:** Classify each path
+
+1. A --> F --> W = Pipe
+
+2. A --> F --> G --> W = Pipe
+
+No back doors her
+
+**Step 3:** Conditioning
+
+```{r q1 dag}
+# Standardize Variables
+d <- as_tibble(foxes) %>% 
+  mutate(
+    A = standardize(area),
+    F = standardize(avgfood),
+    W = standardize(weight),
+    G = standardize(groupsize)
+  )
+
+# Make Dag to look at what to condition on
+
+dag_01 <- dagitty( "dag {
+  A -> F -> W
+  A -> F -> G -> W
+}")
+
+plot(dag_01)
+
+# Check for conditioning
+adjustmentSets(dag_01, exposure = "A", outcome = "W")
+impliedConditionalIndependencies(dag_01)
+
+
+```
+
+```{r q1 prior}
+# Fit Model for Area
+fit01 <- quap(
+  alist(
+    W ~ dnorm(mu, sigma),
+    mu <- a + bA*A,
+    a ~ dnorm(0, 0.2),
+    bA ~ dnorm(0, 0.5),
+    sigma ~ dexp(1)
+  ), data = d
+)
+
+set.seed(42)
+
+prior01 <- extract.prior(fit01)
+
+# Use link() to compute mu without having to write out the linear function.
+mu <- link(fit01, post = prior01, data = list(A = c(-2, 2)))
+
+# Base plot plus "layers".
+plot(NULL, xlim = c(-2, 2), ylim = c(-2,2))
+for (i in 1:50) {
+  lines(c(-2, 2), mu[i,], col = col.alpha("black",0.4))
+}
+
+# Fit Model for AvgFood
+fit02 <- quap(
+  alist(
+    W ~ dnorm(mu, sigma),
+    mu <- a + bF*F,
+    a ~ dnorm(0, 0.2),
+    bF ~ dnorm(0, 0.5),
+    sigma ~ dexp(1)
+  ), data = d
+)
+
+set.seed(42)
+
+prior02 <- extract.prior(fit02)
+
+# Use link() to compute mu without having to write out the linear function.
+mu <- link(fit02, post = prior02, data = list(F = c(-2, 2)))
+
+# Base plot plus "layers".
+plot(NULL, xlim = c(-2, 2), ylim = c(-2,2))
+for (i in 1:50) {
+  lines(c(-2, 2), mu[i,], col = col.alpha("black",0.4))
+}
+
+# Fit Model for GroupSize
+fit03 <- quap(
+  alist(
+    W ~ dnorm(mu, sigma),
+    mu <- a + bG*G,
+    a ~ dnorm(0, 0.2),
+    bG ~ dnorm(0, 0.5),
+    sigma ~ dexp(1)
+  ), data = d
+)
+
+set.seed(42)
+
+prior03 <- extract.prior(fit03)
+
+# Use link() to compute mu without having to write out the linear function.
+mu <- link(fit03, post = prior03, data = list(G = c(-2, 2)))
+
+# Base plot plus "layers".
+plot(NULL, xlim = c(-2, 2), ylim = c(-2,2))
+for (i in 1:50) {
+  lines(c(-2, 2), mu[i,], col = col.alpha("black",0.4))
+}
+
+
+```
+
+Well I don't know if my priors are good,not sure how to tell so I am going to move on to combining the variables.
+
+```{r q1 fit multi}
+# Fit model for Dag 1
+fitAF <- quap(
+  alist(
+    W ~ dnorm(mu, sigma),
+    mu <- a + bA*A + bF*F,
+    a ~ dnorm(0, 0.2),
+    bA ~ dnorm(0, 0.5),
+    bF ~ dnorm(0, 0.5),
+    sigma ~ dexp(1)
+  ), data = d
+)
+
+precis(fitAF)
+
+# Fit model for Dag 2
+fitAFG <- quap(
+  alist(
+    W ~ dnorm(mu, sigma),
+    mu <- a + bA*A + bF*F + bG*G,
+    a ~ dnorm(0, 0.2),
+    bA ~ dnorm(0, 0.5),
+    bF ~ dnorm(0, 0.5),
+    bG ~ dnorm(0, 0.5),
+    sigma ~ dexp(1)
+  ), data = d
+)
+
+precis(fitAFG)
+
+# Fit model without F
+fitAG <- quap(
+  alist(
+    W ~ dnorm(mu, sigma),
+    mu <- a + bA*A + bG*G,
+    a ~ dnorm(0, 0.2),
+    bA ~ dnorm(0, 0.5),
+    bG ~ dnorm(0, 0.5),
+    sigma ~ dexp(1)
+  ), data = d
+)
+
+precis(fitAG)
+
+
+# Plot all models together
+plot(coeftab(fitAF, fitAG, fitAFG))
+
+```
+In general as area gets bigger then the healthier the foxes are. However, there seems to be an association between groupsize and area where the larger the group the less healthy. There seems to be something happening between avgfood and groupsize that is changing the outcome. When adding avgfood to the model with groupsize there avgfood size spikes from negative to positive.
+
+2. Now infer the causal impact of adding food (avgfood) to a territory. Would this make foxes heavier? Which covariates do you need to adjust for to estimate the total causal influence of food?
+
+avgfood on weight. backdoor is area.
+
+I am going to model without area to see what happens
+
+```{r}
+
+# Fit model for food and weight
+fitF <- quap(
+  alist(
+    W ~ dnorm(mu, sigma),
+    mu <- a + bF*F,
+    a ~ dnorm(0, 0.2),
+    bF ~ dnorm(0, 0.5),
+    sigma ~ dexp(1)
+  ), data = d
+)
+
+precis(fitF)
+
+# Fit model for groupsize and weight
+fitG <- quap(
+  alist(
+    W ~ dnorm(mu, sigma),
+    mu <- a + bG*G,
+    a ~ dnorm(0, 0.2),
+    bG ~ dnorm(0, 0.5),
+    sigma ~ dexp(1)
+  ), data = d
+)
+
+precis(fitG)
+
+# Fit model for food groupsize and weight
+fitFG <- quap(
+  alist(
+    W ~ dnorm(mu, sigma),
+    mu <- a + bF*F + bG*G,
+    a ~ dnorm(0, 0.2),
+    bF ~ dnorm(0, 0.5),
+    bG ~ dnorm(0, 0.5),
+    sigma ~ dexp(1)
+  ), data = d
+)
+
+precis(fitFG)
+
+# Plot all models together
+plot(coeftab(fitF, fitG, fitFG))
+
+```
+Perhaps avgfood has no impact at all until you account for groupsize or area. these two variables you would need to adjust.
+
+3. Now infer the causal impact of group size. Which covariates do you need to adjust for? Looking at the posterior distribution of the resulting model, what do you think explains these data? That is, can you explain the estimates for all three problems? How do they make sense together?
+
+I kind of already checked out groupsize with the previous models and it looks like avgfood is the variable that needs to be adjusted becuase it affects groupsize the most. I think that this is happening becuase the more foxes in a group the more average food they will need to eat so the groupsize is negative association with weight since you have to increase avgfood inorder for there to be enough food for the larger group. 
+
+So in general the area increases the weight of the foxes when you also increase the average food, however increasing the groupsize will negatively affect the weight. 
+
+
+**Questions I have:**
+
+I mentioned this is class on Tuesday, but I don't understand how to pick priors. I am basically just using from examples we have had in the book but I don't really know what would be best given the data. Since the data is standardized I am doing the same thing as when we standardized for the WafflesDivorce data model. 
+
+I don't think I understand what the code should be for conditioning on a variable. Does conditioning mean to include the variable or to not include the variable when fitting the model? I think I am getting mixed up because of the example form the book of including the recall variable in the model lead to no result so we took it out and it improved the model (I think haha)
+
+Also I hope I am interpreting the plots correctly, might not be haha. Cause I am curious that in my example, the area dips once you add groupsize to the model. Is it ok that once you add a variable it influences another one?  I guess this is just showing how the variables are associated but I am wondering about when to add variables versus when not to add variables? Of course after looking at the DAGs you will know which variables influence each other so that can help you decide.
