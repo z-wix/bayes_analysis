@@ -25,12 +25,12 @@ the `httr` package has documentation to connect to many different API's from web
 # Packages
 library(tidyverse)
 library(httr)
-
-url <- "https://fortnite-api.p.rapidapi.com/stats/zRotation"
-
-response <- VERB("GET", url, add_headers(x_rapidapi_key = '751fdcf83amshb438c02e00cb7f9p189025jsne07cf0e465d3', x_rapidapi_host = 'fortnite-api.p.rapidapi.com'), content_type("application/octet-stream"))
-
-content(response, "text")
+# 
+# url <- "https://fortnite-api.p.rapidapi.com/stats/zRotation"
+# 
+# response <- VERB("GET", url, add_headers(x_rapidapi_key = '751fdcf83amshb438c02e00cb7f9p189025jsne07cf0e465d3', x_rapidapi_host = 'fortnite-api.p.rapidapi.com'), content_type("application/octet-stream"))
+# 
+# content(response, "text")
 
 ```
 
@@ -70,6 +70,8 @@ result <- httr::content(resp, as = "parsed")
 # Convert to dataset
 data <- data.frame(result)
 
+data
+
 ```
 
 It worked!! So now let me test getting some player stats. Eventually I will need to make a list of player names that I can look through and create a dataset of data for players.
@@ -80,10 +82,10 @@ It worked!! So now let me test getting some player stats. Eventually I will need
 url <- "https://api.fortnitetracker.com/v1/profile"
 
 # Platform
-platform <- "kbm"
+platform <- "gamepad"
 
 # GamerTag
-gamertag <- "ninja"
+gamertag <- "princesstress"
 
 # Connect to API
 resp <- httr::GET(url = paste(url, platform, gamertag, sep = "/"),
@@ -92,12 +94,10 @@ resp <- httr::GET(url = paste(url, platform, gamertag, sep = "/"),
 # Check for any errors
 http_error(resp) 
 
-str(resp)
+# str(resp)
 
 # Get content use "parsed" to make it an r object
 result <- httr::content(resp, as = "parse")
-
-result$stats
 
 # Convert to dataset
 data <- data.frame(result)
@@ -105,4 +105,58 @@ data <- data.frame(result)
 
 ```
 
+The result is pretty complex but has all the information we need. We just need to clean it up and make it easier to understand. first I am going to just get the lifetime stats of the player along with their identifying information.
+
+There are levels and groups to the data. 
+
+**Overview Level** --> identifying information
+- account ID
+- Avatar
+- Platform ID
+- Platform Name
+- Platform Name Long
+- Epic User Handle
+
+**Stats Level** --> Recent Game Stats
+
+Stats for every time of game mode:
+- p2    = Solo Matches
+- p10   = Duos Matches
+- p9    = Squad Matches
+- ltm   = Limited Time Matches (special game modes, etc)
+
+Within each game mode there are these statistics:
+- trnRating   = Tracker Network Rating
+- score       = Score
+- top1        = Wins (Victory Royales)
+- top3        = Top 3 placement
+- 
+
+**Lifetime Stats** --> Lifetime Overall Stats
+
+The first six levels are all about placement in matches:
+- 1     = Top 5 placement
+- 2     = Top 3
+- 3     = Top 6
+- 4     = Top 10
+- 5     = Top 12
+- 6     = Top 25
+
+The next six are various other stats:
+- 7     = Score (of points from in game XP)
+- 8     = Matches Played
+- 9     = Wins (Victory Royales)
+- 10    = Win Ratio %
+- 11    = Eliminations
+- 12    = Kills/Death Ratio %
+
+**Recent Matches** --> Recent Match Session Stats
+
+
+
+```{r}
+
+result
+
+```
 
