@@ -1,0 +1,13 @@
+---
+title: "Ulysses Compass"
+subtitle: "Week 5"
+author: "Zack Wixom"
+output: github_document
+---
+
+```{r opts, echo = FALSE}
+# puts any figures made into this folder
+knitr::opts_chunk$set(
+  fig.path = "../Figures/"
+)
+```
