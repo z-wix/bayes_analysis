@@ -1,0 +1,21 @@
+---
+title: "Super Smash Bros Data"
+subtitle: "Project 2"
+author: "Zack Wixom"
+output: github_document
+---
+
+```{r opts, echo = FALSE}
+# puts any figures made into this folder
+knitr::opts_chunk$set(
+  fig.path = "../Figures/"
+)
+```
+
+So my first attempt to get data on Fortnite players to understand earnings and victory royales didn't work. My API didn't have sufficient data for the players I wanted to analyze. So I am going to try to go a different approach with Super Smash Bros.
+
+I think that I can build a model to understand the relationship between character stats and their win rates. I want to see if frame data, weight, speed, etc, will increase or decrease chance of winning a match against another character. Ideally I will be able to pit two characters up against each other and see which one wins.
+
+In order to do this I need two sources of data: Character data and Match data. I know of a website that has frame data for every character and I know of at least one data set of match results data. I am not sure if I can get more but the more the better so I can see the match ups for every character so I can make some kind of comparison between the characters. Not sure if this is possible but I will see. 
+
+
