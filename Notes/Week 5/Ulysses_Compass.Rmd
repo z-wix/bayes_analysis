@@ -12,3 +12,38 @@ knitr::opts_chunk$set(
 )
 ```
 
+## Ulysses Compass
+
+
+
+
+## Model Comparison
+
+### Entropy and Accuracy
+
+How do you nagivate between hyrda of overfitting and votex of underfitting?
+
+**Figure out the target of model performance**
+
+ALso establish deviance as an approximation of relative distances between two probability distributions.
+
+### Firing the Weatherperson
+
+Accuracy depends on definition of target. No universal best target. Two dimensions to focus on:
+
+1. Cost Benefit Analysis --> How much does it cost when we are wrong? or win when we are right?
+
+2. Accuracy in context --> Some predictions are easier than others. We need a way to judge accuracy that accounts for how much a model could possibly improve prediction.
+
+### Information and Uncertainty
+
+We want to use a log probability of the data to score the accuracy of competing models. So how do we measure distance form perfect prediction?
+
+How much uncertainty reduced by learning an outcome?
+
+*Information:* The reduction in uncertainty when we learn an outcome.
+
+
+
+
+
