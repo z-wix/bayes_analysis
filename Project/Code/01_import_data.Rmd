@@ -166,14 +166,20 @@ The next six are various other stats:
 
 **Recent Matches** --> Recent Match Session Stats
 
+### Extracting Season Solo Match Stats
+
 My plan is to extract each of these datasets so that I can tidy up the data.
 
-```{r solo stats}
+```{r id data}
 # Create data with just Idenfitication Data
 id_data <- data.frame(result[1:6]) 
 
 # username
 id <- result$epicUserHandle
+
+```
+
+```{r solo stats test}
 
 # Loop to get all the stats for Solo
 for (i in seq(19)) {
@@ -198,13 +204,116 @@ for (i in seq(19)) {
   solo_data
 }
 
+solo_data
 ```
 
 Perfect I was able to create a loop that allowed me to grab all of the stats for the Solo gamemode. 
 
-```{r}
+Now let me do the same thing but for the lifetime stats.
 
+```{r lifetime stat test}
+# username
+id <- result$epicUserHandle
 
+# Loop to get all the stats for Solo
+for (i in seq(12)) {
+  stat_level <- result$lifeTimeStats[[i]]
+  
+  stat_label <- stat_level[1]
+  
+  stat_value <- stat_level[2]
+  
+  stat_df <- data.frame(stat_value)
+  
+  names(stat_df)[names(stat_df) == "value"] <- stat_label
+  
+  if(i == 1){
+    life_stat <- stat_df %>% 
+      mutate(
+        id = id
+      )
+  }else{
+    life_stat <- cbind(life_stat, stat_df)
+  }
+  life_stat
+}
+
+life_stat
+```
+
+Now I have the lifetime stats as well using a loop. 
+
+I realized that I need a list of gamertags that I will use to grab stats for. So I am going to add that dataset which was found on [Kaggle](https://www.kaggle.com/jackdaoud/esports-earnings-for-players-teams-by-game?select=highest_earning_players.csv)
+
+This dataset includes total earnings of top 100 players of various games. I will filter by Fortnite and then use those names in my data pull.
+
+*Note: data has been updated last 2 months*
+
+```{r earnings data}
+
+# Pull earnings data
+earnings_data <- read_csv(here::here("Project", "Data", "highest_earning_players.csv")) %>% 
+  filter(Game == "Fortnite") %>% 
+  select(CurrentHandle, TotalUSDPrize)
+
+# Get list of player names
+player_names <- earnings_data$CurrentHandle
+
+# test to see if I can index
+player_names[1]
+```
+
+Now I have a data set that has the current gamertag of the player and their total earnings in USD.
+
+```{r extract data}
+# Platform
+platform <- "kbm"
+
+# GamerTag
+gamertag <- "bugha"
+
+# Connect to API
+resp <- httr::GET(url = paste(url, platform, gamertag, sep = "/"),
+    add_headers('TRN-API-Key' = api_key))
+
+# Check for any errors
+http_error(resp) 
+
+# str(resp)
+
+# Get content use "parsed" to make it an r object
+result <- httr::content(resp, as = "parse")
+
+# username
+id <- result$epicUserHandle
+
+# Loop to get all the stats for Solo
+for (i in seq(12)) {
+  stat_level <- result$lifeTimeStats[[i]]
+  
+  stat_label <- stat_level[1]
+  
+  stat_value <- stat_level[2]
+  
+  stat_df <- data.frame(stat_value)
+  
+  names(stat_df)[names(stat_df) == "value"] <- stat_label
+  
+  if(i == 1){
+    life_stat <- stat_df %>% 
+      mutate(
+        id = id
+      )
+  }else{
+    life_stat <- cbind(life_stat, stat_df)
+  }
+  life_stat
+}
+
+life_stat
 
 ```
+
+So I have run into the issue that not all fortnite players have the stats on the API. It has some but it isn't completely consistent. So I might need to change up my data source.
+
 
