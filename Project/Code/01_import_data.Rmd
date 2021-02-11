@@ -126,11 +126,25 @@ Stats for every time of game mode:
 - ltm   = Limited Time Matches (special game modes, etc)
 
 Within each game mode there are these statistics:
-- trnRating   = Tracker Network Rating
-- score       = Score
-- top1        = Wins (Victory Royales)
-- top3        = Top 3 placement
-- 
+- trnRating     = Tracker Network Rating
+- score         = Score
+- top1          = Wins (Victory Royales)
+- top3          = Top 3 placement
+- top5          = Top 5 
+- top6          = Top 6 
+- top10         = Top 10 
+- top12         = Top 12
+- top25         = Top 25
+- kd            = Kill/Death Ratio
+- winRatio      = Win Ratio
+- matches       = Number of Matches
+- kills         = Number of Eliminations
+- minutesPlayed = Time Played in Minutes
+- kpm           = Kills per Minute
+- kpg           = Kills per Match
+- avgTimePlayed = Average Match Time
+- scorePerMatch = Score per Match
+- scorePerMin   = Score per Minute
 
 **Lifetime Stats** --> Lifetime Overall Stats
 
@@ -152,11 +166,45 @@ The next six are various other stats:
 
 **Recent Matches** --> Recent Match Session Stats
 
+My plan is to extract each of these datasets so that I can tidy up the data.
 
+```{r solo stats}
+# Create data with just Idenfitication Data
+id_data <- data.frame(result[1:6]) 
+
+# username
+id <- result$epicUserHandle
+
+# Loop to get all the stats for Solo
+for (i in seq(19)) {
+  x <- result$stats$p2[i]
+  
+  y <- x[[1]]
+  
+  z <- y[[4]]
+  
+  a <- data.frame(z)
+  
+  names(a)[names(a) == "z"] <- y[[2]]
+  
+  if(i == 1){
+    solo_data <- a %>% 
+      mutate(
+        id = id
+      )
+  }else{
+    solo_data <- cbind(solo_data, a)
+  }
+  solo_data
+}
+
+```
+
+Perfect I was able to create a loop that allowed me to grab all of the stats for the Solo gamemode. 
 
 ```{r}
 
-result
+
 
 ```
 
