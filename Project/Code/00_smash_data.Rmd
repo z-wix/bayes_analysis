@@ -12,10 +12,137 @@ knitr::opts_chunk$set(
 )
 ```
 
+```{r packages, eval = FALSE, message = FALSE}
+# Load Packages
+library(tidyverse)
+library(tidytext)
+library(textdata)
+library(rvest)
+
+```
+
 So my first attempt to get data on Fortnite players to understand earnings and victory royales didn't work. My API didn't have sufficient data for the players I wanted to analyze. So I am going to try to go a different approach with Super Smash Bros.
 
 I think that I can build a model to understand the relationship between character stats and their win rates. I want to see if frame data, weight, speed, etc, will increase or decrease chance of winning a match against another character. Ideally I will be able to pit two characters up against each other and see which one wins.
 
-In order to do this I need two sources of data: Character data and Match data. I know of a website that has frame data for every character and I know of at least one data set of match results data. I am not sure if I can get more but the more the better so I can see the match ups for every character so I can make some kind of comparison between the characters. Not sure if this is possible but I will see. 
+In order to do this I need two sources of data: Character data and Match data. I know of a [website](https://ultimateframedata.com/) that has frame data for every character and I know of at least one data set of match results data. I am not sure if I can get more but the more the better so I can see the match ups for every character so I can make some kind of comparison between the characters. Not sure if this is possible but I will see. 
+
+```{r webscrapping}
+
+## Web scrapping for Frame Data
+tables <- read_html("https://ultimateframedata.com/stats.php") %>%
+  html_nodes("table")
+
+# # Practice table webscrape
+# air_acceleration <- tables %>% 
+#   .[1] %>%
+#   html_table(fill = TRUE)
+
+# Loop to grab all data tables
+for (i in 1:14) {
+  x <- tables %>% 
+  .[i] %>%
+  html_table(fill = TRUE)
+  
+  write_csv(as.data.frame(x), paste("smash", i, ".csv", sep = ""))
+}
+
+# Explore the varialbe names
+acceleration <- read.csv(here::here("Project", "Data", "smash1_acceleration.csv"))
+airspeed <- read.csv(here::here("Project", "Data", "smash2_airspeed.csv"))
+head(acceleration)
+head(airspeed)
+
+
+```
+
+Every Data table has a identifier, `Character`, variable. This will be used to join together the datasets. However, there are some variable names that are repeated but need to be fixed before joining together. For example, every dataset comes with the ranking of the characters for that statistic. So that will need to be changed so that we can differentiate before each table's ranking.
+
+```{r load data}
+
+# Load in Air Acceleration Data >>> Needed to define variables better to avoid confusion
+acceleration <- read.csv(here::here("Project", "Data", "smash1_acceleration.csv")) %>% 
+  rename(
+    rank_accel = Rank,
+    base_accel = Base,
+    additional_accel = Additional,
+    max_accel = Max
+  )
+
+# Load in Air Speed Data
+airspeed <- read.csv(here::here("Project", "Data", "smash2_airspeed.csv")) %>% 
+  rename(
+    rank_airspeed = Rank
+  )
+
+# Load in Fall Speed Data
+fallspeed <- read.csv(here::here("Project", "Data", "smash3_fallspeed.csv")) %>% 
+  rename(
+    rank_fallspeed = Rank
+  )
+
+# Load in Gravity Data
+gravity <- read.csv(here::here("Project", "Data", "smash4_gravity.csv"))
+
+# Load in Jump Height Data
+jumpheight <- read.csv(here::here("Project", "Data", "smash5_jumpheight.csv")) %>% 
+  rename(
+    shorthop_height = Short.Hop,
+    fullhop_height = Full.Hop,
+    airjump_height = Air.Jump
+  )
+
+# Load in Jump Duration Data
+jumpduration <- read.csv(here::here("Project", "Data", "smash6_jumpduration.csv")) %>% 
+  rename(
+    shorthop_dur = Short.Hop,
+    fullhop_dur = Full.Hop
+  )
+
+# Load in Weight Data
+weight <- read.csv(here::here("Project", "Data", "smash7_weight.csv")) %>% 
+  rename(
+    rank_weight = Rank
+  )
+
+# Load in Landing Data
+landing <- read.csv(here::here("Project", "Data", "smash8_landing.csv"))
+
+# Load in Walk Speed Data
+walkspeed <- read.csv(here::here("Project", "Data", "smash9_walkspeed.csv")) %>% 
+  rename(
+    rank_walkspeed = Rank
+  )
+
+# Load in Dash and Run Data
+dashrun <- read.csv(here::here("Project", "Data", "smash10_dashrun.csv"))
+
+# Load in Dash Turn Around Data
+dashturn <- read.csv(here::here("Project", "Data", "smash11_dashturnaround.csv")) %>% 
+  rename(
+    Fast.Initial.Dash = Fast..Initial.Dash.,
+    Normal.Buffer.Window = Normal..Buffer.Window.,
+    Slow.Full.Dash = Slow..Full.Dash.
+  )
+
+# Load in Grab Data
+grab <- read.csv(here::here("Project", "Data", "smash12_grab.csv"))
+
+
+## Lots of changes for Ledge Stats
+# Load in LEdge Stats Data
+ledge <- read.csv(here::here("Project", "Data", "smash13_ledge.csv"))
+
+# Load in Out of Shield Data
+outofshield <- read.csv(here::here("Project", "Data", "smash14_outofshield.csv"))
+
+```
+
+
+```{r join data}
+
+
+
+```
 
 
