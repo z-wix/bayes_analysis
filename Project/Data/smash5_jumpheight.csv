@@ -1,4 +1,4 @@
-Character,Full.Hop,Short.Hop,Air.Jump
+Character,fullhop_height,shorthop_height,airjump_height
 Falco,50.51,17.34,50.51
 Greninja,46,22.11,46
 Zero Suit Samus,44.5,21.35,44.2

@@ -1,4 +1,4 @@
-Rank,Character,Base,Additional,Max
+rank_accel,Character,base_accel,additional_accel,max_accel
 1,Jigglypuff,0.05,0.08,0.13
 2-4,Wario,0.04,0.08,0.12
 2-4,Peach,0.04,0.08,0.12

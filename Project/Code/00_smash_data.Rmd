@@ -61,7 +61,7 @@ Every Data table has a identifier, `Character`, variable. This will be used to j
 ```{r load data}
 
 # Load in Air Acceleration Data >>> Needed to define variables better to avoid confusion
-acceleration <- read.csv(here::here("Project", "Data", "smash1_acceleration.csv")) %>% 
+acceleration <- read.csv(here::here("Project", "Data", "smash1_acceleration.csv")) %>%
   rename(
     rank_accel = Rank,
     base_accel = Base,
@@ -69,17 +69,23 @@ acceleration <- read.csv(here::here("Project", "Data", "smash1_acceleration.csv"
     max_accel = Max
   )
 
+write_csv(acceleration, here::here("Project", "Data", "smash1_acceleration.csv"))
+
 # Load in Air Speed Data
 airspeed <- read.csv(here::here("Project", "Data", "smash2_airspeed.csv")) %>% 
   rename(
     rank_airspeed = Rank
   )
 
+write_csv(airspeed, here::here("Project", "Data", "smash2_airspeed.csv"))
+
 # Load in Fall Speed Data
 fallspeed <- read.csv(here::here("Project", "Data", "smash3_fallspeed.csv")) %>% 
   rename(
     rank_fallspeed = Rank
   )
+
+write_csv(fallspeed, here::here("Project", "Data", "smash3_fallspeed.csv"))
 
 # Load in Gravity Data
 gravity <- read.csv(here::here("Project", "Data", "smash4_gravity.csv"))
@@ -92,6 +98,8 @@ jumpheight <- read.csv(here::here("Project", "Data", "smash5_jumpheight.csv")) %
     airjump_height = Air.Jump
   )
 
+write_csv(jumpheight, here::here("Project", "Data", "smash5_jumpheight.csv"))
+
 # Load in Jump Duration Data
 jumpduration <- read.csv(here::here("Project", "Data", "smash6_jumpduration.csv")) %>% 
   rename(
@@ -99,11 +107,15 @@ jumpduration <- read.csv(here::here("Project", "Data", "smash6_jumpduration.csv"
     fullhop_dur = Full.Hop
   )
 
+write_csv(jumpduration, here::here("Project", "Data", "smash6_jumpduration.csv"))
+
 # Load in Weight Data
 weight <- read.csv(here::here("Project", "Data", "smash7_weight.csv")) %>% 
   rename(
     rank_weight = Rank
   )
+
+write_csv(weight, here::here("Project", "Data", "smash7_weight.csv"))
 
 # Load in Landing Data
 landing <- read.csv(here::here("Project", "Data", "smash8_landing.csv"))
@@ -113,6 +125,8 @@ walkspeed <- read.csv(here::here("Project", "Data", "smash9_walkspeed.csv")) %>%
   rename(
     rank_walkspeed = Rank
   )
+
+write_csv(walkspeed, here::here("Project", "Data", "smash9_walkspeed.csv"))
 
 # Load in Dash and Run Data
 dashrun <- read.csv(here::here("Project", "Data", "smash10_dashrun.csv"))
@@ -125,9 +139,10 @@ dashturn <- read.csv(here::here("Project", "Data", "smash11_dashturnaround.csv")
     Slow.Full.Dash = Slow..Full.Dash.
   )
 
+write_csv(dashturn, here::here("Project", "Data", "smash11_dashturnaround.csv"))
+
 # Load in Grab Data
 grab <- read.csv(here::here("Project", "Data", "smash12_grab.csv"))
-
 
 ## Lots of changes for Ledge Stats
 # Load in LEdge Stats Data
@@ -138,10 +153,26 @@ outofshield <- read.csv(here::here("Project", "Data", "smash14_outofshield.csv")
 
 ```
 
+Now to join all the datasets together.
 
 ```{r join data}
 
+frame_data <- acceleration %>% 
+  full_join(airspeed, by = "Character") %>% 
+  full_join(fallspeed, by = "Character") %>% 
+  full_join(gravity, by = "Character") %>% 
+  full_join(jumpheight, by = "Character") %>% 
+  full_join(jumpduration, by = "Character") %>% 
+  full_join(weight, by = "Character") %>% 
+  full_join(landing, by = "Character") %>% 
+  full_join(walkspeed, by = "Character") %>% 
+  full_join(dashrun, by = "Character") %>% 
+  full_join(dashturn, by = "Character") %>% 
+  full_join(grab, by = "Character") %>% 
+  full_join(ledge, by = "Character") %>% 
+  full_join(outofshield, by = "Character")
 
+write_csv(frame_data, here::here("Project", "Data", "frame_data.csv"))
 
 ```
 

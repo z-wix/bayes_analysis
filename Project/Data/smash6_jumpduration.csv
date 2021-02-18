@@ -1,4 +1,4 @@
-Character,Short.Hop,Full.Hop,SH.Fast.Fall,FH.Fast.Fall
+Character,shorthop_dur,fullhop_dur,SH.Fast.Fall,FH.Fast.Fall
 Mario,40,56,28,39
 Donkey Kong,40,53,27,37
 Link,33,45,22,30
