@@ -177,3 +177,73 @@ write_csv(frame_data, here::here("Project", "Data", "frame_data.csv"))
 ```
 
 
+### Match Data
+
+Now that I have the frame data collected. I can get the Match data which will tell me the wins and losses of each character. My goal is to create a model that will determine if a character wins or losses. Maybe a win rate or discrete explanatory variable we will see.
+
+```{r connect to database}
+library(DBI)
+library(odbc)
+# # Create an ephemeral in-memory RSQLite database
+# con <- dbConnect(RSQLite::SQLite(), dbname = "ultimate_player_database.db")
+# 
+# dbListTables(con)
+# 
+# con <- dbConnect(RSQLite::SQLite(), dbname = "ultimate_player_database.db")
+# 
+# con <- dbConnect(
+#   RPostgreSQL::PostgreSQL(), "ultimate_player_database.db",
+# )
+# 
+# dbListTables(con)
+# 
+# ## Connect to an existing database
+# test <- dbConnect(RSQLite::SQLite(), 'https://github.com/smashdata/ThePlayerDatabase/releases/download/v2021.02.05/ultimate_player_database.db')
+# 
+# dbListTables(test)
+# 
+# file.exists("https://github.com/smashdata/ThePlayerDatabase/releases/download/v2021.02.05/ultimate_player_database.db")
+# 
+# file.info("https://github.com/smashdata/ThePlayerDatabase/releases/download/v2021.02.05/ultimate_player_database.db")
+# 
+# con <- dbConnect(odbc(), "ultimate_player_database.db")
+
+```
+
+```{r}
+library(RSQLite)
+temp <- tempfile()
+# download.file("https://github.com/smashdata/ThePlayerDatabase/releases/download/v2021.02.05/ultimate_player_database.db", temp)
+db <- dbConnect(RSQLite::SQLite(), dbname=temp)
+dbListTables(db)
+
+```
+
+```{r}
+# Packages
+library(tidyverse)
+library(httr)
+library(jsonlite)
+
+# # # Save API Key to Private Folder
+# # saveRDS(smash_key, here::here("Private", "smash_key.rds"))
+# 
+# # Read in API Key
+# api_key <- readRDS(here::here("Private", "smash_key.rds"))
+# 
+# # Url to API
+# url <- "https://api.smash.gg/gql/alpha"
+# 
+# resp <- httr::GET(url,
+#           add_headers("Bearer" = api_key))
+# 
+# httr::GET(url,
+#           add_headers("Bearer" = api_key))
+# 
+# # Check for any errors
+# http_error(resp) 
+
+
+
+```
+
