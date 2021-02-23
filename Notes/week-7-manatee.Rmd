@@ -4,3 +4,15 @@ subtitle: "Week 7"
 output: github_document
 ---
 
+## Chapter 8 - Conditional Manatees
+
+Off the shelf vs. Bespoke
+
+- We provide tools and golems which are useful but also counterproductive
+
+"Seek first to understand, then to be understood"
+
+
+
+
+
