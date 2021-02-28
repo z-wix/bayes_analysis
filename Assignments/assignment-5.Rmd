@@ -22,58 +22,137 @@ library(rethinking)
 # Load Data
 data("Wines2012")
 
+d <- Wines2012
+
 ```
 
-```{r standardize vars}
-# Standardize Variables
-wines <- as_tibble(Wines2012) %>% 
-  mutate(
-    score = standardize(score),
-    wine.amer = standardize(wine.amer),
-    judge.amer = standardize(judge.amer)
-  )
-```
+
 
 ## Question 1
 
-```{r index vars}
-## Create Index Variables for Judge and Wine
-
-# inspect levels of wines
-levels(wines$wine)
-
-# inspect levels of judges
-levels(wines$judge)
-
-# index the wine variable
-wines$wine_id <- as.integer(wines$wine)
-
-# index the wine variable
-wines$judge_id <- as.integer(wines$judge)
-
+```{r q1 standardize and index vars}
+# Standardize  and Index Variables
+wines <- list(
+    score = standardize(d$score),
+    judge_id = as.integer(d$judge),
+    wine_id = as.integer(d$wine)
+)
 ```
 
-```{r linear model}
+Not sure if I need to also do the log and std of the outcome variable or not. I tried and it wasn't working so I will keep with just the original standardized `score` variable.
+
+```{r q1 linear model}
 # Fit model
 m1.1 <- quap(
   alist(
     score ~ dnorm(mu, sigma),
-    mu <- a[wine_id] + b[judge_id],
-    a[wine_id] ~ dnorm(0, 0.2),
-    b[judge_id] ~ dnorm(0, 0.2),
+    mu <- a[judge_id] + b[wine_id],
+    a[judge_id] ~ dnorm(0, 0.5),
+    b[wine_id] ~ dnorm(0, 0.5),
     sigma ~ dexp(1)
   ), data = wines
 )
 
-precis(m1.1, 2)
+plot(precis(m1.1, 2))
+```
+
+```{r q1 mcmc}
+# Fit Model
+m1.2 <- ulam(
+  alist(
+    score ~ dnorm(mu, sigma),
+    mu <- a[judge_id] + b[wine_id],
+    a[judge_id] ~ dnorm(0, 0.5),
+    b[wine_id] ~ dnorm(0, 0.5),
+    sigma ~ dexp(1)
+  ), data=wines, chains=4, cores = 4)
+
+plot(precis(m1.2, depth = 2))
+
+# pairs(m1.2)
+```
+
+__How do you interpret the variation among individual judges and individual wines?__
+
+I am assuming that different judges have different preferences for certain wines.
+
+__Do you notice any patterns, just by plotting the differences?__
+
+I wasn't able to get to get the plot to work, perhaps my priors are off as well. But I do see there are alot of differences between the judges and not the wines, maybe suggesting that there isn't much difference between them.
+
+__Which judges gave the highest/lowest ratings?__
+
+```{r q1 judge summary}
+d %>% 
+  group_by(judge) %>% 
+  summarize(
+    id = max(as.integer(judge))
+  )
+```
+
+_Lowest_:  Robert Hodgson, Jean-M Cardebat, and Tyler Colman.
+
+_Highest_: John Foy and Linda Murphy.
+
+__Which wines were rated worst/best on average?__
+
+```{r q1 wine summary}
+d %>% 
+  group_by(wine) %>% 
+  summarize(
+    id = max(as.integer(wine))
+  )
+```
+
+_Highest wines:_ B2 and J2
+
+_Lowest wines:_ I2 and C2
+
+## Question 2
+
+```{r q2 standardize}
+# Standardize  and Index Variables
+wines2 <- list(
+    score = standardize(d$score),
+    wine.amer = d$wine.amer,
+    judge.amer = d$judge.amer,
+    flight_id = as.integer(d$flight)
+)
+
+```
+
+```{r q2 mcmc}
+
+wines <- list(
+  score = wines$score,
+  flight = as.integer(wines$flight),
+  wine.amer_std = wines$wine.amer / max(wines$wine.amer),
+  judge.amer_std = wines$judge.amer / max(wines$judge.amer)
+)
+
+str(wine_slim)
+
+# Fit Model
+m1.2 <- ulam(
+  alist(
+    score ~ dnorm(mu, sigma),
+    mu <- a[flight] + b[wine.amer] + c[judge.amer],
+    a[flight] ~ dnorm(1, 0.3),
+    b[wine.amer] ~ dnorm(0, 0.2),
+    c[judge.amer] ~ dnorm(0, 0.2),
+    sigma ~ dexp(1)
+  ), data=wine_slim, chains=2, cores = 2)
+
+show(m1.2)
+
+plot(precis(m1.2, depth = 2))
+
+
 ```
 
 
 
-How do you interpret the variation among individual judges and individual wines? 
 
-Do you notice any patterns, just by plotting the differences?
 
-Which judges gave the highest/lowest ratings?
 
-Which wines were rated worst/best on average?
+
