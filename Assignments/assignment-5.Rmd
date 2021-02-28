@@ -4,26 +4,76 @@ subtitle: "MCMC"
 output: github_document
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+```{r opts, echo = FALSE}
+# puts any figures made into this folder
+knitr::opts_chunk$set(
+  fig.path = "../Figures/"
+)
 ```
 
-## R Markdown
+```{r packages}
+# Packages
+library(tidyverse)
+library(cmdstanr)
+library(posterior)
+library(bayesplot)
+library(rethinking)
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+# Load Data
+data("Wines2012")
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
 ```
 
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
+```{r standardize vars}
+# Standardize Variables
+wines <- as_tibble(Wines2012) %>% 
+  mutate(
+    score = standardize(score),
+    wine.amer = standardize(wine.amer),
+    judge.amer = standardize(judge.amer)
+  )
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+## Question 1
+
+```{r index vars}
+## Create Index Variables for Judge and Wine
+
+# inspect levels of wines
+levels(wines$wine)
+
+# inspect levels of judges
+levels(wines$judge)
+
+# index the wine variable
+wines$wine_id <- as.integer(wines$wine)
+
+# index the wine variable
+wines$judge_id <- as.integer(wines$judge)
+
+```
+
+```{r linear model}
+# Fit model
+m1.1 <- quap(
+  alist(
+    score ~ dnorm(mu, sigma),
+    mu <- a[wine_id] + b[judge_id],
+    a[wine_id] ~ dnorm(0, 0.2),
+    b[judge_id] ~ dnorm(0, 0.2),
+    sigma ~ dexp(1)
+  ), data = wines
+)
+
+precis(m1.1, 2)
+```
+
+
+
+How do you interpret the variation among individual judges and individual wines? 
+
+Do you notice any patterns, just by plotting the differences?
+
+Which judges gave the highest/lowest ratings?
+
+Which wines were rated worst/best on average?
