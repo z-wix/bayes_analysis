@@ -11,7 +11,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-```{r packages}
+```{r packages, message=FALSE}
 # Packages
 library(tidyverse)
 library(cmdstanr)
@@ -26,8 +26,6 @@ d <- Wines2012
 
 ```
 
-
-
 ## Question 1
 
 ```{r q1 standardize and index vars}
@@ -41,7 +39,7 @@ wines <- list(
 
 Not sure if I need to also do the log and std of the outcome variable or not. I tried and it wasn't working so I will keep with just the original standardized `score` variable.
 
-```{r q1 linear model}
+```{r q1 linear model, message = FALSE}
 # Fit model
 m1.1 <- quap(
   alist(
@@ -53,10 +51,13 @@ m1.1 <- quap(
   ), data = wines
 )
 
+```
+
+```{r q1.1 precis}
 plot(precis(m1.1, 2))
 ```
 
-```{r q1 mcmc}
+```{r q1 mcmc, message = FALSE}
 # Fit Model
 m1.2 <- ulam(
   alist(
@@ -71,9 +72,10 @@ m1.2 <- ulam(
   cores = 4
 )
 
-plot(precis(m1.2, depth = 2))
+```
 
-# pairs(m1.2)
+```{r, q1.2 plot}
+plot(precis(m1.2, depth = 2))
 ```
 
 __How do you interpret the variation among individual judges and individual wines?__
@@ -125,7 +127,7 @@ wines2 <- list(
 
 ```
 
-```{r q2 mcmc}
+```{r q2 mcmc, message = FALSE}
 # Fit Model
 m1.2 <- ulam(
   alist(
@@ -141,9 +143,10 @@ m1.2 <- ulam(
   cores = 4
 )
 
+```
+
+```{r q2 plot}
 plot(precis(m1.2, depth = 2))
-
-
 ```
 
 __What do you conclude about the differences among the wines and judges?__
@@ -152,11 +155,82 @@ It looks like there aren't differences between the red and white wine scoring bu
 
 ## Question 3
 
+For this question I am doing a different approach. Not sure which one is the best in general but I think it is better for an indicator approach to the predictor variables, than mbefore I was using index variables.
 
+```{r q3 standardize}
+# Standardize and M<ake Indicator Variables
+wines3 <- list(
+    score = standardize(d$score),
+    wine = d$wine.amer,
+    judge = d$judge.amer,
+    flight = ifelse(d$flight == "red", 1, 0)
+)
+```
 
+For the interactions I am doing three different ones: _wine & judge, wine & flight,_ and _judge & flight._
 
+I saw something that suggested to do interaction prior tighter so that's why I chose these priors.
 
+```{r q3 mcmc, message = FALSE}
+# Fit Model
+m1.3 <- ulam(
+  alist(
+    score ~ dnorm(mu, sigma),
+    mu <- a + 
+      bW*wine + 
+      bJ*judge + 
+      bF*flight + 
+      bWJ*wine*judge + 
+      bWF*wine*flight + 
+      bJF*judge*flight,
+    a ~ dnorm(0, 0.2),
+    bW ~ dnorm(0, 0.5),
+    bJ ~ dnorm(0, 0.5),
+    bF ~ dnorm(0, 0.5),
+    bWJ ~ dnorm(0, 0.25),
+    bWF ~ dnorm(0, 0.25),
+    bJF ~ dnorm(0, 0.25),
+    sigma ~ dexp(1)
+  ), 
+  data = wines3, 
+  chains = 4, 
+  cores = 4
+)
 
+```
+
+```{r q3 plot}
+plot(precis(m1.3))
+```
+
+Now to use `link()` to interpret the models predictions
+
+```{r q3 link}
+# Predictive data
+pred_data <- tibble(
+  wine = rep(0:1, times = 4),
+  judge = rep(0:1, each = 4),
+  flight = rep(c(0,0,1,1), times = 2)
+)
+
+# Link
+mu <- link(m1.3, data = pred_data)
+
+# Row names for plot easier interpretation (found a resource to add these feature made it easier)
+row_labels <- paste(ifelse(pred_data$wine == 1, "A", "F"),
+                    ifelse(pred_data$judge == 1, "A", "F"),
+                    ifelse(pred_data$flight == 1, "R", "W"), 
+                    sep = "")
+
+# Plot precis()
+plot(precis(list(mu = mu), 2), labels = row_labels)
+```
+
+__What do you conclude about the features and the scores? Can you relate the results of your model(s) to the individual judge and wine inferences from Problem 1?__
+
+Now with labels I can read this better and see that American Red Wine that scores low from French judge. While French Red Wine scores high from American Judge.
+
+In general this is similar to my inferences from problem one. It looks like French judges score low on average and american score higher. French wines score higher compared to American ones, but there isn't much difference between Red and White wines that I can realy tell here.
 
 
 
