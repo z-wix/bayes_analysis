@@ -34,7 +34,44 @@ No guarantee that this is best distribution for the real problem but is most con
 
 **Not about the data, it is about the model**
 
+## Generalize Linear Models
 
+A Gaussian liklihood is *NOT* the best option when the outcome variable is discrete or bounded.
+
+- May predict negative values when that is impossible
+
+**2 changes from Linear Model:**
+
+- The liklihood is binomial instead of gaussian
+
+- the f(p) instead of mu which represents a link function
+
+### Exponential Family
+
+**Exponential Distribution:**
+
+- Constrained by 0 (can't be negative)
+
+- Commonly used to represent displacement, distance, or duration
+
+- Maximum entropy among all non-negative continuous distributions with the same average displacement
+
+
+**Gamma Distribution:**
+
+- Constrained by 0 (can't be negative)
+
+- Commonly used to represent displacement, distance, or duration
+
+- it can have a peak > 0
+
+- Cancer onset require multiple events
+
+**Poisson Distribution:**
+
+- Special case of a binomial distribution
+
+- Occurs when the number of trial (n) is very large and the probability (p) is very small
 
 
 
