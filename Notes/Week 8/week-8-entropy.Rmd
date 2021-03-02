@@ -1,0 +1,18 @@
+---
+title: "Big Entropy and Generalized Linear Model"
+subtitle: "Week 8 - Chapter 10"
+output: github_document
+---
+
+```{r opts, echo = FALSE}
+# puts any figures made into this folder
+knitr::opts_chunk$set(
+  fig.path = "../Figures/Week8/"
+)
+```
+
+
+
+
+
+
