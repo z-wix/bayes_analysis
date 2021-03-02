@@ -1,0 +1,213 @@
+---
+title: "Markov Chain Monte Carlo "
+subtitle: "Week 7"
+output: github_document
+---
+
+```{r opts, echo = FALSE}
+# puts any figures made into this folder
+knitr::opts_chunk$set(
+  fig.path = "../Figures/"
+)
+```
+
+```{r}
+# Packages
+library(tidyverse)
+library(cmdstanr)
+library(posterior)
+library(bayesplot)
+library(rethinking)
+
+```
+
+## Methods for Computing the posterior
+
+1. Analytical Approach = _often impossible_
+2. Grid approximation = _very intensive_
+3. Quadratic approximation = _limited_
+4. Markov Chain Monte Carlo = _intensive_
+
+MCMC is when you make an estimation of posterior probability distributions using stochastic process
+
+```{r}
+num_weeks <- 1e5
+positions <- rep(0, num_weeks)
+current <- 10
+
+for (i in 1:num_weeks) {
+  # Record Current Position
+  positions[i] <- current
+  # Flip coin to generate proposal
+  proposal <- current + sample(c(-1,1), size = 1)
+  # Now make sure he loops around the archipelago
+  if(proposal < 1) proposal <- 10
+  if(proposal > 10) proposal <- 1
+  # Move?
+  prob_move <- proposal/current
+  current <- ifelse(runif(1) < prob_move, proposal, current)
+}
+
+plot(1:100, positions[1:100])
+
+```
+
+```{r}
+plot(table(positions))
+```
+
+
+## Metropolis Algorithms
+
+Metropolis = Simple verison of MCMC
+
+Chain = Sequence of draws from distribution
+
+Markov chain = History doesn't matter, just where you are now
+
+Monte Carlo = Random simulation
+
+Metropolis and Gibbs Sampling are guess are check strategies
+
+Hamiltonian monte Carlo fundamentally different
+
+High dimensional problems
+
+```{r}
+D <- 10
+T <- 1e3
+Y <- rmvnorm(T, rep(0,D), diag(D))
+rad_dist <- function(Y) sqrt(sum(Y^2))
+Rd <- sapply(1:T, function(i) rad_dist(Y[i,]))
+dens(Rd)
+
+
+```
+
+
+## Easy HMC: ulam
+
+```{r}
+library(rethinking)
+data(rugged)
+d <- rugged
+d$log_gdp <- log(d$rgdppc_2000)
+dd <- d[ complete.cases(d$rgdppc_2000) , ]
+dd$log_gdp_std <- dd$log_gdp / mean(dd$log_gdp)
+dd$rugged_std <- dd$rugged / max(dd$rugged)
+dd$cid <- ifelse( dd$cont_africa==1 , 1 , 2 )
+
+
+```
+
+
+Old way
+
+```{r}
+m8.3 <- quap(
+  alist(
+    log_gdp_std ~ dnorm( mu , sigma ) ,
+    mu <- a[cid] + b[cid]*( rugged_std - 0.215 ) ,
+    a[cid] ~ dnorm( 1 , 0.1 ) ,
+    b[cid] ~ dnorm( 0 , 0.3 ) ,
+    sigma ~ dexp( 1 )
+  ) , data=dd )
+precis( m8.3 , depth=2 )
+
+
+```
+
+
+## HMC method now
+
+__Preparation__
+
+```{r}
+dat_slim <- list(
+  log_gdp_std = dd$log_gdp_std,
+  rugged_std = dd$rugged_std,
+  cid = as.integer( dd$cid )
+)
+str(dat_slim)
+
+```
+we are using list() instead so that the elements can be any length which isn't unusal for multilevel models
+
+__Sampling Posterior__
+
+using ulam() transaltes formula into Stan model. 
+
+```{r}
+m9.1 <- ulam(
+  alist(
+    log_gdp_std ~ dnorm( mu , sigma ) ,
+    mu <- a[cid] + b[cid]*( rugged_std - 0.215 ) ,
+    a[cid] ~ dnorm( 1 , 0.1 ) ,
+    b[cid] ~ dnorm( 0 , 0.3 ) ,
+    sigma ~ dexp( 1 )
+  ) , data=dat_slim , chains=1 )
+
+precis(m9.1, depth = 2)
+
+
+```
+
+
+Estimates are similar to the quadratic approximation, but there are two new columsn `n_eff` and `Rhat4`. These contain the MCM diagnostic critisa to helpyou see how well the sampling worked. 
+
+`n_eff` = cude estimate of independent samples you get
+
+`Rhat4` = indicator of the convergence of the Markov chains to the target distribution
+
+__Sampling again__
+
+You can easily parallelize the chains and they will all run at same time instead of in a sequence. It will use cores from your computer to do this.
+
+```{r}
+m9.1 <- ulam(
+  alist(
+    log_gdp_std ~ dnorm( mu , sigma ) ,
+    mu <- a[cid] + b[cid]*( rugged_std - 0.215 ) ,
+    a[cid] ~ dnorm( 1 , 0.1 ) ,
+    b[cid] ~ dnorm( 0 , 0.3 ) ,
+    sigma ~ dexp( 1 )
+  ) , data=dat_slim , chains=4 , cores=4 )
+
+show(m9.1)
+
+precis(m9.1, 2)
+
+```
+
+__Visualization__
+
+```{r}
+
+pairs(m9.1)
+```
+
+Here we can see the resulting posterior distribution is quite nearly multivariate gaussian.
+
+## Checking the chain
+
+We are gonna check the chains. HMC will tell us if there are problems and things are going wrong but toher algorthims don't
+
+Using Trace Plot we will see the samples in sequential order, joined by a line
+
+```{r}
+traceplot(m9.1, chains = 1)
+
+```
+
+Also use a trankplot which will visualize the chains ditribution of ranked samples. lowest sample gets rank 1.
+
+```{r}
+trankplot(m9.1)
+
+```
+
+
+
+
+
+

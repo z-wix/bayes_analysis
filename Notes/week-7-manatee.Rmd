@@ -1,0 +1,36 @@
+---
+title: "Conditional Mantees"
+subtitle: "Week 7"
+output: github_document
+---
+
+## Chapter 8 - Conditional Manatees
+
+Off the shelf vs. Bespoke
+
+- We provide tools and golems which are useful but also counterproductive
+
+"Seek first to understand, then to be understood"
+
+
+## Interactions
+
+All about conditionality, how predictors can be conditional on other predictors.
+
+- Very few instances of independent predictors(?)
+
+- Conditioning happens throughout the statistical inference process
+  + sampling, posterior distribution, inferences, etc.
+  
+  
+Identifying interactions is one thing, modeling them is another.
+
+Interaction examples:
+
+- Commercial success of a movie?
+- Admission into grad school?
+  
+
+
+
+
