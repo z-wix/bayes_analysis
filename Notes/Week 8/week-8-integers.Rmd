@@ -12,14 +12,35 @@ knitr::opts_chunk$set(
 )
 ```
 
-## Modeling discrete events
-
-Discrete, regular behavior in nature is not the product of discrete regular systems. It's the product of some continuous dynamical underlying system.
+## Main focuses
 
 - Having informed priors is super important
 
 - Use DAGs for seeing hidden effects skewing models
 
+## Modeling discrete events
+
+> Discrete, regular behavior in nature is not the product of discrete regular systems. It's the product of some continuous dynamical underlying system.
+
 Fireflies, asteriod belts
+
+- tend to spark synchoronously because they see others lighting up and mirror it. It is a discrete distribution
+
+Marketing example: Choice models (choice == discrete) 
+
+First set of GLMs we consider
+
+## Binomial Regression
+
+Max Entropy : 
+- MECE, constant expected value
+
+Logistic regression:
+- single trial
+
+Aggregated binomial regression:
+- Multiple trials are combined
+
+
 
 
