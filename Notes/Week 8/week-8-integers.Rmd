@@ -1,0 +1,25 @@
+---
+title: "God Spiked the Integers"
+subtitle: "Chapter 11 - Week 8"
+author: "Zack Wixom"
+output: github_document
+---
+
+```{r opts, echo = FALSE}
+# puts any figures made into this folder
+knitr::opts_chunk$set(
+  fig.path = "../Figures/Week 8/"
+)
+```
+
+## Modeling discrete events
+
+Discrete, regular behavior in nature is not the product of discrete regular systems. It's the product of some continuous dynamical underlying system.
+
+- Having informed priors is super important
+
+- Use DAGs for seeing hidden effects skewing models
+
+Fireflies, asteriod belts
+
+
