@@ -1,0 +1,319 @@
+---
+title: "Connecting to Fortnite API"
+author: "Zack"
+output: github_document
+---
+
+```{r opts, echo = FALSE}
+# puts any figures made into this folder
+knitr::opts_chunk$set(
+  fig.path = "../Figures/"
+)
+```
+
+I am going to try to connect to an API for [Fortnite Tracker](https://fortnitetracker.com/). This API gives you stats on every player you have the gamertag of. It updates frequently with current matches played.
+
+Hopefully I can connect to this API becuase it seems like the best option for getting the most relevant data I want to analyze. 
+
+However, I couldn't find any documentation on connecting to it with R. So I am going to use similar code for a different API that uses `httr` package to connect to an API and see if I can connect to Fortnite Tracker that way.
+
+## Attempt to Connect
+
+the `httr` package has documentation to connect to many different API's from website called RapidAPI. I am using this [example](https://rapidapi.com/elreco/api/fortnite-api?endpoint=apiendpoint_a787830a-94d7-4d1b-a625-031462c97605) of a different Forntie API call.
+
+```{r httr-example, include = FALSE}
+# Packages
+library(tidyverse)
+library(httr)
+# 
+# url <- "https://fortnite-api.p.rapidapi.com/stats/zRotation"
+# 
+# response <- VERB("GET", url, add_headers(x_rapidapi_key = '751fdcf83amshb438c02e00cb7f9p189025jsne07cf0e465d3', x_rapidapi_host = 'fortnite-api.p.rapidapi.com'), content_type("application/octet-stream"))
+# 
+# content(response, "text")
+
+```
+
+After some messing around I wasn't able to get it to work so I found another resource [here](https://www.dataquest.io/blog/r-api-tutorial/). This says I can use a package called `jsonlite` along with httr to access API's. So I will try that out, for simplicity I am just going to get data from the in game store. 
+
+```{r setup, eval = FALSE}
+# Packages
+library(tidyverse)
+library(httr)
+library(jsonlite)
+
+# Url of API
+url <- "https://api.fortnitetracker.com/v1/store"
+
+# # Save API Key to Private Folder
+# saveRDS(api_key, here::here("Private", "api_key.rds"))
+
+# Read in API Key
+api_key <- readRDS(here::here("Private", "api_key.rds"))
+
+```
+
+Now that I have my packages loaded, key saved, and url added I can run the `httr` code.
+
+```{r httr practice}
+
+# Connect to API
+resp <- httr::GET(url,
+    add_headers('TRN-API-Key' = api_key))
+
+# Check for any errors
+http_error(resp) 
+
+# Get content use "parsed" to make it an r object
+result <- httr::content(resp, as = "parsed")
+
+# Convert to dataset
+data <- data.frame(result)
+
+data
+
+```
+
+It worked!! So now let me test getting some player stats. Eventually I will need to make a list of player names that I can look through and create a dataset of data for players.
+
+```{r player stat test}
+
+# base Url of API
+url <- "https://api.fortnitetracker.com/v1/profile"
+
+# Platform
+platform <- "gamepad"
+
+# GamerTag
+gamertag <- "princesstress"
+
+# Connect to API
+resp <- httr::GET(url = paste(url, platform, gamertag, sep = "/"),
+    add_headers('TRN-API-Key' = api_key))
+
+# Check for any errors
+http_error(resp) 
+
+# str(resp)
+
+# Get content use "parsed" to make it an r object
+result <- httr::content(resp, as = "parse")
+
+# Convert to dataset
+data <- data.frame(result)
+
+
+```
+
+The result is pretty complex but has all the information we need. We just need to clean it up and make it easier to understand. first I am going to just get the lifetime stats of the player along with their identifying information.
+
+There are levels and groups to the data. 
+
+**Overview Level** --> identifying information
+- account ID
+- Avatar
+- Platform ID
+- Platform Name
+- Platform Name Long
+- Epic User Handle
+
+**Stats Level** --> Recent Game Stats
+
+Stats for every time of game mode:
+- p2    = Solo Matches
+- p10   = Duos Matches
+- p9    = Squad Matches
+- ltm   = Limited Time Matches (special game modes, etc)
+
+Within each game mode there are these statistics:
+- trnRating     = Tracker Network Rating
+- score         = Score
+- top1          = Wins (Victory Royales)
+- top3          = Top 3 placement
+- top5          = Top 5 
+- top6          = Top 6 
+- top10         = Top 10 
+- top12         = Top 12
+- top25         = Top 25
+- kd            = Kill/Death Ratio
+- winRatio      = Win Ratio
+- matches       = Number of Matches
+- kills         = Number of Eliminations
+- minutesPlayed = Time Played in Minutes
+- kpm           = Kills per Minute
+- kpg           = Kills per Match
+- avgTimePlayed = Average Match Time
+- scorePerMatch = Score per Match
+- scorePerMin   = Score per Minute
+
+**Lifetime Stats** --> Lifetime Overall Stats
+
+The first six levels are all about placement in matches:
+- 1     = Top 5 placement
+- 2     = Top 3
+- 3     = Top 6
+- 4     = Top 10
+- 5     = Top 12
+- 6     = Top 25
+
+The next six are various other stats:
+- 7     = Score (of points from in game XP)
+- 8     = Matches Played
+- 9     = Wins (Victory Royales)
+- 10    = Win Ratio %
+- 11    = Eliminations
+- 12    = Kills/Death Ratio %
+
+**Recent Matches** --> Recent Match Session Stats
+
+### Extracting Season Solo Match Stats
+
+My plan is to extract each of these datasets so that I can tidy up the data.
+
+```{r id data}
+# Create data with just Idenfitication Data
+id_data <- data.frame(result[1:6]) 
+
+# username
+id <- result$epicUserHandle
+
+```
+
+```{r solo stats test}
+
+# Loop to get all the stats for Solo
+for (i in seq(19)) {
+  x <- result$stats$p2[i]
+  
+  y <- x[[1]]
+  
+  z <- y[[4]]
+  
+  a <- data.frame(z)
+  
+  names(a)[names(a) == "z"] <- y[[2]]
+  
+  if(i == 1){
+    solo_data <- a %>% 
+      mutate(
+        id = id
+      )
+  }else{
+    solo_data <- cbind(solo_data, a)
+  }
+  solo_data
+}
+
+solo_data
+```
+
+Perfect I was able to create a loop that allowed me to grab all of the stats for the Solo gamemode. 
+
+Now let me do the same thing but for the lifetime stats.
+
+```{r lifetime stat test}
+# username
+id <- result$epicUserHandle
+
+# Loop to get all the stats for Solo
+for (i in seq(12)) {
+  stat_level <- result$lifeTimeStats[[i]]
+  
+  stat_label <- stat_level[1]
+  
+  stat_value <- stat_level[2]
+  
+  stat_df <- data.frame(stat_value)
+  
+  names(stat_df)[names(stat_df) == "value"] <- stat_label
+  
+  if(i == 1){
+    life_stat <- stat_df %>% 
+      mutate(
+        id = id
+      )
+  }else{
+    life_stat <- cbind(life_stat, stat_df)
+  }
+  life_stat
+}
+
+life_stat
+```
+
+Now I have the lifetime stats as well using a loop. 
+
+I realized that I need a list of gamertags that I will use to grab stats for. So I am going to add that dataset which was found on [Kaggle](https://www.kaggle.com/jackdaoud/esports-earnings-for-players-teams-by-game?select=highest_earning_players.csv)
+
+This dataset includes total earnings of top 100 players of various games. I will filter by Fortnite and then use those names in my data pull.
+
+*Note: data has been updated last 2 months*
+
+```{r earnings data}
+
+# Pull earnings data
+earnings_data <- read_csv(here::here("Project", "Data", "highest_earning_players.csv")) %>% 
+  filter(Game == "Fortnite") %>% 
+  select(CurrentHandle, TotalUSDPrize)
+
+# Get list of player names
+player_names <- earnings_data$CurrentHandle
+
+# test to see if I can index
+player_names[1]
+```
+
+Now I have a data set that has the current gamertag of the player and their total earnings in USD.
+
+```{r extract data}
+# Platform
+platform <- "kbm"
+
+# GamerTag
+gamertag <- "bugha"
+
+# Connect to API
+resp <- httr::GET(url = paste(url, platform, gamertag, sep = "/"),
+    add_headers('TRN-API-Key' = api_key))
+
+# Check for any errors
+http_error(resp) 
+
+# str(resp)
+
+# Get content use "parsed" to make it an r object
+result <- httr::content(resp, as = "parse")
+
+# username
+id <- result$epicUserHandle
+
+# Loop to get all the stats for Solo
+for (i in seq(12)) {
+  stat_level <- result$lifeTimeStats[[i]]
+  
+  stat_label <- stat_level[1]
+  
+  stat_value <- stat_level[2]
+  
+  stat_df <- data.frame(stat_value)
+  
+  names(stat_df)[names(stat_df) == "value"] <- stat_label
+  
+  if(i == 1){
+    life_stat <- stat_df %>% 
+      mutate(
+        id = id
+      )
+  }else{
+    life_stat <- cbind(life_stat, stat_df)
+  }
+  life_stat
+}
+
+life_stat
+
+```
+
+So I have run into the issue that not all fortnite players have the stats on the API. It has some but it isn't completely consistent. So I might need to change up my data source.
+
+

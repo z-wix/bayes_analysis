@@ -1,0 +1,27 @@
+---
+title: "Twitch Streamer Analysis"
+author: "Zack Wixom"
+output: github_document
+---
+
+```{r opts, echo = FALSE}
+# puts any figures made into this folder
+knitr::opts_chunk$set(
+  fig.path = "../Figures/"
+)
+```
+
+
+I am going to try and look at just broad Twitch streamer data to build a model off of it. I have identified a dataset from Kaggle that gives me lots of variables that I could help me model on minutes streamed. 
+
+There is also a Twitch API that might be better cause I would like more variables to look at such as the main game they stream, etc. But for now I am looking at just the stats.
+
+```{r}
+# Packages
+library(tidyverse)
+
+# Load Data
+twitch <- read_csv(here::here("Project/Data", "twitchdata-update.csv"))
+
+```
+
