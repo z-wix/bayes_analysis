@@ -19,9 +19,65 @@ There is also a Twitch API that might be better cause I would like more variable
 ```{r}
 # Packages
 library(tidyverse)
+library(cmdstanr)
+library(posterior)
+library(bayesplot)
+library(rethinking)
 
 # Load Data
 twitch <- read_csv(here::here("Project/Data", "twitchdata-update.csv"))
 
+twitch
+
 ```
+
+## The Outcome Variable
+
+There are two variables that would be interesting to model on: `Watch time(Minutes)` is the overall time that viewers have watched their videos and `Followers` the number of followers on Twitch. `Followers` is interesting because it is something that might be a bigger overall outcome that Twitch streamers are looking for becuase followers turn into subs which turn into revenue.
+
+## Running a Linear Model - Milestone 
+
+For a major milestone of the project, I need to build a linear model. This was found in our week 3 reading and assignment 2. 
+
+So I am going to build a simple model on `Followers` with the explanatory variable of `Average Viewers`. 
+
+```{r}
+# Standardize  and Index Variables
+twitch1 <- list(
+    followers = standardize(twitch$Followers),
+    average_viewers = standardize(twitch$`Average viewers`)
+)
+
+dens(twitch1$followers)
+
+dens(twitch1$average_viewers)
+
+```
+
+
+```{r}
+# define average Average Viewers
+xbar <- mean(twitch1$average_viewers)
+
+# Fit Model
+m1 <- quap(
+  alist(
+    followers ~ dnorm(mu, sigma),
+    mu <- a + b*(average_viewers - xbar),
+    a ~ dnorm(0, 1),
+    b ~ dnorm(0, 0.2),
+    sigma ~ dexp(1)
+  ), data = twitch1
+)
+
+plot(precis(m1))
+
+```
+
+
+
+
+
+
+
 
