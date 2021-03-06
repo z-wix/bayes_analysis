@@ -1,0 +1,27 @@
+---
+title: "Assignment 6"
+subtitle: "Week 8"
+author: "Zack Wixom"
+output: github_document
+---
+```{r opts, echo = FALSE}
+# puts any figures made into this folder
+knitr::opts_chunk$set(
+  fig.path = "../Figures/Week 8/HW/"
+)
+```
+
+```{r packages, message=FALSE}
+# Packages
+library(tidyverse)
+library(cmdstanr)
+library(posterior)
+library(bayesplot)
+library(rethinking)
+
+# Load Data
+data("Wines2012")
+
+d <- Wines2012
+
+```
