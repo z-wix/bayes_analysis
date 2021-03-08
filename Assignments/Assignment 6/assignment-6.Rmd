@@ -18,10 +18,130 @@ library(cmdstanr)
 library(posterior)
 library(bayesplot)
 library(rethinking)
+library(dagitty)
 
 # Load Data
-data("Wines2012")
+data(NWOGrants)
 
-d <- Wines2012
+d <- NWOGrants
 
 ```
+
+## Question 1
+
+First I need to draw a DAG to check out the direct and indirect causal effects between the variables: `gender` (G), `award` (A), and `discipline` (D).
+
+```{r q1 dag}
+# Create DAG
+dag1 <- dagitty("dag{G -> A; G -> D; D -> A}")
+
+# DAG coordinates
+coordinates(dag1) <- list(x = c(G = 0, A = 1, D = 2), y = c(G = 0, A = 1, D = 0))
+
+# Draw DAG
+drawdag(dag1)
+
+```
+
+Now we can do the glm model by just conditioning on `gender`. 
+
+```{r q1 glm gender}
+# Standardize Variables
+data <- tibble(
+  awards = as.integer(d$awards),
+  apps = as.integer(d$applications),
+  gender_id = ifelse(d$gender == "m", 1, 2),
+  discipline = as.integer(d$discipline)
+)
+
+# Fit model
+m1 <- ulam(
+  alist(
+    awards ~ binomial(apps, p),
+    logit(p) <- a[gender_id] + b[discipline],
+    a[gender_id] ~ normal(-1,1),
+    b[discipline] ~ normal(0,1)
+  ), data = data, chains = 4, cmdstan = TRUE
+)
+
+plot(precis(m1, depth = 2))
+
+```
+
+Right now we see that males have higher rates of awards than females. There are some difference in the discipline so I think that means that it depends on the discpline where males and females get rewards.  Now we can look how big a difference between male (1) and female (2).
+
+```{r q1 diff}
+# Extract Posterior
+post <- extract.samples(m1)
+
+# Get Difference
+diff <- post$a[,1] - post$a[,2]
+
+precis(tibble(diff = diff))
+```
+
+Looks like there is a slight advantage for males still even while conditioning on discipline. Perhaps different disciplines have different levels of attention or funding that allow them to get more awards and if more men are in those disciplines then they will get more awards.
+
+## Question 2
+
+I will create new DAG that includes an unobserved variable of career stage (S).
+
+```{r q2 dag}
+# Create DAG
+dag2 <- dagitty("dag{G -> A; G -> D; D -> A; S -> A; S -> D}")
+
+# DAG coordinates
+coordinates(dag2) <- list(x = c(G = 0, A = 1, D = 1, S = 2), y = c(G = 0, A = 1, D = 0, S = 0))
+
+# Draw DAG
+drawdag(dag2)
+
+```
+
+With the unobserved variable, we find a backdoor when conditioning on `discipline`. 
+
+## Question 3
+
+```{r q3 setup}
+# Load MASS
+library(MASS)
+
+# Load Data
+data(eagles)
+df <- eagles
+
+```
+
+
+So for my model I will include interactions between the pirate size and victim size (bPV) as well as pirate age and victim size (bAV).
+
+```{r q3 glm}
+# Standardize Variables
+eagles <- tibble(
+  success = standardize(log(df$y)),
+  attempts = standardize(log(df$n)),
+  size_p = as.integer(df$P),     # 1 = Large, 2 = Small
+  age = as.integer(df$A),        # 1 = Adult, 2 = Immature
+  size_v = as.integer(df$V)      # 1 = Large, 2 = Small
+)
+
+a <- rnorm(1e4, 0, 10)
+lambda <- exp(a)
+
+# Fit model
+m3 <- ulam(
+  alist(
+    success ~ dpois(lambda),
+    log(lambda) <- a + bP*size_p + bV*size_v + bA*size_v + bPV*size_p*size_v + bAV*age*size_v,
+    a ~ dnorm(0, 1.5),
+    c(bP, bV, bA, bPV, bAV) ~ dnorm(0,1)
+  ), 
+  data = eagles, 
+  chains = 4, 
+  log_lik = TRUE
+)
+
+plot(precis(m3))
+```
+
+Not sure why I can't get this to work. I am assuming it is because of the distribution because I get the error that no binomial distribution is found. Perhaps it needs to be Poisson but I couldn't get that to work either. I am getting an error that there are NA's. I think the problem comes from not knowing how to get the lambda value for the Poisson distribution.
