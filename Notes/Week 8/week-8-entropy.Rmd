@@ -1,0 +1,80 @@
+---
+title: "Big Entropy and Generalized Linear Model"
+subtitle: "Week 8 - Chapter 10"
+author: "Zack Wixom"
+output: github_document
+---
+
+```{r opts, echo = FALSE}
+# puts any figures made into this folder
+knitr::opts_chunk$set(
+  fig.path = "../Figures/Week 8/"
+)
+```
+
+## Entropy
+
+Helps us solve problems when choosing distribution when conventional choices are not the best choices.
+
+- Choosing a distribution with the largest entropy means spreading probability as evenly as possible while staying consistent with our knowledge.
+
+Nature tends to produce distributions with high entropy.
+
+Works even if we don't fully understand why.
+
+### Maximum Entropy
+
+> The distribution that can happen the most ways is also the distribution with the biggest information entropy. The distribution with the biggest entropy is the most conservative distribution that obeys its constraints.
+
+### Binomial Distribution
+
+When only two unordered outcomes are possible and the numbers of each type of outcome is expected to be constant. then binomial is has the highest entropy.
+
+No guarantee that this is best distribution for the real problem but is most conservative.
+
+**Not about the data, it is about the model**
+
+## Generalize Linear Models
+
+A Gaussian liklihood is *NOT* the best option when the outcome variable is discrete or bounded.
+
+- May predict negative values when that is impossible
+
+**2 changes from Linear Model:**
+
+- The liklihood is binomial instead of gaussian
+
+- the f(p) instead of mu which represents a link function
+
+### Exponential Family
+
+**Exponential Distribution:**
+
+- Constrained by 0 (can't be negative)
+
+- Commonly used to represent displacement, distance, or duration
+
+- Maximum entropy among all non-negative continuous distributions with the same average displacement
+
+
+**Gamma Distribution:**
+
+- Constrained by 0 (can't be negative)
+
+- Commonly used to represent displacement, distance, or duration
+
+- it can have a peak > 0
+
+- Cancer onset require multiple events
+
+**Poisson Distribution:**
+
+- Special case of a binomial distribution
+
+- Occurs when the number of trial (n) is very large and the probability (p) is very small
+
+
+
+
+
+
