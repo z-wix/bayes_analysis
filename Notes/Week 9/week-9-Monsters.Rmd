@@ -1,0 +1,25 @@
+---
+title: "Monsters & Mixtures"
+subtitle: "Week 9 - Chapter 12"
+author: "Zack Wixom"
+output: github_document
+---
+
+```{r opts, echo = FALSE}
+# puts any figures made into this folder
+knitr::opts_chunk$set(
+  fig.path = "../Figures/"
+)
+```
+
+
+## Monsterous Models
+
+1. Over Dispersion
+
+2. Zero-inflated and Zero-augmented
+
+3. Ordered Categorical
+
+
+
