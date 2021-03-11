@@ -1,0 +1,20 @@
+---
+title: "Oreder Categories"
+output: html_document
+---
+
+```{r opts, echo = FALSE, message = FALSE}
+# puts any figures made into this folder
+knitr::opts_chunk$set(
+  fig.path = "../Figures/Week 9/"
+)
+
+library(rethinking)
+library(tidyverse)
+library(cmdstanr)
+library(posterior)
+library(bayesplot)
+
+```
+
+Ordered Categories are common in social sciences (Marketing) are ranking or ordered questions that created ordered categories.

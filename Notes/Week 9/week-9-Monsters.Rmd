@@ -376,7 +376,5 @@ More Mixture Models
 - Gamma-Poisson
 - Multilevel Models
 
-## Ordered Categories
 
-Common in social sciences (Marketing) are ranking or ordered questions that created ordered categories.
 
