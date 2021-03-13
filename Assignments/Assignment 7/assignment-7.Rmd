@@ -4,26 +4,35 @@ author: "Zack Wixom"
 output: github_document
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+```{r opts, echo = FALSE}
+# puts any figures made into this folder
+knitr::opts_chunk$set(
+  fig.path = "../Figures/Week 9/"
+)
 ```
 
-## R Markdown
+```{r packages, message = FALSE}
+# Packages
+library(rethinking)
+library(tidyverse)
+library(cmdstanr)
+library(posterior)
+library(bayesplot)
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+data(Trolley)
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+d <- Trolley
 
-```{r cars}
-summary(cars)
+# Recode Education
+edu_levels <- c(6, 1, 8, 4, 7, 2, 5, 3)
+d$edu_new <- edu_levels[d$edu]
 ```
 
-## Including Plots
+```{r}
 
-You can also embed plots, for example:
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+
