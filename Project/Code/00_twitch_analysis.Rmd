@@ -7,7 +7,7 @@ output: github_document
 ```{r opts, echo = FALSE}
 # puts any figures made into this folder
 knitr::opts_chunk$set(
-  fig.path = "../Figures/"
+  fig.path = "../Figures/Project/"
 )
 ```
 
@@ -23,6 +23,7 @@ library(cmdstanr)
 library(posterior)
 library(bayesplot)
 library(rethinking)
+library(dagitty)
 
 # Load Data
 twitch <- read_csv(here::here("Project/Data", "twitchdata-update.csv"))
@@ -33,7 +34,42 @@ twitch
 
 ## The Outcome Variable
 
-There are two variables that would be interesting to model on: `Watch time(Minutes)` is the overall time that viewers have watched their videos and `Followers` the number of followers on Twitch. `Followers` is interesting because it is something that might be a bigger overall outcome that Twitch streamers are looking for becuase followers turn into subs which turn into revenue.
+There are two variables that would be interesting to model on: `Watch time(Minutes)` is the overall time that viewers have watched their videos and `Followers` the number of followers on Twitch. `Followers` is interesting because it is something that might be a bigger overall outcome that Twitch streamers are looking for because followers turn into subs which turn into revenue.
+
+## DAG
+
+I want to understand what variables I want to include and condition on so I will build a DAG.
+
+```{r dag}
+# Standardize Variables
+d <- twitch %>% 
+  mutate(
+    F = standardize(Followers),
+    A = standardize(`Average viewers`),
+    W = standardize(`Watch time(Minutes)`),
+    S = standardize(`Stream time(minutes)`),
+    P = standardize(`Peak viewers`),
+    Pa = as.integer(Partnered)
+  )
+
+
+# Make Dag to look at what to condition on
+dag_01 <- dagitty( "dag {
+  A -> F
+  W -> F
+  W -> A
+  S -> F
+  S -> W
+  S -> A
+  Pa -> S
+  Pa -> W
+}")
+
+plot(dag_01)
+
+
+```
+
 
 ## Running a Linear Model - Milestone 
 
@@ -45,28 +81,32 @@ So I am going to build a simple model on `Followers` with the explanatory variab
 # Standardize  and Index Variables
 twitch1 <- list(
     followers = standardize(twitch$Followers),
-    average_viewers = standardize(twitch$`Average viewers`)
+    average_viewers = standardize(twitch$`Average viewers`),
+    peak = standardize(twitch$`Peak viewers`),
+    watchtime = standardize(twitch$`Watch time(Minutes)`)
 )
 
 dens(twitch1$followers)
 
 dens(twitch1$average_viewers)
 
+dens(twitch1$peak)
+
 ```
 
 
 ```{r}
 # define average Average Viewers
-xbar <- mean(twitch1$average_viewers)
+xbar <- mean(twitch1$followers)
 
 # Fit Model
 m1 <- quap(
   alist(
-    followers ~ dnorm(mu, sigma),
-    mu <- a + b*(average_viewers - xbar),
-    a ~ dnorm(0, 1),
-    b ~ dnorm(0, 0.2),
-    sigma ~ dexp(1)
+    average_viewers ~ dnorm(mu, sigma),
+    mu <- beta0 + beta1*(average_viewers - xbar),
+    beta0 ~ dnorm(0, 1),
+    beta1 ~ dlnorm(0, 1),
+    sigma ~ dunif(0, 50)
   ), data = twitch1
 )
 
@@ -74,9 +114,64 @@ plot(precis(m1))
 
 ```
 
+```{r}
+# 1. Specify the new data we'd like to predict new heights.
+new_average_viewers <- seq(from = 0, to = 1)
+
+# 2. Simulate predicted heights using the likelihood height_i ∼ Normal(mu_i, sigma).
+posterior_pd <- sim(m4_2, data = list(weight = new_weights))
+
+# Plot the posterior prediction distribution and compare with the data.
+hist(posterior_pd)
+hist(data$height)
+```
 
 
 
+```{r}
+diag(vcov(m1))
+cov2cor(vcov(m1))
+```
+```{r}
+# Sample from the posterior.
+posterior <- extract.samples(m1, n = 10000)
+# Some possible summaries.
+precis(posterior)
+as_tibble(posterior) %>% 
+  pivot_longer(
+    a:sigma, 
+    names_to = "parameters", 
+    values_to = "draws"
+  ) %>% 
+  ggplot(aes(x = draws)) +
+  geom_histogram() +
+  facet_wrap(~ parameters, scales = "free")
+
+```
+
+
+
+```{r}
+# 1. Specify the number of lines to simulate.
+N <- 100
+prior_pd <- tibble(
+  # 2. Specify the line number.
+  n = 1:N,
+  # 3. Simulate values of beta0 and beta1 from their priors.
+  beta0 = rnorm(N, 0, 1),
+  beta1 = rlnorm(N, 0, .5)   
+) %>%
+  # 4. Create two rows for each line, one for each end of the range.
+  expand(nesting(n, beta0, beta1), average_viewers = range(twitch1$average_viewers)) %>% 
+  mutate(
+    # 5. Simulate average height using the linear model:
+    followers = beta0 + beta1 * (average_viewers - mean(twitch1$average_viewers)),
+  )
+# Plot the prior predictive distribution regression lines.
+prior_pd %>% 
+  ggplot(aes(x = average_viewers, y = followers, group = n)) +
+  geom_line(alpha = 0.10)
+```
 
 
 
