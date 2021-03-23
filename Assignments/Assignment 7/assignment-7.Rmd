@@ -63,7 +63,7 @@ drawdag(dag1)
 
 Now for the model. I already pre-processed the data above question 1.
 
-```{r model 1, message = FALSE}
+```{r model 1}
 m1 <- ulam(
   alist(
     y ~ ordered_logistic(phi, cutpoints),
@@ -122,27 +122,28 @@ Now onto the model.
 # Make indicator for gender
 dat$female <- ifelse(d$male == 1, 0L, 1L)
 
-# Model
-m2 <- ulam(
-  alist(
-    y ~ ordered_logisitic(phi, cutpoints),
-    phi <- bE*sum(delta_shell[1:E]) + bA*A + bC*C + BI*I + bAge*age + bF*female,
-    BI <- bI + bIA*A + bIC*C,
-    c(bA, bI, bC, bIA, bIC, bE, bAge, bF) ~ normal(0. 0.5),
-    cutpoints ~ normal(0, 1.5),
-    vector[8]: delta_shell <<- append_row(0, delta),
-    simplex[7]: delta ~ dirichlet(alpha)
-  ),
-  data = dat,
-  chains = 4,
-  cores = 4,
-  cmdstan = TRUE
-)
+# # Model
+# m2 <- ulam(
+#   alist(
+#     y ~ ordered_logisitic(phi, cutpoints),
+#     phi <- bE*sum(delta_shell[1:E]) + bA*A + bC*C + BI*I + bAge*age + bF*female,
+#     BI <- bI + bIA*A + bIC*C,
+#     c(bA, bI, bC, bIA, bIC, bE, bAge, bF) ~ normal(0. 0.5),
+#     cutpoints ~ normal(0, 1.5),
+#     vector[8]: delta_shell <<- append_row(0, delta),
+#     simplex[7]: delta ~ dirichlet(alpha)
+#   ),
+#   data = dat,
+#   cha ins = 4,
+#   cores = 4,
+#   cmdstan = TRUE
+# )
 
 ```
 
 ```{r}
-precis(m2)
+# precis(m2)
 ```
 
+I keep getting an error for my second model. Something wrong with BI parameter part. and So I am not able to knit this assignment, I have been trying for a while now and not sure what is happening.
 
