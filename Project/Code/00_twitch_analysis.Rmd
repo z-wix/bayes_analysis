@@ -38,21 +38,9 @@ There are two variables that would be interesting to model on: `Watch time(Minut
 
 ## DAG
 
-I want to understand what variables I want to include and condition on so I will build a DAG.
+I want to understand what variables I want to include and condition on so I will build a DAG. I am just going to use the continuous variables with `Partnered` variable instead of using all the other discrete variables.
 
-```{r dag}
-# Standardize Variables
-d <- twitch %>% 
-  mutate(
-    F = standardize(Followers),
-    A = standardize(`Average viewers`),
-    W = standardize(`Watch time(Minutes)`),
-    S = standardize(`Stream time(minutes)`),
-    P = standardize(`Peak viewers`),
-    Pa = as.integer(Partnered)
-  )
-
-
+```{r dag1}
 # Make Dag to look at what to condition on
 dag_01 <- dagitty( "dag {
   A -> F
@@ -70,109 +58,176 @@ plot(dag_01)
 
 ```
 
+There is a lot going on here with all these variables. The main paths I want to explore are A -> F, W -> F and S -> F. In order to do this I will need to condition on Pa for the mode, since it is a back door.
 
-## Running a Linear Model - Milestone 
+## Running Models
 
-For a major milestone of the project, I need to build a linear model. This was found in our week 3 reading and assignment 2. 
+First I want to check out all the variables and check out if I should log any of them or make any index variables.
 
-So I am going to build a simple model on `Followers` with the explanatory variable of `Average Viewers`. 
-
-```{r}
+```{r prep data}
 # Standardize  and Index Variables
-twitch1 <- list(
+twitch1 <- tibble(
     followers = standardize(twitch$Followers),
     average_viewers = standardize(twitch$`Average viewers`),
     peak = standardize(twitch$`Peak viewers`),
-    watchtime = standardize(twitch$`Watch time(Minutes)`)
+    watchtime = standardize(twitch$`Watch time(Minutes)`),
+    partnered = as.integer(twitch$Partnered),
+    mature = as.integer(twitch$Mature),
+    language = as.integer(factor(twitch$Language))
 )
 
 dens(twitch1$followers)
-
 dens(twitch1$average_viewers)
-
 dens(twitch1$peak)
+dens(twitch1$partnered)
+dens(twitch1$mature)
+dens(twitch1$language)
 
 ```
 
+All the continuous variables are skewed so I will need to log them to get an accurate distribution. However I also noticed that almost all of the channels are Partnered and so that means that there isn't going to be any real effect happening so I need to update my DAG without Pa.
 
-```{r}
+```{r dag2}
+# Make Dag to look at what to condition on
+dag_02 <- dagitty( "dag {
+  A -> F
+  W -> F
+  W -> A
+  S -> F
+  S -> W
+  S -> A
+}")
+
+plot(dag_02)
+
+
+```
+
+```{r prep data contd}
+
+# Standardize  and Index Variables
+twitch2 <- tibble(
+    followers = standardize(log(twitch$Followers)),
+    average_viewers = standardize(log(twitch$`Average viewers`)),
+    peak = standardize(log(twitch$`Peak viewers`)),
+    watchtime = standardize(log(twitch$`Watch time(Minutes)`))
+)
+
+# Check distributions
+dens(twitch2$followers)
+dens(twitch2$average_viewers)
+dens(twitch2$peak)
+```
+
+Now I can create my first model
+
+```{r model1}
 # define average Average Viewers
-xbar <- mean(twitch1$followers)
+xbar <- mean(twitch2$average_viewers)
 
 # Fit Model
 m1 <- quap(
   alist(
-    average_viewers ~ dnorm(mu, sigma),
-    mu <- beta0 + beta1*(average_viewers - xbar),
-    beta0 ~ dnorm(0, 1),
-    beta1 ~ dlnorm(0, 1),
-    sigma ~ dunif(0, 50)
-  ), data = twitch1
+    followers ~ dnorm(mu, sigma),
+    mu <- a + b_avgviewers*average_viewers + b_peak * peak + b_watchtime*watchtime,
+    a ~ dnorm(0, 1),
+    b_avgviewers ~ dlnorm(0, .5),
+    b_peak ~ dlnorm(0, .5),
+    b_watchtime ~ dlnorm(0, .5),
+    sigma ~ dexp(1)
+  ), data = twitch2
 )
 
 plot(precis(m1))
 
 ```
 
-```{r}
-# 1. Specify the new data we'd like to predict new heights.
-new_average_viewers <- seq(from = 0, to = 1)
+So it looks like that these three variables are very impacting for increasing followers on Twitch. This isn't much of a surprise but it will be interesting to add in more variables such as Mature and Language
 
-# 2. Simulate predicted heights using the likelihood height_i ∼ Normal(mu_i, sigma).
-posterior_pd <- sim(m4_2, data = list(weight = new_weights))
+```{r dag3}
+# Make Dag to look at what to condition on
+dag_03 <- dagitty( "dag {
+  A -> F
+  W -> F
+  W -> A
+  S -> F
+  S -> W
+  S -> A
+  M -> W
+  L -> W
+}")
 
-# Plot the posterior prediction distribution and compare with the data.
-hist(posterior_pd)
-hist(data$height)
-```
+plot(dag_03)
 
-
-
-```{r}
-diag(vcov(m1))
-cov2cor(vcov(m1))
-```
-```{r}
-# Sample from the posterior.
-posterior <- extract.samples(m1, n = 10000)
-# Some possible summaries.
-precis(posterior)
-as_tibble(posterior) %>% 
-  pivot_longer(
-    a:sigma, 
-    names_to = "parameters", 
-    values_to = "draws"
-  ) %>% 
-  ggplot(aes(x = draws)) +
-  geom_histogram() +
-  facet_wrap(~ parameters, scales = "free")
 
 ```
 
+Well I am not sure how to deal with what variables are influencing each other so I am going to assume just that `Language` and `Mature` discrete variables are influencing `Watch time (minutes)` becuase the older the audience probably the more they watch so `Mature` might indicate age (on average) also I think that `Language` could influence `Watch time (minutes)`because there might be more streamers in certain languages than others so certain languages like English might have more watchers and increase the overall `Watch time (minutes)`.
 
+```{r data prep 2}
+# Standardize  and Index Variables
+twitch3 <- tibble(
+    followers = standardize(log(twitch$Followers)),
+    average_viewers = standardize(log(twitch$`Average viewers`)),
+    peak = standardize(log(twitch$`Peak viewers`)),
+    watchtime = standardize(log(twitch$`Watch time(Minutes)`)),
+    mature = as.integer(twitch$Mature),
+    language = as.integer(factor(twitch$Language))
+)
 
-```{r}
-# 1. Specify the number of lines to simulate.
-N <- 100
-prior_pd <- tibble(
-  # 2. Specify the line number.
-  n = 1:N,
-  # 3. Simulate values of beta0 and beta1 from their priors.
-  beta0 = rnorm(N, 0, 1),
-  beta1 = rlnorm(N, 0, .5)   
-) %>%
-  # 4. Create two rows for each line, one for each end of the range.
-  expand(nesting(n, beta0, beta1), average_viewers = range(twitch1$average_viewers)) %>% 
-  mutate(
-    # 5. Simulate average height using the linear model:
-    followers = beta0 + beta1 * (average_viewers - mean(twitch1$average_viewers)),
-  )
-# Plot the prior predictive distribution regression lines.
-prior_pd %>% 
-  ggplot(aes(x = average_viewers, y = followers, group = n)) +
-  geom_line(alpha = 0.10)
+# Check distributions
+dens(twitch3$mature)
+dens(twitch3$language)
+
 ```
 
+Checking out the Density os the `mature` and `language` variables for this model we see that most streamers are not mature and speak English. So we will see if this influences the number of followers they have.
+
+```{r model2}
+# Fit Model
+m2 <- quap(
+  alist(
+    followers ~ dnorm(mu, sigma),
+    mu <- a[language] + b_avgviewers*average_viewers + b_peak * peak + b_watchtime*watchtime,
+    a[language] ~ dnorm(0, 1),
+    b_avgviewers ~ dlnorm(0, .5),
+    b_peak ~ dlnorm(0, .5),
+    b_watchtime ~ dlnorm(0, .5),
+    sigma ~ dexp(1)
+  ), data = twitch3
+)
+
+plot(precis(m2, depth = 2))
+
+```
+
+So there are definitely some languages that indicate more followers or less. This seems fairly obvious since the languages that are less common in general there will be less big streamers and so they will have less followers.
+
+Let's do the same thing but with `mature` variables.
+
+```{r model3}
+# Fit Model
+m3 <- quap(
+  alist(
+    followers ~ dnorm(mu, sigma),
+    mu <- a[mature] + b_avgviewers*average_viewers + b_peak * peak + b_watchtime*watchtime,
+    a[mature] ~ dnorm(0, 1),
+    b_avgviewers ~ dlnorm(0, .5),
+    b_peak ~ dlnorm(0, .5),
+    b_watchtime ~ dlnorm(0, .5),
+    sigma ~ dexp(1)
+  ), data = twitch3
+)
+
+plot(precis(m3, depth = 2))
+
+```
+
+Looks like `mature` is not giving us any significant changes with followers.
+
+## Prior Predicitve Checks
+
+It will be useful to see if I am using good Priors right now before moving onto `ulam()` function for my models.
 
 
 
