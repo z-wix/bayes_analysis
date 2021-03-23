@@ -1,0 +1,380 @@
+---
+title: "Monsters & Mixtures"
+subtitle: "Week 9 - Chapter 12"
+author: "Zack Wixom"
+output: github_document
+---
+
+```{r opts, echo = FALSE, message = FALSE}
+# puts any figures made into this folder
+knitr::opts_chunk$set(
+  fig.path = "../Figures/Week 9/"
+)
+
+library(rethinking)
+library(tidyverse)
+library(cmdstanr)
+library(posterior)
+library(bayesplot)
+
+```
+
+![owlimage](/Users/zwixom/School/Marketing/Quant Analytics/Repo/zack-wixom/Figures/Week 9/owl.png)
+
+## Generalized Linear Madness
+
+Bad Model:
+
+- Make anomalies
+- Intercepts don't pass through origin
+- Zero Population = Zero Tools
+
+We can do better by thinking *scientifically* instead of *statistically*.
+
+## Scientific model
+
+Change in tools per unit time:
+
+![owlimage](/Users/zwixom/School/Marketing/Quant Analytics/Repo/zack-wixom/Figures/Week 9/Scientific_model.png)
+
+Three parameters: Alpha, Beta, and Gamma
+
+![scienceimage](/Users/zwixom/School/Marketing/Quant Analytics/Repo/zack-wixom/Figures/Week 9/scientific_model2.png)
+
+- No link function needed.
+
+- intercept is fixed.
+
+```{r scientific fit, include=FALSE}
+# dat2 <- list(
+#   T = d$total_tools,
+#   P = d$population,
+#   cid = d$contact_id
+# )
+# 
+# 
+# m11.11 <- ulam(
+#   alist(
+#     T ~ dpois(lambda),
+#     lambda <- exp(a[cid]) * P^b[cid]/g,
+#     a[cid] ~ dnorm(1,1),
+#     b[cid] ~ dexp(1),
+#     g ~ dexp(1)
+#   ),
+#   data = dat2,
+#   chains = 4,
+#   log_lik = TRUE
+# )
+
+```
+
+
+### Poisson Exposure
+
+Observation windows are *exposures*. 
+
+Poisson outcome: events per unit time/distance
+
+**Question:** What if time/distance varies across cases?
+
+**Answer:** Use an *exposure* aka *offset*
+
+Offset --> log of the amount of observation
+
+![scienceimage](/Users/zwixom/School/Marketing/Quant Analytics/Repo/zack-wixom/Figures/Week 9/offset.png)
+
+### Survival Analysis
+
+*Count the stuff that wasn't counted* --> Censoring
+
+Count models are fundamentally about rates
+- Rate of heads per coin toss
+- Rate of tools per person
+
+Can also estimate rates by modeling time-to-event
+
+Tricky, because cannot ignore censored cases
+- Left-censored: Don't know when time started
+- Right-censored: Something cut observation off before event occurred
+
+Ignoring censored cases leads to inferential error
+- Imagine estimating time-toPHD but ignoring people who drop out
+
+**Cat Adoptions**
+
+Look at two events:
+1. Adopted
+2. Something else (death, escape, censored)
+
+Hypothesis: *People don't like black cats*
+
+Exponential distributions for observed events
+
+Censored Cats need Cumulative distribution: Probability event before or at time X
+
+Complementary Cumulative distribution: Probability not-event-yet.
+
+First model with multiple choice. 
+
+![catimage](/Users/zwixom/School/Marketing/Quant Analytics/Repo/zack-wixom/Figures/Week 9/cat.png)
+
+![cat2image](/Users/zwixom/School/Marketing/Quant Analytics/Repo/zack-wixom/Figures/Week 9/cat2.png)
+
+## Monsterous Models
+
+**Monsters**: Specialized, complex distributions
+
+- Ordered categories, ranks
+
+**Mixtures**: blends of stochastic processes
+
+- Varying means, probabilities, rates
+- Varying processes
+
+1. Over-Dispersion
+
+2. Zero-inflated and Zero-augmented
+
+3. Ordered Categorical
+
+These models help us transform our modeling to cope with inconvenient realities of measurement, rather than transforming measurements to cope with constraints of our models.
+
+## Over-dispered counts
+
+Models based on normal distributions can be overly sensitive to extreme observations
+
+**Over-Dispersion** --> When counts are more variable than pure process.
+
+The variance of a variable is called **dispersion**.
+
+Variance as a function:
+
+- Expected Value of binomial = *Np*
+
+- Variance = *Np*(1 - *p*)
+
+When observed variance *exceed* the expected value of the binomial then some omitted variable is producing additional **dispersion** in observed counts.
+
+Ignoring over-dispersion can be just as bad as ignoring a predictor variable.
+
+Heterogeneity in counts can be a confound and hide effects or make spurious inferences. (Waffles)
+
+So we need to find the source of dispersion.
+
+### Two Strategies
+
+**Continuous Mixture Models** 
+
+Linear model is attached to distribution of observations instead of the observations themselves.
+
+**Multilevel Models**
+
+estimate both residuals of each observation and the distribution of the residuals. These are flexible and can handle over-dispersion and heterogeneity at same time.
+
+### Beta-Binomals
+
+Estimates the distribution of probabilities of success instead of a single probability of success.
+
+Mixture of binomial distributions that uses each binomial count as its own probability of success.
+
+beta distribution has two parameters:
+
+- Average probability
+
+- Shape parameter 
+  + describes how spread out the distribution is.
+  
+Shape = 2 --> probability from 0 to 1 equally likely
+
+```{r shape 2}
+pbar <- 0.5
+theta <- 2
+
+curve(dbeta2(x, pbar, theta), from = 0, to = 1, xlab = "probability", ylab = "Density")
+
+```
+
+Shape > 2 --> distribution of probabilities grows more concentrated
+
+```{r shape greater than 2}
+pbar <- 0.5
+theta <- 5
+
+curve(dbeta2(x, pbar, theta), from = 0, to = 1, xlab = "probability", ylab = "Density")
+
+```
+
+Shape < 2 --> extreme probabilities near 0 and 1 more likely than mean
+
+```{r shape}
+pbar <- 0.5
+theta <- 1
+
+curve(dbeta2(x, pbar, theta), from = 0, to = 1, xlab = "probability", ylab = "Density")
+
+```
+
+### Fitting beta-binomial model
+
+```{r fit beta-binomial}
+library(rethinking)
+data("UCBadmit")
+d <- UCBadmit
+
+# Standardize
+d$gid <- ifelse(d$applicant.gender == "male", 1L, 2L)
+
+dat <- tibble(
+  A = d$admit,
+  N = d$applications,
+  gid = d$gid
+)
+
+# Fit Model
+m12.1 <- ulam(
+  alist(
+    A ~ dbetabinom(N, pbar, theta),
+    logit(pbar) <- a[gid],
+    a[gid] ~ dnorm(0, 1.5),
+    transpars> theta <<- phi + 2.0,
+    phi ~ dexp(1)
+  ), data = dat, 
+  chains = 4
+)
+
+# Extract Samples
+post <- extract.samples(m12.1)
+post$da <- post$a[,1] - post$a[,2]
+precis(post, depth = 2)
+
+```
+
+
+`a[1]` is the log-odds of admission for male applicants lower than female. 
+
+*??? Wasn't getting same results as book*
+
+## Zero-inflated Outcomes
+
+We sometimes measure mixtures of multiple process. And when there are different causes for the same observation we use a **Mixture Model** that uses more than one likelihood for the same outcome variable.
+
+Zero means nothing happened, because rate of events is low or rather because the process that generates events failed to get started.
+
+![jayimage](/Users/zwixom/School/Marketing/Quant Analytics/Repo/zack-wixom/Figures/Week 9/jay.jpg)
+
+### Drunk Monks
+
+Monk example was a binomial process, but with large number of trials and low probability we used a Poisson distribution.
+
+New problem: *how often do monks take a break from writing and how often do they drink?*
+
+Hidden state: *drunk or sober*
+
+**The Mixture**
+
+Zeros in data?
+
+- Monks spent the day drinking
+
+- they worked but failed to complete any manuscripts
+
+Parameters: *p* is probability the monks spend day drinking and *lambda* is mean number of manuscripts completed when monks work.
+
+**The Monster**
+
+Define a likelihood function that mixes these two zero processes. Simulated as a coin flip to decide whether they drink or work.
+
+Here is that function:
+
+![formulaimage](/Users/zwixom/School/Marketing/Quant Analytics/Repo/zack-wixom/Figures/Week 9/monks_drink_formula.png)
+
+![chartimage](/Users/zwixom/School/Marketing/Quant Analytics/Repo/zack-wixom/Figures/Week 9/chart.png)
+
+![chart2image](/Users/zwixom/School/Marketing/Quant Analytics/Repo/zack-wixom/Figures/Week 9/chart2.png)
+
+> The probability of observing a zero is the probability of the monks drinking OR (+) the probability of the monks working AND (x) them not finishing a manuscript.
+
+**ZIPoisson or Zero Inflated Poisson regression**
+
+![ZIPformulaimage](/Users/zwixom/School/Marketing/Quant Analytics/Repo/zack-wixom/Figures/Week 9/ZIPoisson.png)
+
+![chart3image](/Users/zwixom/School/Marketing/Quant Analytics/Repo/zack-wixom/Figures/Week 9/chart3.png)
+
+```{r sim monk}
+## Define Parameters
+
+# 20% of days
+prob_drink <- 0.2
+
+# Average 1 manuscript per day
+rate_work <- 1
+
+# sample one year of production
+N <- 365
+
+set.seed(365)
+
+# simulate days monks drink
+drink <- rbinom(N, 1, prob_drink)
+
+# simulate manuscripts completed
+y <- (1 - drink) * rpois(N, rate_work)
+
+```
+
+Result is *y* as a list of counts of  completed manuscripts for each day of year.
+
+Zeros produced by drinking shown in blue and zeros from working shown in black.
+
+```{r monk plot}
+simplehist(y, xlab = "manuscripts complete", lwd = 4)
+#calculate zero instances
+zeros_drink <- sum(drink)
+zeros_work <- sum(y == 0 & drink == 0)
+zeros_total <- sum(y == 0)
+lines(c(0, 0), c(zeros_work, zeros_total), lwd = 4, col = rangi2)
+
+```
+
+Now onto fitting the model:
+
+```{r fit monk}
+m12.3 <- ulam(
+  alist(
+    y ~ dzipois(p, lambda),
+    logit(p) <- ap,
+    log(lambda) <- al,
+    ap ~ dnorm(-1.5, 1),
+    al ~ dnorm(1, 0.5)
+  ), 
+  data = list(y = y),
+  chains = 4
+)
+
+precis(m12.3)
+```
+
+On natural scale the posterior means are below:
+
+```{r monk post}
+post <- extract.samples(m12.3)
+
+# probability drink
+mean(inv_logit(post$ap))
+
+# rate finish manuscripts when not drinking
+mean(exp(post$al))
+
+```
+
+## Honorable Mentions
+
+More Mixture Models
+
+- ZIBinomial
+- Zero-Augmented
+- Gamma-Poisson
+- Multilevel Models
+
+
+
