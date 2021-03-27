@@ -7,7 +7,7 @@ output: github_document
 ```{r opts, echo = FALSE}
 # puts any figures made into this folder
 knitr::opts_chunk$set(
-  fig.path = "../Figures/Project/"
+  fig.path = "../Figures/Project/Twitch"
 )
 ```
 
@@ -130,7 +130,7 @@ m1 <- quap(
   alist(
     followers ~ dnorm(mu, sigma),
     mu <- a + b_avgviewers*average_viewers + b_peak * peak + b_watchtime*watchtime,
-    a ~ dnorm(0, 1),
+    a ~ dnorm(0, .2),
     b_avgviewers ~ dlnorm(0, .5),
     b_peak ~ dlnorm(0, .5),
     b_watchtime ~ dlnorm(0, .5),
@@ -141,6 +141,27 @@ m1 <- quap(
 plot(precis(m1))
 
 ```
+Extract priors for this model to see if I am doing it alright.
+
+```{r m1 prior predictive check}
+# Set seed
+set.seed(42)
+
+# Extract the prior
+prior_01 <- extract.prior(m1)
+
+# Use link() to compute mu without having to write out the linear function.
+mu <- link(m1, post = prior_01, data = list(average_viewers = c(-2, 2), peak = c(-2, 2), watchtime = c(-2,2)))
+
+# Base plot plus "layers".
+plot(NULL, xlim = c(-2, 2), ylim = c(-2,2))
+for (i in 1:50) {
+  lines(c(-2, 2), mu[i,], col = col.alpha("black",0.4))
+}
+
+```
+
+**I am not sure what you want to see to see if these priors are good or not.**
 
 So it looks like that these three variables are very impacting for increasing followers on Twitch. This isn't much of a surprise but it will be interesting to add in more variables such as Mature and Language
 
@@ -189,7 +210,7 @@ m2 <- quap(
   alist(
     followers ~ dnorm(mu, sigma),
     mu <- a[language] + b_avgviewers*average_viewers + b_peak * peak + b_watchtime*watchtime,
-    a[language] ~ dnorm(0, 1),
+    a[language] ~ dnorm(0, .2),
     b_avgviewers ~ dlnorm(0, .5),
     b_peak ~ dlnorm(0, .5),
     b_watchtime ~ dlnorm(0, .5),
@@ -203,6 +224,28 @@ plot(precis(m2, depth = 2))
 
 So there are definitely some languages that indicate more followers or less. This seems fairly obvious since the languages that are less common in general there will be less big streamers and so they will have less followers.
 
+Looking at a prior predictive check on this
+
+```{r m2 prior predictive check}
+# Set seed
+set.seed(42)
+
+# Extract the prior
+prior_02 <- extract.prior(m2)
+
+# Use link() to compute mu without having to write out the linear function.
+mu <- link(m2, post = prior_02, data = list(average_viewers = c(-2, 2), peak = c(-2, 2), watchtime = c(-2,2), language = ))
+
+# Base plot plus "layers".
+plot(NULL, xlim = c(-2, 2), ylim = c(-2,2))
+for (i in 1:50) {
+  lines(c(-2, 2), mu[i,], col = col.alpha("black",0.4))
+}
+
+```
+
+**Not sure how to do the prior predicitive check for discrete variables**
+
 Let's do the same thing but with `mature` variables.
 
 ```{r model3}
@@ -211,7 +254,7 @@ m3 <- quap(
   alist(
     followers ~ dnorm(mu, sigma),
     mu <- a[mature] + b_avgviewers*average_viewers + b_peak * peak + b_watchtime*watchtime,
-    a[mature] ~ dnorm(0, 1),
+    a[mature] ~ dnorm(0, .2),
     b_avgviewers ~ dlnorm(0, .5),
     b_peak ~ dlnorm(0, .5),
     b_watchtime ~ dlnorm(0, .5),
@@ -225,9 +268,10 @@ plot(precis(m3, depth = 2))
 
 Looks like `mature` is not giving us any significant changes with followers.
 
-## Prior Predicitve Checks
+I think I can move onto using better models to see the real impact of these variables and see if there are any interactions that I need to be aware of.
 
-It will be useful to see if I am using good Priors right now before moving onto `ulam()` function for my models.
+## Unobserved Variables
 
+I think there are some unobserved variables that I need to handle. I will use the Instruments chapter to help this issue.
 
 

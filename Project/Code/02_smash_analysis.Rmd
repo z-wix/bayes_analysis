@@ -1,0 +1,74 @@
+---
+title: "Smash Data Analysis"
+subtitle: "Beginning Modeling"
+author: "Zack Wixom"
+output: github_document
+---
+
+```{r opts, echo = FALSE}
+# puts any figures made into this folder
+knitr::opts_chunk$set(
+  fig.path = "../Figures/Project/Smash"
+)
+```
+
+Now that I have data and a success metric that I want to model on. I can start to build out some models. I am going to start with a simple model using quadratic approximation before moving onto a `ulam()`.
+
+### Set Up
+
+First I am going to be loading some packages I will need and import my data from `01_smash_analysis.Rmd`.
+
+```{r set up, message = FALSE}
+# Packages
+library(tidyverse)
+library(cmdstanr)
+library(posterior)
+library(bayesplot)
+library(rethinking)
+library(dagitty)
+
+# Load Data
+smash <- read_csv(here::here("Project/Data", "smash_data.csv")) %>% 
+  select(-contains("rank")) # Don't need these variables
+
+smash
+
+```
+
+Some of the characters do not have all the frame stats available. I might need to take care of this later if having NA's present cause an issue, but for now I will not worry about them. However, I really don't need the rankings per frame stat, so I will just drop those columns.
+
+### Clean Up Data
+
+**The Outcome Variable**
+
+The variable I will be modeling on is `per_played`. This is a ratio for how often this character is chosen and I want to know what influences peoples choice of each character.
+
+**The Explanatory Variables**
+
+There are a lot of variables in this dataset. So I want to make it simple and just use the most realistic variables that might go into a person's choice of a character. Here is a list of the variables that are most important to gameplay and are used in strategic moves:
+
+- *string1*: character is first string choice
+- *base_accel*: base acceleration 
+- *Air.speed*: speed in air
+- *Fast.Fall*: fast fall speed
+- *shorthop_height*: height of short hop
+- *fullhop_height*: height of full hop
+- *airjump_height*: height of midair jump
+- *Weight*: weight
+- *Run.Speed*: # of frames to pivot dash
+- *Grab.Range*: range of grab
+- *Fastest.Move.s.*: Fastest move out of shield
+
+> Note: I do not have damage data as of right now. It might be good to incorporate damage data for certain moves as this could be an indicator of character preference, however, the real reason players are good are because they understand the mechanics of their preferred character and know how to use it. So for a pro the actual damage output might not be as important as knowing how to move and time combos, leading to rampping up damage, and delivering a kill.
+
+```{r filtering data}
+
+vars <- c(1, 4, 5, 8, 11, 13, 16:18, 23, 24, 34, 41)
+
+smash <- smash %>% 
+  select(vars)
+
+```
+
+Now there is some issues with different spellings for the characters and that needs to be fixed. I will do that fixing in `01_smash_analysis.Rmd` and clean up there so that I can just have modeling on this markdown with clean data.
+
