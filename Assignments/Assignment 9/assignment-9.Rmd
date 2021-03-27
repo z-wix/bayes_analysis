@@ -1,0 +1,64 @@
+---
+title: "Assignment 9"
+author: "Zack Wixom"
+date: "3/27/2021"
+output: github_document
+---
+
+```{r opts, echo = FALSE}
+# puts any figures made into this folder
+knitr::opts_chunk$set(
+  fig.path = "../Figures/Week 11/"
+)
+```
+
+```{r packages, message = FALSE}
+# Packages
+library(tidyverse)
+library(rethinking)
+library(dagitty)
+
+# Set Seed
+set.seed(42)
+
+# Load Data
+data("bangladesh")
+d <- bangladesh
+
+```
+
+### Question 1
+
+First to make the varying slopes model, with centered parameterization.
+
+```{r m1}
+# Standardize Vars
+data <- tibble(
+  contra = d$use.contraception,
+  district_id = as.integer(as.factor(d$district)),
+  urban = d$urban
+)
+
+# Fit Model
+m1.1 <- ulam(
+  alist(
+    contra ~ bernoulli(p),
+    logit(p) <- a[district_id] + b[district_id]*urban,
+    c(a, b)[district_id] ~ multi_normal(c(abar, bbar), Rho, Sigma),
+    abar ~ normal(0, 1),
+    bbar ~ normal(0, 0.5),
+    Rho ~ lkj_corr(2),
+    Sigma ~ exponential(1)
+  ),
+  data = data,
+  chains = 4,
+  cores = 4,
+  cmdstan = TRUE
+)
+
+```
+
+
+
+
+
