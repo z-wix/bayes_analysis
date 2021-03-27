@@ -17,6 +17,7 @@ knitr::opts_chunk$set(
 library(tidyverse)
 library(rethinking)
 library(dagitty)
+library(ellipse)
 
 # Set Seed
 set.seed(42)
@@ -31,7 +32,7 @@ d <- bangladesh
 
 First to make the varying slopes model, with centered parameterization.
 
-```{r m1}
+```{r m1.1 code}
 # Standardize Vars
 data <- tibble(
   contra = d$use.contraception,
@@ -58,7 +59,68 @@ m1.1 <- ulam(
 
 ```
 
+```{r m1.1 plot 1}
+plot(precis(m1.1))
+```
+
+This is telling us that urban areas are using more contraceptives. But we will look at distribution of varying effects.
+
+```{r m1.1 plot 2}
+
+plot(precis(m1.1, depth = 3, pars = c("Rho", "Sigma")))
+
+```
+
+**Can't remember what differeence of looking at Rho does, Check in Book**
+
+Now onto plotting the intercpets and slopes with the ellipse plot 
+
+```{r m1.1 ellipse}
+post <- extract.samples(m1.1)
+
+a <- apply(post$a, 2, mean)
+b <- apply(post$b, 2, mean)
+
+plot(a, b, xlab = "a intercept", ylab = "b urban slope")
+abline(h = 0, lty = 2)
+abline(v = 0, lty = 2)
+
+R <- apply(post$Rho, 2:3, mean)
+s <- apply(post$Sigma, 2, mean)
+S <- diag(s) %*% R %*% diag(s)
+ll <- c(0.5, 0.67, 0.89, 0.97)
+for(l in ll){
+  el <- ellipse(S, contre = c(mean(post$abar), mean(post$bbar)), level = l)
+  lines(el, col = "black", lwd = 0.5)
+}
 
 
 
+```
+
+So we can see a negative correlation with districts with higher use outside urban areas have smaller slopes. 
+
+Overall this can mean that perhaps urban areas are similar to all districts but once you go to rural areas there is variation, But to check we will plot urban areas against rural areas.
+
+```{r m1.1 outcome scale}
+u0 <- inv_logit(a)
+u1 <- inv_logit(a + b)
+
+plot(u0, u1, xlim = c(0,1), ylim = c(0,1), xlab = "rural", ylab = "urban")
+abline(h = 0.5, lty = 2)
+abline(v = 0.5, lty = 2)
+
+```
+
+This shows how the spread is more tight in the urban areas while the rural as a large spread and more variety.
+
+### Question 2
+
+First to draw my DAG.
+
+```{r dag}
+
+
+
+```
 
