@@ -65,8 +65,42 @@ There are a lot of variables in this dataset. So I want to make it simple and ju
 
 vars <- c(1, 4, 5, 8, 11, 13, 16:18, 23, 24, 34, 41)
 
-smash <- smash %>% 
+smash_tidy <- smash %>% 
   select(vars)
+
+```
+
+I need to fix the character names in the data now.
+
+```{r fix character names}
+
+# Look at all names in alphabetical order to see what ones are spelled differently
+unique(smash_tidy$character[order(smash_tidy$character)])
+
+# Fix names
+smash_tidy$character[smash_tidy$character == "Banjo-Kazooie"] <- "Banjo & Kazooie"
+smash_tidy$character[smash_tidy$character == "DK"] <- "Donkey Kong"
+smash_tidy$character[smash_tidy$character == "Mr. Game and Watch"] <- "Mr. Game & Watch"
+smash_tidy$character[smash_tidy$character == "P.T. [Charizard]"] <- "Charizard"
+smash_tidy$character[smash_tidy$character == "P.T. [Ivysaur]"] <- "Ivysaur"
+smash_tidy$character[smash_tidy$character == "P.T. [Squirtle]"] <- "Squirtle"
+smash_tidy$character[smash_tidy$character == "PAC-MAN"] <- "Pac-Man"
+smash_tidy$character[smash_tidy$character == "P.T. [Ivysaur]"] <- "Ivysaur"
+smash_tidy$character[smash_tidy$character == "Pokemon Trainer (Ivysaur)"] <- "Ivysaur"
+smash_tidy$character[smash_tidy$character == "Pokemon Trainer (Charizard)"] <- "Charizard"
+smash_tidy$character[smash_tidy$character == "Pokemon Trainer (Squirtle)"] <- "Squirtle"
+  
+
+
+# Ref: https://stackoverflow.com/a/45515491
+# Supply lists by splicing them into dots:
+coalesce_by_column <- function(df) {
+  return(dplyr::coalesce(!!! as.list(df)))
+}
+
+smash_tidy %>% 
+  group_by(character) %>% 
+  summarise_all(coalesce_by_column)
 
 ```
 

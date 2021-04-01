@@ -54,7 +54,7 @@ rank_accel,Character,base_accel,additional_accel,max_accel
 52,Dr. Mario,0.007648,0.053536,0.061184
 53-59,Young Link,0.02,0.04,0.06
 53-59,Charizard,0.01,0.05,0.06
-53-59,Mii Swordfighter,0.01,0.05,0.06
+53-59,Mii Sword Fighter,0.01,0.05,0.06
 53-59,Piranha Plant,0.01,0.05,0.06
 53-59,Donkey Kong,0.01,0.05,0.06
 53-59,Villager,0.01,0.05,0.06
@@ -65,7 +65,7 @@ rank_accel,Character,base_accel,additional_accel,max_accel
 61-71,Steve,**,**,0.05
 61-71,Bowser,0.01,0.04,0.05
 61-71,Shulk,0.01,0.04,0.05
-61-71,Dedede,0.01,0.04,0.05
+61-71,King Dedede,0.01,0.04,0.05
 61-71,Link,0.01,0.04,0.05
 61-71,Ike,0.01,0.04,0.05
 61-71,Corrin,0.01,0.04,0.05
