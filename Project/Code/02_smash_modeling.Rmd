@@ -51,8 +51,8 @@ There are a lot of variables in this dataset. So I want to make it simple and ju
 - `base_accel`: base acceleration 
 - `Air.speed`: speed in air
 - `Fast.Fall`: fast fall speed
-- `shorthop_height`: height of short hop
 - `fullhop_height`: height of full hop
+- `shorthop_height`: height of short hop
 - `airjump_height`: height of midair jump
 - `Weight`: weight
 - `Run.Speed`: # of frames to pivot dash
@@ -63,7 +63,7 @@ There are a lot of variables in this dataset. So I want to make it simple and ju
 
 ```{r filtering data}
 
-vars <- c(1, 4, 5, 8, 11, 13, 16:18, 23, 24, 34, 41)
+vars <- c(1, 4, 5, 8, 11, 13, 16:18, 23, 28, 34, 41)
 
 smash_tidy <- smash %>% 
   select(vars)
@@ -107,15 +107,158 @@ drawdag(dag1)
 
 There are a few interactions that we need to watch. Since it is a fork from W to X, S, and R we will condition all the variables in the model.
 
-### First Model
+### Standardize Variables
+
+We are going to standardize each variable, there are a couple that need to be converted to numeric because of they are character variables.
+
+Here are the variables I will standardize
+
+- played = `per_played` the outcome variable
+- weight = `Weight`
+- shorthop = `shorthop_height` make numeric to get rid of ~'s
+- grab = `Grab.Range` make numeric to get rid of ~'s
+- run = `Run.Speed`
 
 ```{r standardize data}
 
+# Standardize and Index Variables
+smash1 <- tibble(
+  played = standardize(smash_tidy$per_played),
+  weight = standardize(smash_tidy$Weight),
+  shorthop = standardize(as.numeric(smash_tidy$shorthop_height)),
+  grab = standardize(as.numeric(smash_tidy$Grab.Range)),
+  run = standardize(smash_tidy$Run.Speed)
+)
 
-
-
+# Initial Density Graphs
+dens(smash1$played)
+dens(smash1$weight)
+dens(smash1$shorthop)
+dens(smash1$grab)
+dens(smash1$run)
 
 ```
 
+There are a couple of outliers happening in grab and run. I think this is because there are a few characters that are known to have this extreme stats. So it is not surprising, but I might need to log these two variables.
+
+I also do not have any discrete varables at the moment. In a later iteration this may change especially as I group by character.
+
+### Build Model
+
+```{r m1}
+
+# Omit NA's
+smash1 <- smash1 %>% 
+  na.omit()
+
+# Fit Model
+m1.1 <- quap(
+  alist(
+    played ~ dnorm(mu, sigma),
+    mu <- a + bW * weight + bS * shorthop + bG * grab + bR * run,
+    a ~ dnorm(0, .2),
+    bW ~ dnorm(0, .5),
+    bS ~ dnorm(0, .5),
+    bG ~ dnorm(0, .5),
+    bR ~ dnorm(0, .5),
+    sigma ~ dexp(1)
+  ), data = smash1
+)
+
+# Plot Precis
+plot(precis(m1.1))
+
+```
+
+So we can see that there the variables are straddling 0 but there is some pull for *Grab* and *Run Speed*. However, I think that I still need to fix this to see if there is something else influencing this.
+
+### Iteration 2
+
+I want to see if I don't include some variables if it changes things.
+
+```{r}
+
+# Standardize and Index Variables
+smash1.2 <- tibble(
+  played = standardize(smash_tidy$per_played),
+  shorthop = standardize(as.numeric(smash_tidy$shorthop_height)),
+  grab = standardize(as.numeric(smash_tidy$Grab.Range)),
+  run = standardize(smash_tidy$Run.Speed)
+)
+
+# Initial Density Graphs
+dens(smash1.2$played)
+dens(smash1.2$shorthop)
+dens(smash1.2$grab)
+dens(smash1.2$run)
+
+```
+
+There are a couple of outliers happening in grab and run. I think this is because there are a few characters that are known to have this extreme stats. So it is not surprising, but I might need to log these two variables.
+
+I also do not have any discrete varables at the moment. In a later iteration this may change especially as I group by character.
+
+### Build Model
+
+```{r m1.2}
+
+# Omit NA's
+smash1.2 <- smash1.2 %>% 
+  na.omit()
+
+# Fit Model
+m1.2 <- quap(
+  alist(
+    played ~ dnorm(mu, sigma),
+    mu <- a + bS * shorthop + bG * grab + bR * run,
+    a ~ dnorm(0, .2),
+    bS ~ dnorm(0, .5),
+    bG ~ dnorm(0, .5),
+    bR ~ dnorm(0, .5),
+    sigma ~ dexp(1)
+  ), data = smash1.2
+)
+
+# Plot Precis
+plot(precis(m1.2))
+
+```
+
+No difference. So let's look at some new variables.
+
+### Iteration 3
+
+```{r}
+
+# Standardize and Index Variables
+smash1.3 <- tibble(
+  played = standardize(smash_tidy$per_played),
+  weight = standardize(smash_tidy$Weight),
+  shorthop = standardize(as.numeric(smash_tidy$shorthop_height)),
+  grab = standardize(as.numeric(smash_tidy$Grab.Range)),
+  run = standardize(smash_tidy$Run.Speed),
+  character = smash_tidy$character
+) %>% 
+  drop_na()
+
+```
+
+```{r m1.3}
+
+# Fit Model
+m1.3 <- quap(
+  alist(
+    played ~ dnorm(mu, sigma),
+    mu <- a + bW * weight,
+    a ~ dnorm(0, .2),
+    bW ~ dnorm(0, .5),
+    sigma ~ dexp(1)
+  ), data = smash1.3
+)
+
+# Plot Precis
+plot(precis(m1.3))
+
+```
 
 
