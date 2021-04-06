@@ -16,7 +16,7 @@ Now that I have data and a success metric that I want to model on. I can start t
 
 ### Set Up
 
-First I am going to be loading some packages I will need and import my data from `01_smash_analysis.Rmd`.
+First I am going to be loading some packages I will need and import my data from `01_smash_data.Rmd`.
 
 ```{r set up, message = FALSE}
 # Packages
@@ -47,17 +47,17 @@ The variable I will be modeling on is `per_played`. This is a ratio for how ofte
 
 There are a lot of variables in this dataset. So I want to make it simple and just use the most realistic variables that might go into a person's choice of a character. Here is a list of the variables that are most important to gameplay and are used in strategic moves:
 
-- *string1*: character is first string choice
-- *base_accel*: base acceleration 
-- *Air.speed*: speed in air
-- *Fast.Fall*: fast fall speed
-- *shorthop_height*: height of short hop
-- *fullhop_height*: height of full hop
-- *airjump_height*: height of midair jump
-- *Weight*: weight
-- *Run.Speed*: # of frames to pivot dash
-- *Grab.Range*: range of grab
-- *Fastest.Move.s.*: Fastest move out of shield
+- `string1`: character is first string choice
+- `base_accel`: base acceleration 
+- `Air.speed`: speed in air
+- `Fast.Fall`: fast fall speed
+- `shorthop_height`: height of short hop
+- `fullhop_height`: height of full hop
+- `airjump_height`: height of midair jump
+- `Weight`: weight
+- `Run.Speed`: # of frames to pivot dash
+- `Grab.Range`: range of grab
+- `Fastest.Move.s.`: Fastest move out of shield
 
 > Note: I do not have damage data as of right now. It might be good to incorporate damage data for certain moves as this could be an indicator of character preference, however, the real reason players are good are because they understand the mechanics of their preferred character and know how to use it. So for a pro the actual damage output might not be as important as knowing how to move and time combos, leading to rampping up damage, and delivering a kill.
 
@@ -70,39 +70,52 @@ smash_tidy <- smash %>%
 
 ```
 
-I need to fix the character names in the data now.
+### Drawing First DAG
 
-```{r fix character names}
+Now I will create a DAG that I can use to determine my models. here are my variables that I am going to start with:
 
-# Look at all names in alphabetical order to see what ones are spelled differently
-unique(smash_tidy$character[order(smash_tidy$character)])
+- X = `per_played` the outcome variable
+- W = `Weight`
+- S = `shorthop_height`
+- G = `Grab.Range`
+- R = `Run.Speed`
 
-# Fix names
-smash_tidy$character[smash_tidy$character == "Banjo-Kazooie"] <- "Banjo & Kazooie"
-smash_tidy$character[smash_tidy$character == "DK"] <- "Donkey Kong"
-smash_tidy$character[smash_tidy$character == "Mr. Game and Watch"] <- "Mr. Game & Watch"
-smash_tidy$character[smash_tidy$character == "P.T. [Charizard]"] <- "Charizard"
-smash_tidy$character[smash_tidy$character == "P.T. [Ivysaur]"] <- "Ivysaur"
-smash_tidy$character[smash_tidy$character == "P.T. [Squirtle]"] <- "Squirtle"
-smash_tidy$character[smash_tidy$character == "PAC-MAN"] <- "Pac-Man"
-smash_tidy$character[smash_tidy$character == "P.T. [Ivysaur]"] <- "Ivysaur"
-smash_tidy$character[smash_tidy$character == "Pokemon Trainer (Ivysaur)"] <- "Ivysaur"
-smash_tidy$character[smash_tidy$character == "Pokemon Trainer (Charizard)"] <- "Charizard"
-smash_tidy$character[smash_tidy$character == "Pokemon Trainer (Squirtle)"] <- "Squirtle"
-  
+These are pretty basic components that should be considered when picking a character. These are *Grab Range*, *Run Speed*, *Short Hop*, and *Weight*. Weight is related to a lot of the other variables, besides Grab. 
 
 
-# Ref: https://stackoverflow.com/a/45515491
-# Supply lists by splicing them into dots:
-coalesce_by_column <- function(df) {
-  return(dplyr::coalesce(!!! as.list(df)))
-}
+```{r dag1}
+# Create DAG
+dag1 <- dagitty("dag{
+    W -> X; 
+    S -> X;
+    G -> X;
+    R -> X;
+    W -> S;
+    W -> R
+}")
 
-smash_tidy %>% 
-  group_by(character) %>% 
-  summarise_all(coalesce_by_column)
+# DAG coordinates
+coordinates(dag1) <- list(
+  x = c(X = 2, W = 2, S = 3, G = 1, R = 1),
+  y = c(X = 2, W = 0, S = 0, G = 2, R = 0)
+)
+
+# Draw DAG
+drawdag(dag1)
 
 ```
 
-Now there is some issues with different spellings for the characters and that needs to be fixed. I will do that fixing in `01_smash_analysis.Rmd` and clean up there so that I can just have modeling on this markdown with clean data.
+There are a few interactions that we need to watch. Since it is a fork from W to X, S, and R we will condition all the variables in the model.
+
+### First Model
+
+```{r standardize data}
+
+
+
+
+
+```
+
+
 

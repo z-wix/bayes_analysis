@@ -51,13 +51,6 @@ for (i in 1:14) {
   write_csv(as.data.frame(x), paste("smash", i, ".csv", sep = ""))
 }
 
-# Explore the varialbe names
-acceleration <- read.csv(here::here("Project", "Data", "smash1_acceleration.csv"))
-airspeed <- read.csv(here::here("Project", "Data", "smash2_airspeed.csv"))
-head(acceleration)
-head(airspeed)
-
-
 ```
 
 Every Data table has a identifier, `Character`, variable. This will be used to join together the datasets. However, there are some variable names that are repeated but need to be fixed before joining together. For example, every dataset comes with the ranking of the characters for that statistic. So that will need to be changed so that we can differentiate before each table's ranking.
@@ -67,7 +60,7 @@ I also need to clean up the `Character` variable a bit. Some of the tables have 
 ```{r load data}
 
 # Load in Air Acceleration Data >>> Needed to define variables better to avoid confusion
-acceleration <- read.csv(here::here("Project", "Data", "smash1_acceleration.csv")) %>%
+acceleration <- read.csv(here::here("Project", "Data", "smash1.csv")) %>%
   rename(
     rank_accel = Rank,
     base_accel = Base,
@@ -95,6 +88,7 @@ acceleration$Character[acceleration$Character == "Olimar (r/b/y +1)"] <- "Olimar
 acceleration$Character[acceleration$Character == "Dedede"] <- "King Dedede"
 acceleration$Character[acceleration$Character == "Metaknight"] <- "Meta Knight"
 acceleration$Character[acceleration$Character == "Mii Swordfighter"] <- "Mii Sword Fighter"
+acceleration$Character[acceleration$Character == "R.O.B."] <- "R.O.B"
 
 # Separate Echo Fighters
 acceleration <- acceleration %>% 
@@ -104,7 +98,7 @@ acceleration <- acceleration %>%
 write_csv(acceleration, here::here("Project", "Data", "smash1_acceleration.csv"))
 
 # Load in Air Speed Data
-airspeed <- read.csv(here::here("Project", "Data", "smash2_airspeed.csv")) %>% 
+airspeed <- read.csv(here::here("Project", "Data", "smash2.csv")) %>% 
   rename(
     rank_airspeed = Rank
   )
@@ -129,6 +123,7 @@ airspeed$Character[airspeed$Character == "Olimar (r/b/y +1)"] <- "Olimar (rby +1
 airspeed$Character[airspeed$Character == "Dedede"] <- "King Dedede"
 airspeed$Character[airspeed$Character == "Metaknight"] <- "Meta Knight"
 airspeed$Character[airspeed$Character == "Mii Swordfighter"] <- "Mii Sword Fighter"
+airspeed$Character[airspeed$Character == "R.O.B."] <- "R.O.B"
 
 # Separate Echo Fighters
 airspeed <- airspeed %>% 
@@ -138,7 +133,7 @@ airspeed <- airspeed %>%
 write_csv(airspeed, here::here("Project", "Data", "smash2_airspeed.csv"))
 
 # Load in Fall Speed Data
-fallspeed <- read.csv(here::here("Project", "Data", "smash3_fallspeed.csv")) %>% 
+fallspeed <- read.csv(here::here("Project", "Data", "smash3.csv")) %>% 
   rename(
     rank_fallspeed = Rank
   )
@@ -163,6 +158,7 @@ fallspeed$Character[fallspeed$Character == "Olimar (r/b/y +1)"] <- "Olimar (rby 
 fallspeed$Character[fallspeed$Character == "Dedede"] <- "King Dedede"
 fallspeed$Character[fallspeed$Character == "Metaknight"] <- "Meta Knight"
 fallspeed$Character[fallspeed$Character == "Mii Swordfighter"] <- "Mii Sword Fighter"
+fallspeed$Character[fallspeed$Character == "R.O.B."] <- "R.O.B"
 
 # Separate Echo Fighters
 fallspeed <- fallspeed %>% 
@@ -172,7 +168,9 @@ fallspeed <- fallspeed %>%
 write_csv(fallspeed, here::here("Project", "Data", "smash3_fallspeed.csv"))
 
 # Load in Gravity Data
-gravity <- read.csv(here::here("Project", "Data", "smash4_gravity.csv"))
+gravity <- read.csv(here::here("Project", "Data", "smash4.csv"))
+
+# gravity <- read.csv(here::here("Project", "Data", "smash4_gravity.csv"))
 
 # Fix Names
 gravity$Character[gravity$Character == "Banjo-Kazooie"] <- "Banjo & Kazooie"
@@ -192,6 +190,7 @@ gravity$Character[gravity$Character == "Olimar (r/b/y +1)"] <- "Olimar (rby +1)"
 gravity$Character[gravity$Character == "Dedede"] <- "King Dedede"
 gravity$Character[gravity$Character == "Metaknight"] <- "Meta Knight"
 gravity$Character[gravity$Character =="Mii Swordfighter"] <- "Mii Sword Fighter"
+gravity$Character[gravity$Character == "R.O.B."] <- "R.O.B"
 
 # Separate Echo Fighters
 gravity <- gravity %>% 
@@ -201,7 +200,7 @@ gravity <- gravity %>%
 write_csv(gravity, here::here("Project", "Data", "smash4_gravity.csv"))
 
 # Load in Jump Height Data
-jumpheight <- read.csv(here::here("Project", "Data", "smash5_jumpheight.csv")) %>% 
+jumpheight <- read.csv(here::here("Project", "Data", "smash5.csv")) %>% 
   rename(
     shorthop_height = Short.Hop,
     fullhop_height = Full.Hop,
@@ -228,6 +227,7 @@ jumpheight$Character[jumpheight$Character == "Olimar (r/b/y +1)"] <- "Olimar (rb
 jumpheight$Character[jumpheight$Character == "Dedede"] <- "King Dedede"
 jumpheight$Character[jumpheight$Character == "Metaknight"] <- "Meta Knight"
 jumpheight$Character[jumpheight$Character == "Mii Swordfighter"] <- "Mii Sword Fighter"
+jumpheight$Character[jumpheight$Character == "R.O.B."] <- "R.O.B"
 
 # Separate Echo Fighters
 jumpheight <- jumpheight %>% 
@@ -237,7 +237,7 @@ jumpheight <- jumpheight %>%
 write_csv(jumpheight, here::here("Project", "Data", "smash5_jumpheight.csv"))
 
 # Load in Jump Duration Data
-jumpduration <- read.csv(here::here("Project", "Data", "smash6_jumpduration.csv")) %>% 
+jumpduration <- read.csv(here::here("Project", "Data", "smash6.csv")) %>% 
   rename(
     shorthop_dur = Short.Hop,
     fullhop_dur = Full.Hop
@@ -263,6 +263,7 @@ jumpduration$Character[jumpduration$Character == "Olimar (r/b/y +1)"] <- "Olimar
 jumpduration$Character[jumpduration$Character == "Dedede"] <- "King Dedede"
 jumpduration$Character[jumpduration$Character == "Metaknight"] <- "Meta Knight"
 jumpduration$Character[jumpduration$Character == "Mii Swordfighter"] <- "Mii Sword Fighter"
+jumpduration$Character[jumpduration$Character == "R.O.B."] <- "R.O.B"
 
 # Separate Echo Fighters
 jumpduration <- jumpduration %>% 
@@ -272,12 +273,12 @@ jumpduration <- jumpduration %>%
 write_csv(jumpduration, here::here("Project", "Data", "smash6_jumpduration.csv"))
 
 # Load in Weight Data
-weight <- read.csv(here::here("Project", "Data", "smash7_weight.csv")) %>% 
+weight <- read.csv(here::here("Project", "Data", "smash7.csv")) %>% 
   rename(
     rank_weight = Rank
   )
 
-weight <- read.csv(here::here("Project", "Data", "smash7_weight.csv"))
+# weight <- read.csv(here::here("Project", "Data", "smash7_weight.csv"))
 
 # Fix Names
 weight$Character[weight$Character == "Banjo-Kazooie"] <- "Banjo & Kazooie"
@@ -297,6 +298,7 @@ weight$Character[weight$Character == "Olimar (r/b/y +1)"] <- "Olimar (rby +1)"
 weight$Character[weight$Character == "Dedede"] <- "King Dedede"
 weight$Character[weight$Character == "Metaknight"] <- "Meta Knight"
 weight$Character[weight$Character == "Mii Swordfighter"] <- "Mii Sword Fighter"
+weight$Character[weight$Character == "R.O.B."] <- "R.O.B"
 
 # Separate Echo Fighters
 weight <- weight %>% 
@@ -306,8 +308,7 @@ weight <- weight %>%
 write_csv(weight, here::here("Project", "Data", "smash7_weight.csv"))
 
 # Load in Landing Data
-landing <- read.csv(here::here("Project", "Data", "smash8_landing.csv")) %>% 
-  separate_rows(Character, sep = "/")
+landing <- read.csv(here::here("Project", "Data", "smash8.csv"))
 
 # landing <- read.csv(here::here("Project", "Data", "smash8_landing.csv"))
 
@@ -329,16 +330,17 @@ landing$Character[landing$Character == "Olimar (r/b/y +1)"] <- "Olimar (rby +1)"
 landing$Character[landing$Character == "Dedede"] <- "King Dedede"
 landing$Character[landing$Character == "Metaknight"] <- "Meta Knight"
 landing$Character[landing$Character == "Mii Swordfighter"] <- "Mii Sword Fighter"
+landing$Character[landing$Character == "R.O.B."] <- "R.O.B"
 
 # Separate Echo Fighters
 landing <- landing %>% 
   separate_rows(Character, sep = "/")
 
 # Write data locally
-write_csv(landing, here::here("Project", "Data", "smash8_weight.csv"))
+write_csv(landing, here::here("Project", "Data", "smash8_landing.csv"))
 
 # Load in Walk Speed Data
-walkspeed <- read.csv(here::here("Project", "Data", "smash9_walkspeed.csv")) %>% 
+walkspeed <- read.csv(here::here("Project", "Data", "smash9.csv")) %>% 
   rename(
     rank_walkspeed = Rank
   )
@@ -363,6 +365,7 @@ walkspeed$Character[walkspeed$Character == "Olimar (r/b/y +1)"] <- "Olimar (rby 
 walkspeed$Character[walkspeed$Character == "Dedede"] <- "King Dedede"
 walkspeed$Character[walkspeed$Character == "Metaknight"] <- "Meta Knight"
 walkspeed$Character[walkspeed$Character == "Mii Swordfighter"] <- "Mii Sword Fighter"
+walkspeed$Character[walkspeed$Character == "R.O.B."] <- "R.O.B"
 
 # Separate Echo Fighters
 walkspeed <- walkspeed %>% 
@@ -372,7 +375,9 @@ walkspeed <- walkspeed %>%
 write_csv(walkspeed, here::here("Project", "Data", "smash9_walkspeed.csv"))
 
 # Load in Dash and Run Data
-dashrun <- read.csv(here::here("Project", "Data", "smash10_dashrun.csv"))
+dashrun <- read.csv(here::here("Project", "Data", "smash10.csv"))
+
+# dashrun <- read.csv(here::here("Project", "Data", "smash10_dashrun.csv"))
 
 # Fix Names
 dashrun$Character[dashrun$Character == "Banjo-Kazooie"] <- "Banjo & Kazooie"
@@ -392,6 +397,7 @@ dashrun$Character[dashrun$Character == "Olimar (r/b/y +1)"] <- "Olimar (rby +1)"
 dashrun$Character[dashrun$Character == "Dedede"] <- "King Dedede"
 dashrun$Character[dashrun$Character == "Metaknight"] <- "Meta Knight"
 dashrun$Character[dashrun$Character == "Mii Swordfighter"] <- "Mii Sword Fighter"
+dashrun$Character[dashrun$Character == "R.O.B."] <- "R.O.B"
 
 # Separate Echo Fighters
 dashrun <- dashrun %>% 
@@ -401,7 +407,7 @@ dashrun <- dashrun %>%
 write_csv(dashrun, here::here("Project", "Data", "smash10_dashrun.csv"))
 
 # Load in Dash Turn Around Data
-dashturn <- read.csv(here::here("Project", "Data", "smash11_dashturnaround.csv")) %>% 
+dashturn <- read.csv(here::here("Project", "Data", "smash11.csv")) %>% 
   rename(
     Fast.Initial.Dash = Fast..Initial.Dash.,
     Normal.Buffer.Window = Normal..Buffer.Window.,
@@ -428,6 +434,7 @@ dashturn$Character[dashturn$Character == "Olimar (r/b/y +1)"] <- "Olimar (rby +1
 dashturn$Character[dashturn$Character == "Dedede"] <- "King Dedede"
 dashturn$Character[dashturn$Character == "Metaknight"] <- "Meta Knight"
 dashturn$Character[dashturn$Character == "Mii Swordfighter"] <- "Mii Sword Fighter"
+dashturn$Character[dashturn$Character == "R.O.B."] <- "R.O.B"
 
 # Separate Echo Fighters
 dashturn <- dashturn %>% 
@@ -437,7 +444,9 @@ dashturn <- dashturn %>%
 write_csv(dashturn, here::here("Project", "Data", "smash11_dashturnaround.csv"))
 
 # Load in Grab Data
-grab <- read.csv(here::here("Project", "Data", "smash12_grab.csv"))
+grab <- read.csv(here::here("Project", "Data", "smash12.csv"))
+
+# grab <- read.csv(here::here("Project", "Data", "smash12_grab.csv"))
 
 # Fix Names
 grab$Character[grab$Character == "Banjo-Kazooie"] <- "Banjo & Kazooie"
@@ -457,6 +466,7 @@ grab$Character[grab$Character == "Olimar (r/b/y +1)"] <- "Olimar (rby +1)"
 grab$Character[grab$Character == "Dedede"] <- "King Dedede"
 grab$Character[grab$Character == "Metaknight"] <- "Meta Knight"
 grab$Character[grab$Character == "Mii Swordfighter"] <- "Mii Sword Fighter"
+grab$Character[grab$Character   == "R.O.B."] <- "R.O.B"
 
 # Separate Echo Fighters
 grab <- grab %>% 
@@ -467,7 +477,9 @@ write_csv(grab, here::here("Project", "Data", "smash12_grab.csv"))
 
 ## Lots of changes for Ledge Stats
 # Load in LEdge Stats Data
-ledge <- read.csv(here::here("Project", "Data", "smash13_ledge.csv"))
+ledge <- read.csv(here::here("Project", "Data", "smash13.csv"))
+
+# ledge <- read.csv(here::here("Project", "Data", "smash13_ledge.csv"))
 
 # Fix Names
 ledge$Character[ledge$Character == "Banjo-Kazooie"] <- "Banjo & Kazooie"
@@ -487,6 +499,7 @@ ledge$Character[ledge$Character == "Olimar (r/b/y +1)"] <- "Olimar (rby +1)"
 ledge$Character[ledge$Character == "Dedede"] <- "King Dedede"
 ledge$Character[ledge$Character == "Metaknight"] <- "Meta Knight"
 ledge$Character[ledge$Character =="Mii Swordfighter"] <- "Mii Sword Fighter"
+ledge$Character[ledge$Character  == "R.O.B."] <- "R.O.B"
 
 # Separate Echo Fighters
 ledge <- ledge %>% 
@@ -496,7 +509,9 @@ ledge <- ledge %>%
 write_csv(ledge, here::here("Project", "Data", "smash13_ledge.csv"))
 
 # Load in Out of Shield Data
-outofshield <- read.csv(here::here("Project", "Data", "smash14_outofshield.csv"))
+outofshield <- read.csv(here::here("Project", "Data", "smash14.csv"))
+
+# outofshield <- read.csv(here::here("Project", "Data", "smash14_outofshield.csv"))
 
 # Fix Names
 outofshield$Character[outofshield$Character == "Banjo-Kazooie"] <- "Banjo & Kazooie"
@@ -516,6 +531,7 @@ outofshield$Character[outofshield$Character == "Olimar (r/b/y +1)"] <- "Olimar (
 outofshield$Character[outofshield$Character == "Dedede"] <- "King Dedede"
 outofshield$Character[outofshield$Character == "Metaknight"] <- "Meta Knight"
 outofshield$Character[outofshield$Character == "Mii Swordfighter"] <- "Mii Sword Fighter"
+outofshield$Character[outofshield$Character == "R.O.B."] <- "R.O.B"
 
 # Separate Echo Fighters
 outofshield <- outofshield %>% 
@@ -528,55 +544,84 @@ write_csv(outofshield, here::here("Project", "Data", "smash14_outofshield.csv"))
 
 Now to join all the datasets together. As well as clean some of the `Character` names since it is not consistent across `frame_data` and `tier_data`
 
+```{r frame datasets}
+
+acceleration <- read.csv(here::here("Project", "Data", "smash1_acceleration.csv"))
+acceleration$Character[acceleration$Character == "Nana"] <- "Ice Climbers"
+acceleration$Character[acceleration$Character == "Popo"] <- "Ice Climbers"
+
+airspeed <- read.csv(here::here("Project", "Data", "smash2_airspeed.csv"))
+
+fallspeed <- read.csv(here::here("Project", "Data", "smash3_fallspeed.csv"))
+
+gravity <- read.csv(here::here("Project", "Data", "smash4_gravity.csv"))
+
+jumpheight <- read.csv(here::here("Project", "Data", "smash5_jumpheight.csv"))
+jumpheight$Character[jumpheight$Character == "Rosalina & Luma"] <- "Rosalina"
+
+jumpduration <- read.csv(here::here("Project", "Data", "smash6_jumpduration.csv"))
+
+weight <- read.csv(here::here("Project", "Data", "smash7_weight.csv"))
+
+landing <- read.csv(here::here("Project", "Data", "smash8_landing.csv"))
+
+walkspeed <- read.csv(here::here("Project", "Data", "smash9_walkspeed.csv"))
+walkspeed$Character[walkspeed$Character == "Nana"] <- "Ice Climbers"
+walkspeed$Character[walkspeed$Character == "Popo"] <- "Ice Climbers"
+
+
+dashrun <- read.csv(here::here("Project", "Data", "smash10_dashrun.csv"))
+dashrun$Character[dashrun$Character == "Rosalina & Luma"] <- "Rosalina"
+dashrun$Character[dashrun$Character == "Ice Climbers (partner)"] <- "Ice Climbers"
+dashrun$Character[dashrun$Character == "Ice Climbers (leader)"] <- "Ice Climbers"
+
+dashturn <- read.csv(here::here("Project", "Data", "smash11_dashturnaround.csv"))
+dashturn$Character[dashturn$Character == "Rosalina & Luma"] <- "Rosalina"
+dashturn$Character[dashturn$Character == "Pokemon Trainer (All)"] <- "Pokemon Trainer"
+
+grab <- read.csv(here::here("Project", "Data", "smash12_grab.csv"))
+grab$Character[grab$Character == "Rosalina & Luma"] <- "Rosalina"
+
+ledge <- read.csv(here::here("Project", "Data", "smash13_ledge.csv"))
+outofshield <- read.csv(here::here("Project", "Data", "smash14_outofshield.csv"))
+outofshield$Character[outofshield$Character == "Rosalina & Luma"] <- "Rosalina"
+
+```
+
+
 ```{r join data}
 
 frame_data <- acceleration %>% 
-  full_join(airspeed, by = "Character") %>% # Ice Climbers together
+  full_join(airspeed, by = "Character") %>% # Terry, Joker, Min Min
   full_join(fallspeed, by = "Character") %>%  # Sephiroth 
-  full_join(gravity, by = "Character") %>% 
-  full_join(jumpheight, by = "Character") %>% # Rosalina & Luma
+  full_join(gravity, by = "Character") %>% # Pyra, Mythra
+  full_join(jumpheight, by = "Character") %>%
   full_join(jumpduration, by = "Character") %>% 
   full_join(weight, by = "Character") %>% 
   full_join(landing, by = "Character") %>% 
   full_join(walkspeed, by = "Character") %>% 
   full_join(dashrun, by = "Character") %>% 
-  full_join(dashturn, by = "Character") %>% 
-  full_join(grab, by = "Character") %>% 
+  left_join(dashturn, by = "Character") %>% 
+  left_join(grab, by = "Character") %>% 
   full_join(ledge, by = "Character") %>% 
-  full_join(outofshield, by = "Character")
+  left_join(outofshield, by = "Character")
 
+```
 
+Now with all the frame data joined we can write it locally.
+
+```{r write frame data}
+# Check Names
 unique(frame_data$Character[order(frame_data$Character)])
 
-# Fix names
-frame_data$Character[frame_data$Character == "DK"] <- "Donkey Kong"
-frame_data$Character[frame_data$Character == "P.T. [Charizard]"] <- "Charizard"
-frame_data$Character[frame_data$Character == "P.T. [Ivysaur]"] <- "Ivysaur"
-frame_data$Character[frame_data$Character == "P.T. [Squirtle]"] <- "Squirtle"
-frame_data$Character[frame_data$Character == "PAC-MAN"] <- "Pac-Man"
-frame_data$Character[frame_data$Character == "Pokemon Trainer (Ivysaur)"] <- "Ivysaur"
-frame_data$Character[frame_data$Character == "Pokemon Trainer (Charizard)"] <- "Charizard"
-frame_data$Character[frame_data$Character == "Pokemon Trainer (Squirtle)"] <- "Squirtle"
-frame_data$Character[frame_data$Character == "Olimar (r/b/y +2)"] <- "Olimar (rby +2)"
-frame_data$Character[frame_data$Character == "Olimar (r/b/y)"] <- "Olimar (rby)"
-frame_data$Character[frame_data$Character == "Olimar (r/b/y +1)"] <- "Olimar (rby +1)"
-frame_data$Character[frame_data$Character == "Dedede"] <- "King Dedede"
-frame_data$Character[frame_data$Character == "Metaknight"] <- "Meta Knight"
-frame_data$Character[frame_data$Character == "Mii Swordfighter"] <- "Mii Sword Fighter"
-frame_data$Character[frame_data$Character == "R.O.B."] <- "R.O.B"
-
-frame_clean <- frame_data %>% 
-  separate_rows(Character, sep = "/")
-
-unique(frame_clean$Character[order(frame_clean$Character)])
-
-write_csv(frame_clean, here::here("Project", "Data", "frame_data.csv"))
+# Write Data
+write_csv(frame_data, here::here("Project", "Data", "frame_data.csv"))
 
 ```
 
 ### Character Usage Data
 
-I have found some data on the usage of the characters. Here is the [website](https://www.eventhubs.com/stats/ssbu/) I webscrapped the data from This shows a tier list and the player usage. I think even though this might not be a completely comprehensive list it does show how some characters are chosen over others. Since there are certain characters that are used more and I want to know if there is any underlying frame data that is causing these choices.
+I have found some data on the usage of the characters. Here is the [website](https://www.eventhubs.com/stats/ssbu/) I web-scrapped the data from This shows a tier list and the player usage. I think even though this might not be a completely comprehensive list it does show how some characters are chosen over others. Since there are certain characters that are used more and I want to know if there is any underlying frame data that is causing these choices.
 
 I also need to clean the `character` variable names so it matches the `frame_data`.
 
@@ -623,6 +668,7 @@ tier_data$character[tier_data$character == "Olimar (r/b/y +1)"] <- "Olimar (rby 
 tier_data$character[tier_data$character == "Dedede"] <- "King Dedede"
 tier_data$character[tier_data$character == "Metaknight"] <- "Meta Knight"
 tier_data$character[tier_data$character == "Mii Swordfighter"] <- "Mii Sword Fighter"
+tier_data$character[tier_data$character == "R.O.B."] <- "R.O.B"
 
 # Double check names
 unique(tier_data$character[order(tier_data$character)])
@@ -639,7 +685,6 @@ Now that I have `frame_data` and `tier_data` I can merge them based on the chara
 ```{r join frame and usage}
 # Read in Data
 frame_data <- read_csv(here::here("Project", "Data", "frame_data.csv"))
-
 tier_data <- read_csv(here::here("Project", "Data", "tier_data.csv"))
 
 # Join Datasets
@@ -652,7 +697,9 @@ unique(smash_data$character[order(smash_data$character)])
 write_csv(smash_data, here::here("Project", "Data", "smash_data.csv"))
 ```
 
-Data cleaning is pretty much done. There are a few weird instances of character name difference that I don't care about at this moment. Also the `gravity` dataset might be wrong, but I don't think I will use any of those variables anyways.
+Data cleaning is pretty much done. There are a few weird instances of character name difference that I don't care about at this moment. Mostly with the Pokemon Trainer since I have frame data on each pokemon respectively but tier data on just Pokemon Trainer as a single character.
+
+Now I can move onto starting some modeling in `02_smash_analysis.Rmd` where I will look at the variables and start a simple model.
 
 ### Failed Data Gathering 
 
