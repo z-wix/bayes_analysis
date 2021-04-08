@@ -1,40 +1,42 @@
----
-title: "Smash Data Analysis"
-subtitle: "Collecting and Cleaning Data"
-author: "Zack Wixom"
-output: github_document
----
+Smash Data Analysis
+================
+Zack Wixom
 
-```{r opts, echo = FALSE}
-# puts any figures made into this folder
-knitr::opts_chunk$set(
-  fig.path = "../Project/Figures/Smash/"
-)
-```
+![Super Smash
+Logo](/Users/zwixom/School/Marketing/Quant%20Analytics/Repo/zack-wixom/Project/Figures/Smash/super-smash-bros-ultimate.png)
 
-![Super Smash Logo](/Users/zwixom/School/Marketing/Quant Analytics/Repo/zack-wixom/Project/Figures/Smash/super-smash-bros-ultimate.png)
-
-```{r packages, message = FALSE}
+``` r
 # Load Packages
 library(tidyverse)
 library(tidytext)
 library(textdata)
 library(rvest)
-
 ```
 
-So my first attempt to get data on Fortnite players to understand earnings and victory royales didn't work. My API didn't have sufficient data for the players I wanted to analyze. So I am going to try to go a different approach with Super Smash Bros.
+So my first attempt to get data on Fortnite players to understand
+earnings and victory royales didn’t work. My API didn’t have sufficient
+data for the players I wanted to analyze. So I am going to try to go a
+different approach with Super Smash Bros.
 
-I think that I can build a model to understand the relationship between character stats and their win rates. I want to see if frame data, weight, speed, etc, will increase or decrease chance of winning a match against another character. Ideally I will be able to pit two characters up against each other and see which one wins.
+I think that I can build a model to understand the relationship between
+character stats and their win rates. I want to see if frame data,
+weight, speed, etc, will increase or decrease chance of winning a match
+against another character. Ideally I will be able to pit two characters
+up against each other and see which one wins.
 
 ## Collecting Data
 
 ### Frame Data
 
-In order to do this I need two sources of data: Character data and Match data. I know of a [website](https://ultimateframedata.com/) that has frame data for every character and I know of at least one data set of match results data. I am not sure if I can get more but the more the better so I can see the match ups for every character so I can make some kind of comparison between the characters. Not sure if this is possible but I will see. 
+In order to do this I need two sources of data: Character data and Match
+data. I know of a [website](https://ultimateframedata.com/) that has
+frame data for every character and I know of at least one data set of
+match results data. I am not sure if I can get more but the more the
+better so I can see the match ups for every character so I can make some
+kind of comparison between the characters. Not sure if this is possible
+but I will see.
 
-```{r webscrapping frame, eval = FALSE}
-
+``` r
 ## Web scrapping for Frame Data
 tables <- read_html("https://ultimateframedata.com/stats.php") %>%
   html_nodes("table")
@@ -52,15 +54,22 @@ for (i in 1:14) {
   
   write_csv(as.data.frame(x), paste("smash", i, ".csv", sep = ""))
 }
-
 ```
 
-Every Data table has a identifier, `Character`, variable. This will be used to join together the datasets. However, there are some variable names that are repeated but need to be fixed before joining together. For example, every dataset comes with the ranking of the characters for that statistic. So that will need to be changed so that we can differentiate before each table's ranking.
+Every Data table has a identifier, `Character`, variable. This will be
+used to join together the datasets. However, there are some variable
+names that are repeated but need to be fixed before joining together.
+For example, every dataset comes with the ranking of the characters for
+that statistic. So that will need to be changed so that we can
+differentiate before each table’s ranking.
 
-I also need to clean up the `Character` variable a bit. Some of the tables have echo fighters together and some have them separate. The final dataset will have them separate since people choose one echo fighter over the other for various reasons (i.e. Dark Samus over Samus, Daisy over Peach, etc.).
+I also need to clean up the `Character` variable a bit. Some of the
+tables have echo fighters together and some have them separate. The
+final dataset will have them separate since people choose one echo
+fighter over the other for various reasons (i.e. Dark Samus over Samus,
+Daisy over Peach, etc.).
 
-```{r load data, eval = FALSE}
-
+``` r
 # Load in Air Acceleration Data >>> Needed to define variables better to avoid confusion
 acceleration <- read.csv(here::here("Project", "Data", "smash1.csv")) %>%
   rename(
@@ -541,13 +550,13 @@ outofshield <- outofshield %>%
 
 # Write data locally
 write_csv(outofshield, here::here("Project", "Data", "smash14_outofshield.csv"))
-
 ```
 
-Now to join all the datasets together. As well as clean some of the `Character` names since it is not consistent across `frame_data` and `tier_data`
+Now to join all the datasets together. As well as clean some of the
+`Character` names since it is not consistent across `frame_data` and
+`tier_data`
 
-```{r frame datasets}
-
+``` r
 acceleration <- read.csv(here::here("Project", "Data", "smash1_acceleration.csv"))
 acceleration$Character[acceleration$Character == "Nana"] <- "Ice Climbers"
 acceleration$Character[acceleration$Character == "Popo"] <- "Ice Climbers"
@@ -587,12 +596,9 @@ grab$Character[grab$Character == "Rosalina & Luma"] <- "Rosalina"
 ledge <- read.csv(here::here("Project", "Data", "smash13_ledge.csv"))
 outofshield <- read.csv(here::here("Project", "Data", "smash14_outofshield.csv"))
 outofshield$Character[outofshield$Character == "Rosalina & Luma"] <- "Rosalina"
-
 ```
 
-
-```{r join data}
-
+``` r
 frame_data <- acceleration %>% 
   full_join(airspeed, by = "Character") %>% # Terry, Joker, Min Min
   full_join(fallspeed, by = "Character") %>%  # Sephiroth 
@@ -607,27 +613,65 @@ frame_data <- acceleration %>%
   left_join(grab, by = "Character") %>% 
   full_join(ledge, by = "Character") %>% 
   left_join(outofshield, by = "Character")
-
 ```
 
 Now with all the frame data joined we can write it locally.
 
-```{r write frame data}
+``` r
 # Check Names
 unique(frame_data$Character[order(frame_data$Character)])
+```
 
+    ##  [1] "Banjo & Kazooie"   "Bayonetta"         "Bowser"           
+    ##  [4] "Bowser Jr."        "Byleth"            "Captain Falcon"   
+    ##  [7] "Charizard"         "Chrom"             "Cloud"            
+    ## [10] "Corrin"            "Daisy"             "Dark Pit"         
+    ## [13] "Dark Samus"        "Diddy Kong"        "DK"               
+    ## [16] "Donkey Kong"       "Dr. Mario"         "Duck Hunt"        
+    ## [19] "Falco"             "Fox"               "Ganondorf"        
+    ## [22] "Greninja"          "Hero"              "Ice Climbers"     
+    ## [25] "Ike"               "Incineroar"        "Inkling"          
+    ## [28] "Isabelle"          "Ivysaur"           "Jigglypuff"       
+    ## [31] "Joker"             "Ken"               "King Dedede"      
+    ## [34] "King K. Rool"      "Kirby"             "Link"             
+    ## [37] "Little Mac"        "Lucario"           "Lucas"            
+    ## [40] "Lucina"            "Luigi"             "Mario"            
+    ## [43] "Marth"             "Mega Man"          "Meta Knight"      
+    ## [46] "Mewtwo"            "Mii Brawler"       "Mii Gunner"       
+    ## [49] "Mii Sword Fighter" "Min Min"           "Mr. Game & Watch" 
+    ## [52] "Mythra"            "Ness"              "Olimar"           
+    ## [55] "Pac-Man"           "Palutena"          "Peach"            
+    ## [58] "Pichu"             "Pikachu"           "Piranha Plant"    
+    ## [61] "Pit"               "Pyra"              "R.O.B"            
+    ## [64] "R.O.B."            "Richter"           "Ridley"           
+    ## [67] "Robin"             "Rosalina"          "Roy"              
+    ## [70] "Ryu"               "Samus"             "Sephiroth"        
+    ## [73] "Sheik"             "Shulk"             "Simon"            
+    ## [76] "Snake"             "Sonic"             "Squirtle"         
+    ## [79] "Steve"             "Terry"             "Toon Link"        
+    ## [82] "Villager"          "Wario"             "Wii Fit Trainer"  
+    ## [85] "Wolf"              "Yoshi"             "Young Link"       
+    ## [88] "Zelda"             "Zero Suit Samus"
+
+``` r
 # Write Data
 write_csv(frame_data, here::here("Project", "Data", "frame_data.csv"))
-
 ```
 
 ### Character Usage Data
 
-I have found some data on the usage of the characters. Here is the [website](https://www.eventhubs.com/stats/ssbu/) I web-scrapped the data from This shows a tier list and the player usage. I think even though this might not be a completely comprehensive list it does show how some characters are chosen over others. Since there are certain characters that are used more and I want to know if there is any underlying frame data that is causing these choices.
+I have found some data on the usage of the characters. Here is the
+[website](https://www.eventhubs.com/stats/ssbu/) I web-scrapped the data
+from This shows a tier list and the player usage. I think even though
+this might not be a completely comprehensive list it does show how some
+characters are chosen over others. Since there are certain characters
+that are used more and I want to know if there is any underlying frame
+data that is causing these choices.
 
-I also need to clean the `character` variable names so it matches the `frame_data`.
+I also need to clean the `character` variable names so it matches the
+`frame_data`.
 
-```{r webscraping usage}
+``` r
 # Webscraping
 tables <- read_html("https://www.eventhubs.com/stats/ssbu/") %>%
   html_nodes("#tiers1")
@@ -652,7 +696,39 @@ tier_data <- as.data.frame(tier_list) %>%
 
 # Look at all names in alphabetical order to see what ones are spelled differently
 unique(tier_data$character[order(tier_data$character)])
+```
 
+    ##  [1] "Banjo-Kazooie"      "Bayonetta"          "Bowser"            
+    ##  [4] "Bowser Jr."         "Byleth"             "Captain Falcon"    
+    ##  [7] "Chrom"              "Cloud"              "Corrin"            
+    ## [10] "Daisy"              "Dark Pit"           "Dark Samus"        
+    ## [13] "Diddy Kong"         "Donkey Kong"        "Dr. Mario"         
+    ## [16] "Duck Hunt"          "Falco"              "Fox"               
+    ## [19] "Ganondorf"          "Greninja"           "Hero"              
+    ## [22] "Ice Climbers"       "Ike"                "Incineroar"        
+    ## [25] "Inkling"            "Isabelle"           "Jigglypuff"        
+    ## [28] "Joker"              "Ken"                "King Dedede"       
+    ## [31] "King K. Rool"       "Kirby"              "Link"              
+    ## [34] "Little Mac"         "Lucario"            "Lucas"             
+    ## [37] "Lucina"             "Luigi"              "Mario"             
+    ## [40] "Marth"              "Mega Man"           "Meta Knight"       
+    ## [43] "Mewtwo"             "Mii Brawler"        "Mii Gunner"        
+    ## [46] "Mii Swordfighter"   "Min Min"            "Mr. Game and Watch"
+    ## [49] "Mythra"             "Ness"               "Olimar"            
+    ## [52] "Pac-Man"            "Palutena"           "Peach"             
+    ## [55] "Pichu"              "Pikachu"            "Piranha Plant"     
+    ## [58] "Pit"                "Pokemon Trainer"    "Pyra"              
+    ## [61] "R.O.B."             "Richter"            "Ridley"            
+    ## [64] "Robin"              "Rosalina"           "Roy"               
+    ## [67] "Ryu"                "Samus"              "Sephiroth"         
+    ## [70] "Sheik"              "Shulk"              "Simon"             
+    ## [73] "Snake"              "Sonic"              "Steve"             
+    ## [76] "Terry"              "Toon Link"          "Villager"          
+    ## [79] "Wario"              "Wii Fit Trainer"    "Wolf"              
+    ## [82] "Yoshi"              "Young Link"         "Zelda"             
+    ## [85] "Zero Suit Samus"
+
+``` r
 # Fix names
 tier_data$character[tier_data$character == "Banjo-Kazooie"] <- "Banjo & Kazooie"
 tier_data$character[tier_data$character == "DK"] <- "Donkey Kong"
@@ -674,42 +750,159 @@ tier_data$character[tier_data$character == "R.O.B."] <- "R.O.B"
 
 # Double check names
 unique(tier_data$character[order(tier_data$character)])
-  
-write_csv(tier_data, here::here("Project", "Data", "tier_data.csv"))
-
 ```
 
+    ##  [1] "Banjo & Kazooie"   "Bayonetta"         "Bowser"           
+    ##  [4] "Bowser Jr."        "Byleth"            "Captain Falcon"   
+    ##  [7] "Chrom"             "Cloud"             "Corrin"           
+    ## [10] "Daisy"             "Dark Pit"          "Dark Samus"       
+    ## [13] "Diddy Kong"        "Donkey Kong"       "Dr. Mario"        
+    ## [16] "Duck Hunt"         "Falco"             "Fox"              
+    ## [19] "Ganondorf"         "Greninja"          "Hero"             
+    ## [22] "Ice Climbers"      "Ike"               "Incineroar"       
+    ## [25] "Inkling"           "Isabelle"          "Jigglypuff"       
+    ## [28] "Joker"             "Ken"               "King Dedede"      
+    ## [31] "King K. Rool"      "Kirby"             "Link"             
+    ## [34] "Little Mac"        "Lucario"           "Lucas"            
+    ## [37] "Lucina"            "Luigi"             "Mario"            
+    ## [40] "Marth"             "Mega Man"          "Meta Knight"      
+    ## [43] "Mewtwo"            "Mii Brawler"       "Mii Gunner"       
+    ## [46] "Mii Sword Fighter" "Min Min"           "Mr. Game & Watch" 
+    ## [49] "Mythra"            "Ness"              "Olimar"           
+    ## [52] "Pac-Man"           "Palutena"          "Peach"            
+    ## [55] "Pichu"             "Pikachu"           "Piranha Plant"    
+    ## [58] "Pit"               "Pokemon Trainer"   "Pyra"             
+    ## [61] "R.O.B"             "Richter"           "Ridley"           
+    ## [64] "Robin"             "Rosalina"          "Roy"              
+    ## [67] "Ryu"               "Samus"             "Sephiroth"        
+    ## [70] "Sheik"             "Shulk"             "Simon"            
+    ## [73] "Snake"             "Sonic"             "Steve"            
+    ## [76] "Terry"             "Toon Link"         "Villager"         
+    ## [79] "Wario"             "Wii Fit Trainer"   "Wolf"             
+    ## [82] "Yoshi"             "Young Link"        "Zelda"            
+    ## [85] "Zero Suit Samus"
+
+``` r
+write_csv(tier_data, here::here("Project", "Data", "tier_data.csv"))
+```
 
 ## Merging Data
 
-Now that I have `frame_data` and `tier_data` I can merge them based on the character name and then the `per_played` will be my outcome variable with the frame data being the explanatory variables. I am going to use `full_join` again. I need to fix the issue with the echo fighters being combined on the `tier_data` but separate in the `frame_data`.
+Now that I have `frame_data` and `tier_data` I can merge them based on
+the character name and then the `per_played` will be my outcome variable
+with the frame data being the explanatory variables. I am going to use
+`full_join` again. I need to fix the issue with the echo fighters being
+combined on the `tier_data` but separate in the `frame_data`.
 
-```{r join frame and usage}
+``` r
 # Read in Data
 frame_data <- read_csv(here::here("Project", "Data", "frame_data.csv"))
-tier_data <- read_csv(here::here("Project", "Data", "tier_data.csv"))
+```
 
+    ## 
+    ## ── Column specification ────────────────────────────────────────────────────────
+    ## cols(
+    ##   .default = col_character(),
+    ##   Air.speed = col_double(),
+    ##   Regular.Fall = col_double(),
+    ##   Fast.Fall = col_double(),
+    ##   Gravity = col_double(),
+    ##   shorthop_dur = col_double(),
+    ##   fullhop_dur = col_double(),
+    ##   SH.Fast.Fall = col_double(),
+    ##   FH.Fast.Fall = col_double(),
+    ##   Weight = col_double(),
+    ##   Hard.Land = col_double(),
+    ##   Soft.Land..Universal. = col_double(),
+    ##   Walk.Speed = col_double(),
+    ##   Run.Speed = col_double(),
+    ##   X.1 = col_double(),
+    ##   X.2 = col_double(),
+    ##   X.3 = col_double()
+    ## )
+    ## ℹ Use `spec()` for the full column specifications.
+
+``` r
+tier_data <- read_csv(here::here("Project", "Data", "tier_data.csv"))
+```
+
+    ## 
+    ## ── Column specification ────────────────────────────────────────────────────────
+    ## cols(
+    ##   character = col_character(),
+    ##   score = col_double(),
+    ##   total_players = col_double(),
+    ##   per_played = col_double(),
+    ##   string1 = col_double(),
+    ##   string2 = col_double(),
+    ##   string3 = col_double()
+    ## )
+
+``` r
 # Join Datasets
 smash_data <- tier_data %>% 
   right_join(frame_data, by = c("character" = "Character"))
 
 unique(smash_data$character[order(smash_data$character)])
+```
 
+    ##  [1] "Banjo & Kazooie"   "Bayonetta"         "Bowser"           
+    ##  [4] "Bowser Jr."        "Byleth"            "Captain Falcon"   
+    ##  [7] "Charizard"         "Chrom"             "Cloud"            
+    ## [10] "Corrin"            "Daisy"             "Dark Pit"         
+    ## [13] "Dark Samus"        "Diddy Kong"        "DK"               
+    ## [16] "Donkey Kong"       "Dr. Mario"         "Duck Hunt"        
+    ## [19] "Falco"             "Fox"               "Ganondorf"        
+    ## [22] "Greninja"          "Hero"              "Ice Climbers"     
+    ## [25] "Ike"               "Incineroar"        "Inkling"          
+    ## [28] "Isabelle"          "Ivysaur"           "Jigglypuff"       
+    ## [31] "Joker"             "Ken"               "King Dedede"      
+    ## [34] "King K. Rool"      "Kirby"             "Link"             
+    ## [37] "Little Mac"        "Lucario"           "Lucas"            
+    ## [40] "Lucina"            "Luigi"             "Mario"            
+    ## [43] "Marth"             "Mega Man"          "Meta Knight"      
+    ## [46] "Mewtwo"            "Mii Brawler"       "Mii Gunner"       
+    ## [49] "Mii Sword Fighter" "Min Min"           "Mr. Game & Watch" 
+    ## [52] "Mythra"            "Ness"              "Olimar"           
+    ## [55] "Pac-Man"           "Palutena"          "Peach"            
+    ## [58] "Pichu"             "Pikachu"           "Piranha Plant"    
+    ## [61] "Pit"               "Pyra"              "R.O.B"            
+    ## [64] "R.O.B."            "Richter"           "Ridley"           
+    ## [67] "Robin"             "Rosalina"          "Roy"              
+    ## [70] "Ryu"               "Samus"             "Sephiroth"        
+    ## [73] "Sheik"             "Shulk"             "Simon"            
+    ## [76] "Snake"             "Sonic"             "Squirtle"         
+    ## [79] "Steve"             "Terry"             "Toon Link"        
+    ## [82] "Villager"          "Wario"             "Wii Fit Trainer"  
+    ## [85] "Wolf"              "Yoshi"             "Young Link"       
+    ## [88] "Zelda"             "Zero Suit Samus"
+
+``` r
 # Write Data Locally
 write_csv(smash_data, here::here("Project", "Data", "smash_data.csv"))
 ```
 
-Data cleaning is pretty much done. There are a few weird instances of character name difference that I don't care about at this moment. Mostly with the Pokemon Trainer since I have frame data on each pokemon respectively but tier data on just Pokemon Trainer as a single character.
+Data cleaning is pretty much done. There are a few weird instances of
+character name difference that I don’t care about at this moment. Mostly
+with the Pokemon Trainer since I have frame data on each pokemon
+respectively but tier data on just Pokemon Trainer as a single
+character.
 
-Now I can move onto starting some modeling in `02_smash_analysis.Rmd` where I will look at the variables and start a simple model.
+Now I can move onto starting some modeling in `02_smash_analysis.Rmd`
+where I will look at the variables and start a simple model.
 
-### Failed Data Gathering 
+### Failed Data Gathering
 
-Originally I wanted to access match results to use as my outcome variable. However I was unable to do this and here is some of the code of my attempts to connect to a database I found on github.
+Originally I wanted to access match results to use as my outcome
+variable. However I was unable to do this and here is some of the code
+of my attempts to connect to a database I found on github.
 
-Now that I have the frame data collected. I can get the Match data which will tell me the wins and losses of each character. My goal is to create a model that will determine if a character wins or losses. Maybe a win rate or discrete explanatory variable we will see.
+Now that I have the frame data collected. I can get the Match data which
+will tell me the wins and losses of each character. My goal is to create
+a model that will determine if a character wins or losses. Maybe a win
+rate or discrete explanatory variable we will see.
 
-```{r connect to database}
+``` r
 # library(DBI)
 # library(odbc)
 # # Create an ephemeral in-memory RSQLite database
@@ -735,19 +928,17 @@ Now that I have the frame data collected. I can get the Match data which will te
 # file.info("https://github.com/smashdata/ThePlayerDatabase/releases/download/v2021.02.05/ultimate_player_database.db")
 # 
 # con <- dbConnect(odbc(), "ultimate_player_database.db")
-
 ```
 
-```{r}
+``` r
 # library(RSQLite)
 # temp <- tempfile()
 # # download.file("https://github.com/smashdata/ThePlayerDatabase/releases/download/v2021.02.05/ultimate_player_database.db", temp)
 # db <- dbConnect(RSQLite::SQLite(), dbname=temp)
 # dbListTables(db)
-
 ```
 
-```{r}
+``` r
 # # Packages
 # library(tidyverse)
 # library(httr)
@@ -770,8 +961,4 @@ Now that I have the frame data collected. I can get the Match data which will te
 # 
 # # Check for any errors
 # http_error(resp) 
-
-
-
 ```
-

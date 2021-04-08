@@ -1,26 +1,20 @@
----
-title: "Smash Data Analysis"
-subtitle: "Beginning Modeling"
-author: "Zack Wixom"
-output: github_document
----
+Smash Data Analysis
+================
+Zack Wixom
 
-```{r opts, echo = FALSE}
-# puts any figures made into this folder
-knitr::opts_chunk$set(
-  fig.path = "../Project/Figures/Smash/"
-)
-```
+![Super Smash
+Logo](/Users/zwixom/School/Marketing/Quant%20Analytics/Repo/zack-wixom/Project/Figures/Smash/super-smash-bros-ultimate.png)
 
-![Super Smash Logo](/Users/zwixom/School/Marketing/Quant Analytics/Repo/zack-wixom/Project/Figures/Smash/super-smash-bros-ultimate.png)
-
-Now that I have data and a success metric that I want to model on. I can start to build out some models. I am going to start with a simple model using quadratic approximation before moving onto a `ulam()`.
+Now that I have data and a success metric that I want to model on. I can
+start to build out some models. I am going to start with a simple model
+using quadratic approximation before moving onto a `ulam()`.
 
 ### Set Up
 
-First I am going to be loading some packages I will need and import my data from `01_smash_data.Rmd`.
+First I am going to be loading some packages I will need and import my
+data from `01_smash_data.Rmd`.
 
-```{r set up, message = FALSE}
+``` r
 # Packages
 library(tidyverse)
 library(cmdstanr)
@@ -37,37 +31,79 @@ smash <- read_csv(here::here("Project/Data", "smash_data.csv")) %>%
   select(-contains("rank")) # Don't need these variables
 
 smash
-
 ```
 
-Some of the characters do not have all the frame stats available. I might need to take care of this later if having NA's present cause an issue, but for now I will not worry about them. However, I really don't need the rankings per frame stat, so I will just drop those columns.
+    ## # A tibble: 96 x 52
+    ##    character score total_players per_played string1 string2 string3 base_accel
+    ##    <chr>     <dbl>         <dbl>      <dbl>   <dbl>   <dbl>   <dbl> <chr>     
+    ##  1 Cloud       448           190       3.66     101      56      33 0.01      
+    ##  2 Bayonetta   290           151       2.91      26      87      38 0.01      
+    ##  3 Terry       276           135       2.6       46      49      40 <NA>      
+    ##  4 Joker       234           114       2.2       43      34      37 <NA>      
+    ##  5 Ganondorf   224           109       2.1       36      43      30 0.01      
+    ##  6 Young Li…   213           129       2.49      26      32      71 0.02      
+    ##  7 Snake       199            97       1.87      39      24      34 0.01      
+    ##  8 Marth       194            93       1.79      31      39      23 0.01      
+    ##  9 Inkling     194            95       1.83      35      29      31 0.01      
+    ## 10 Roy         193            95       1.83      26      46      23 0.02      
+    ## # … with 86 more rows, and 44 more variables: additional_accel <chr>,
+    ## #   max_accel <chr>, Air.speed <dbl>, Regular.Fall <dbl>, Fast.Fall <dbl>,
+    ## #   X..Increase <chr>, Gravity <dbl>, fullhop_height <chr>,
+    ## #   shorthop_height <chr>, airjump_height <chr>, shorthop_dur <dbl>,
+    ## #   fullhop_dur <dbl>, SH.Fast.Fall <dbl>, FH.Fast.Fall <dbl>, Weight <dbl>,
+    ## #   Hard.Land <dbl>, Soft.Land..Universal. <dbl>, Walk.Speed <dbl>,
+    ## #   Initial.Dash <chr>, Run.Speed <dbl>, Dash.Frames <chr>,
+    ## #   Pivot.Dash.Frames <chr>, Fast.Initial.Dash <chr>,
+    ## #   Normal.Buffer.Window <chr>, Slow.Full.Dash <chr>, Grab.Range <chr>,
+    ## #   Attack.Range <chr>, Attack.Frames <chr>, Neutral.Getup <chr>, Roll <chr>,
+    ## #   Jump <chr>, X.1 <dbl>, Fastest.Move.s. <chr>, X.2 <dbl>,
+    ## #   X2nd.Fastest.Move.s. <chr>, X.3 <dbl>, X3rd.Fastest.Move.s. <chr>,
+    ## #   Grab <chr>, Grab..Post.Shieldstun <chr>, Item.Throw.Forward. <chr>,
+    ## #   Item.Throw.Back. <chr>, Jump.Z.Drop..Front. <chr>,
+    ## #   Jump.Z.Drop.Behind. <chr>, Key <chr>
+
+Some of the characters do not have all the frame stats available. I
+might need to take care of this later if having NA’s present cause an
+issue, but for now I will not worry about them. However, I really don’t
+need the rankings per frame stat, so I will just drop those columns.
 
 ### Clean Up Data
 
 **The Outcome Variable**
 
-The variable I will be modeling on is `per_played`. This is a ratio for how often this character is chosen and I want to know what influences peoples choice of each character.
+The variable I will be modeling on is `per_played`. This is a ratio for
+how often this character is chosen and I want to know what influences
+peoples choice of each character.
 
 **The Explanatory Variables**
 
-There are a lot of variables in this dataset. So I want to make it simple and just use the most realistic variables that might go into a person's choice of a character. Here is a list of the variables that are most important to gameplay and are used in strategic moves:
+There are a lot of variables in this dataset. So I want to make it
+simple and just use the most realistic variables that might go into a
+person’s choice of a character. Here is a list of the variables that are
+most important to gameplay and are used in strategic moves:
 
-- `string1`: character is first string choice
-- `base_accel`: base acceleration 
-- `Air.speed`: speed in air
-- `Fast.Fall`: fast fall speed
-- `fullhop_height`: height of full hop
-- `shorthop_height`: height of short hop
-- `airjump_height`: height of midair jump
-- `Weight`: weight
-- `Run.Speed`: # of frames to pivot dash
-- `Grab.Range`: range of grab
-- `Fastest.Move.s.`: Fastest move out of shield (I need to clean up this variable a little)
+  - `string1`: character is first string choice
+  - `base_accel`: base acceleration
+  - `Air.speed`: speed in air
+  - `Fast.Fall`: fast fall speed
+  - `fullhop_height`: height of full hop
+  - `shorthop_height`: height of short hop
+  - `airjump_height`: height of midair jump
+  - `Weight`: weight
+  - `Run.Speed`: \# of frames to pivot dash
+  - `Grab.Range`: range of grab
+  - `Fastest.Move.s.`: Fastest move out of shield (I need to clean up
+    this variable a little)
 
-> Note: I do not have damage data as of right now. It might be good to incorporate damage data for certain moves as this could be an indicator of character preference, however, the real reason players are good are because they understand the mechanics of their preferred character and know how to use it. So for a pro the actual damage output might not be as important as knowing how to move and time combos, leading to rampping up damage, and delivering a kill.
+> Note: I do not have damage data as of right now. It might be good to
+> incorporate damage data for certain moves as this could be an
+> indicator of character preference, however, the real reason players
+> are good are because they understand the mechanics of their preferred
+> character and know how to use it. So for a pro the actual damage
+> output might not be as important as knowing how to move and time
+> combos, leading to rampping up damage, and delivering a kill.
 
-```{r filtering data, eval = FALSE}
-
+``` r
 vars <- c(1, 4, 5, 8, 11, 13, 16:18, 23, 28, 34, 41)
 
 smash_tidy <- smash %>% 
@@ -98,30 +134,51 @@ smash_tidy$oos_move[is.na(smash_tidy$oos_move)] <- "none"
   
 
 write.csv(smash_tidy, here::here("Project", "Data", "smash_tidy.csv"), row.names = FALSE)
-
 ```
 
 ## Round 1
 
-Just for fun, let's put in all the variables and see what happens.
+Just for fun, let’s put in all the variables and see what happens.
 
-- `string1`: character is first string choice
-- `base_accel`: base acceleration 
-- `Air.speed`: speed in air
-- `Fast.Fall`: fast fall speed
-- `fullhop_height`: height of full hop
-- `shorthop_height`: height of short hop
-- `airjump_height`: height of midair jump
-- `Weight`: weight
-- `Run.Speed`: # of frames to pivot dash
-- `Grab.Range`: range of grab
-- `oos_move`: Fastest move out of shield
+  - `string1`: character is first string choice
+  - `base_accel`: base acceleration
+  - `Air.speed`: speed in air
+  - `Fast.Fall`: fast fall speed
+  - `fullhop_height`: height of full hop
+  - `shorthop_height`: height of short hop
+  - `airjump_height`: height of midair jump
+  - `Weight`: weight
+  - `Run.Speed`: \# of frames to pivot dash
+  - `Grab.Range`: range of grab
+  - `oos_move`: Fastest move out of shield
 
-```{r}
+<!-- end list -->
 
+``` r
 # Load Data
 smash_tidy <- read_csv(here::here("Project", "Data", "smash_tidy.csv"))[,-1]
+```
 
+    ## 
+    ## ── Column specification ────────────────────────────────────────────────────────
+    ## cols(
+    ##   X1 = col_double(),
+    ##   character = col_character(),
+    ##   per_played = col_double(),
+    ##   string1 = col_double(),
+    ##   base_accel = col_character(),
+    ##   Air.speed = col_double(),
+    ##   Fast.Fall = col_double(),
+    ##   fullhop_height = col_character(),
+    ##   shorthop_height = col_character(),
+    ##   airjump_height = col_character(),
+    ##   Weight = col_double(),
+    ##   Run.Speed = col_double(),
+    ##   Grab.Range = col_character(),
+    ##   oos_move = col_character()
+    ## )
+
+``` r
 # Standardize and Index Variables
 smash1 <- tibble(
   played = standardize(smash_tidy$per_played),
@@ -138,11 +195,19 @@ smash1 <- tibble(
   oosmove = as.integer(factor(smash_tidy$oos_move))
 ) %>% 
   drop_na()
-
 ```
 
-```{r m1.0}
+    ## Warning in scale(x): NAs introduced by coercion
+    
+    ## Warning in scale(x): NAs introduced by coercion
+    
+    ## Warning in scale(x): NAs introduced by coercion
+    
+    ## Warning in scale(x): NAs introduced by coercion
+    
+    ## Warning in scale(x): NAs introduced by coercion
 
+``` r
 # Fit Model
 m1.0 <- quap(
   alist(
@@ -166,18 +231,28 @@ m1.0 <- quap(
 
 # Plot Precis
 plot(precis(m1.0))
-
 ```
 
-So this is pretty interesting. There are a few variables that are really influencing the model. Namely, `fullhop_height`, `shorthop_height`, `airjump_height`, and `Fast.Fall`. Perhaps this is because aerials attacks and movement is key for competitive play.
+![](../Project/Figures/Smash/m1.0-1.png)<!-- -->
 
-`string1` is not surprising. This variable is an indicator of if this character is their frist choice and so this directly effects `per_played`. I think that perhaps I won't use this variable in my analysis, but in other iterations use `string2` and `string3.` My logic being, if a character is someones second or third choice then it might be an indicator of per_played. But this might give us the same result.
+So this is pretty interesting. There are a few variables that are really
+influencing the model. Namely, `fullhop_height`, `shorthop_height`,
+`airjump_height`, and `Fast.Fall`. Perhaps this is because aerials
+attacks and movement is key for competitive play.
 
-I haven't tried putting in the categorical variable of `oos_move`. I will deal with adding that later.
+`string1` is not surprising. This variable is an indicator of if this
+character is their frist choice and so this directly effects
+`per_played`. I think that perhaps I won’t use this variable in my
+analysis, but in other iterations use `string2` and `string3.` My logic
+being, if a character is someones second or third choice then it might
+be an indicator of per\_played. But this might give us the same result.
 
-Let's do a quick prior predicitve check.
+I haven’t tried putting in the categorical variable of `oos_move`. I
+will deal with adding that later.
 
-```{r prior0 check}
+Let’s do a quick prior predicitve check.
+
+``` r
 # Extract the prior (first set.seed).
 set.seed(42)
 prior0 <- extract.prior(m1.0)
@@ -201,9 +276,12 @@ for (i in 1:50) {
 }
 ```
 
-I can't really remember how to interpret this chart. It doesn't look too crazy but is still not really reasonable.
+![](../Project/Figures/Smash/prior0%20check-1.png)<!-- -->
 
-```{r}
+I can’t really remember how to interpret this chart. It doesn’t look too
+crazy but is still not really reasonable.
+
+``` r
 # Call link without specifying new data so it uses the original data.
 mu <- link(m1.0)
 # Summarize samples across cases.
@@ -224,28 +302,35 @@ abline(a = 0, b = 1, lty = 2)
 for (i in 1:nrow(smash1)) {
   lines(rep(smash1$played[i], 2), mu_PI[,i], col = rangi2)
 }
-
 ```
 
-Well I am worried I might be over fitting, since this is pretty accurate predictions. 
+![](../Project/Figures/Smash/unnamed-chunk-2-1.png)<!-- -->
+
+Well I am worried I might be over fitting, since this is pretty accurate
+predictions.
 
 *Anyways*
 
-So let's do some iterations to understand what each of these variables are doing.
+So let’s do some iterations to understand what each of these variables
+are doing.
 
 ## Round 2
 
-Now I will create a DAG that I can use to determine my models. here are my variables that I am going to start with:
+Now I will create a DAG that I can use to determine my models. here are
+my variables that I am going to start with:
 
-- X = `per_played` the outcome variable
-- W = `Weight`
-- S = `shorthop_height`
-- G = `Grab.Range`
-- R = `Run.Speed`
+  - X = `per_played` the outcome variable
+  - W = `Weight`
+  - S = `shorthop_height`
+  - G = `Grab.Range`
+  - R = `Run.Speed`
 
-These are pretty basic components that should be considered when picking a character. These are *Grab Range*, *Run Speed*, *Short Hop*, and *Weight*. Weight is related to a lot of the other variables, besides Grab. 
+These are pretty basic components that should be considered when picking
+a character. These are *Grab Range*, *Run Speed*, *Short Hop*, and
+*Weight*. Weight is related to a lot of the other variables, besides
+Grab.
 
-```{r dag1}
+``` r
 # Create DAG
 dag1 <- dagitty("dag{
     W -> X; 
@@ -264,42 +349,70 @@ coordinates(dag1) <- list(
 
 # Draw DAG
 drawdag(dag1)
-
 ```
 
-There are a few interactions that we need to watch. Since it is a fork from W to X, S, and R we will condition all the variables in the model.
+![](../Project/Figures/Smash/dag1-1.png)<!-- -->
+
+There are a few interactions that we need to watch. Since it is a fork
+from W to X, S, and R we will condition all the variables in the model.
 
 ### Standardize Variables
 
-We are going to standardize each variable, there are a couple that need to be converted to numeric because of they are character variables.
+We are going to standardize each variable, there are a couple that need
+to be converted to numeric because of they are character variables.
 
 Here are the variables I will standardize
 
-- played = `per_played` the outcome variable
-- weight = `Weight`
-- shorthop = `shorthop_height` make numeric to get rid of ~'s
-- grab = `Grab.Range` make numeric to get rid of ~'s
-- run = `Run.Speed`
+  - played = `per_played` the outcome variable
+  - weight = `Weight`
+  - shorthop = `shorthop_height` make numeric to get rid of \~’s
+  - grab = `Grab.Range` make numeric to get rid of \~’s
+  - run = `Run.Speed`
 
-```{r}
+<!-- end list -->
 
+``` r
 # Initial Density Graphs
 dens(smash1$played)
-dens(smash1$weight)
-dens(smash1$shorthop)
-dens(smash1$grab)
-dens(smash1$run)
-
 ```
 
-There are a couple of outliers happening in grab and run. I think this is because there are a few characters that are known to have this extreme stats. So it is not surprising, but I might need to log these two variables.
+![](../Project/Figures/Smash/unnamed-chunk-3-1.png)<!-- -->
 
-I also do not have any discrete varables at the moment. In a later iteration this may change especially as I group by character.
+``` r
+dens(smash1$weight)
+```
+
+![](../Project/Figures/Smash/unnamed-chunk-3-2.png)<!-- -->
+
+``` r
+dens(smash1$shorthop)
+```
+
+![](../Project/Figures/Smash/unnamed-chunk-3-3.png)<!-- -->
+
+``` r
+dens(smash1$grab)
+```
+
+![](../Project/Figures/Smash/unnamed-chunk-3-4.png)<!-- -->
+
+``` r
+dens(smash1$run)
+```
+
+![](../Project/Figures/Smash/unnamed-chunk-3-5.png)<!-- -->
+
+There are a couple of outliers happening in grab and run. I think this
+is because there are a few characters that are known to have this
+extreme stats. So it is not surprising, but I might need to log these
+two variables.
+
+I also do not have any discrete varables at the moment. In a later
+iteration this may change especially as I group by character.
 
 ### Build Model
 
-```{r m1}
-
+``` r
 # Standardize and Index Variables
 smash1.1 <- tibble(
   played = standardize(smash_tidy$per_played),
@@ -309,7 +422,13 @@ smash1.1 <- tibble(
   grab = standardize(as.numeric(smash_tidy$Grab.Range))
 ) %>% 
   drop_na()
+```
 
+    ## Warning in scale(x): NAs introduced by coercion
+    
+    ## Warning in scale(x): NAs introduced by coercion
+
+``` r
 # Fit Model
 m1.1 <- quap(
   alist(
@@ -326,12 +445,15 @@ m1.1 <- quap(
 
 # Plot Precis
 plot(precis(m1.1))
-
 ```
 
-So we can see that there the variables are straddling 0 but there is some pull for *Grab* and *Run Speed*. However, I think that I still need to fix this to see if there is something else influencing this.
+![](../Project/Figures/Smash/m1-1.png)<!-- -->
 
-```{r}
+So we can see that there the variables are straddling 0 but there is
+some pull for *Grab* and *Run Speed*. However, I think that I still need
+to fix this to see if there is something else influencing this.
+
+``` r
 # Extract the prior (first set.seed).
 set.seed(42)
 prior1 <- extract.prior(m1.1)
@@ -349,7 +471,9 @@ for (i in 1:50) {
 }
 ```
 
-```{r}
+![](../Project/Figures/Smash/unnamed-chunk-4-1.png)<!-- -->
+
+``` r
 # Call link without specifying new data so it uses the original data.
 mu <- link(m1.1)
 # Summarize samples across cases.
@@ -370,23 +494,31 @@ abline(a = 0, b = 1, lty = 2)
 for (i in 1:nrow(smash1.1)) {
   lines(rep(smash1.1$played[i], 2), mu_PI[,i], col = rangi2)
 }
-
 ```
 
-Alright so it looks like that without a lot of the variables we can't get a good prediction. There must be an optimal set of variables that will be useful and these are not the most useful. Let's dive into the variables more to get a better idea.
+![](../Project/Figures/Smash/unnamed-chunk-5-1.png)<!-- -->
+
+Alright so it looks like that without a lot of the variables we can’t
+get a good prediction. There must be an optimal set of variables that
+will be useful and these are not the most useful. Let’s dive into the
+variables more to get a better idea.
 
 ### Iteration 2
 
-I want to see if I don't include the `weight` variable if it changes things.
+I want to see if I don’t include the `weight` variable if it changes
+things.
 
-There are a couple of outliers happening in grab and run. I think this is because there are a few characters that are known to have this extreme stats. So it is not surprising, but I might need to log these two variables.
+There are a couple of outliers happening in grab and run. I think this
+is because there are a few characters that are known to have this
+extreme stats. So it is not surprising, but I might need to log these
+two variables.
 
-I also do not have any discrete varables at the moment. In a later iteration this may change especially as I group by character.
+I also do not have any discrete varables at the moment. In a later
+iteration this may change especially as I group by character.
 
 ### Build Model
 
-```{r m1.2}
-
+``` r
 # Standardize and Index Variables
 smash1.2 <- tibble(
   played = standardize(smash_tidy$per_played),
@@ -395,7 +527,13 @@ smash1.2 <- tibble(
   grab = standardize(as.numeric(smash_tidy$Grab.Range))
 ) %>% 
   drop_na()
+```
 
+    ## Warning in scale(x): NAs introduced by coercion
+    
+    ## Warning in scale(x): NAs introduced by coercion
+
+``` r
 # Fit Model
 m1.2 <- quap(
   alist(
@@ -411,11 +549,11 @@ m1.2 <- quap(
 
 # Plot Precis
 plot(precis(m1.2))
-
 ```
 
+![](../Project/Figures/Smash/m1.2-1.png)<!-- -->
 
-```{r}
+``` r
 # Call link without specifying new data so it uses the original data.
 mu <- link(m1.2)
 # Summarize samples across cases.
@@ -436,17 +574,17 @@ abline(a = 0, b = 1, lty = 2)
 for (i in 1:nrow(smash1.2)) {
   lines(rep(smash1.2$played[i], 2), mu_PI[,i], col = rangi2)
 }
-
 ```
 
-No difference. So let's look at some new variables.
+![](../Project/Figures/Smash/unnamed-chunk-6-1.png)<!-- -->
+
+No difference. So let’s look at some new variables.
 
 ### Iteration 3
 
-Let's try with just `weight` variable.
+Let’s try with just `weight` variable.
 
-```{r m1.3}
-
+``` r
 # Standardize and Index Variables
 smash1.3 <- tibble(
   played = standardize(smash_tidy$per_played),
@@ -467,10 +605,11 @@ m1.3 <- quap(
 
 # Plot Precis
 plot(precis(m1.3))
-
 ```
 
-```{r}
+![](../Project/Figures/Smash/m1.3-1.png)<!-- -->
+
+``` r
 # Call link without specifying new data so it uses the original data.
 mu <- link(m1.3)
 
@@ -496,22 +635,26 @@ abline(a = 0, b = 1, lty = 2)
 for (i in 1:nrow(smash1.3)) {
   lines(rep(smash1.3$played[i], 2), mu_PI[,i], col = rangi2)
 }
-
 ```
+
+![](../Project/Figures/Smash/unnamed-chunk-7-1.png)<!-- -->
 
 ### Iteration 4
 
-Let's look at just the `shorthop` variable.
+Let’s look at just the `shorthop` variable.
 
-```{r m1.4}
-
+``` r
 # Standardize and Index Variables
 smash1.4 <- tibble(
   played = standardize(smash_tidy$per_played),
   shorthop = standardize(as.numeric(smash_tidy$shorthop_height))
 ) %>% 
   drop_na()
+```
 
+    ## Warning in scale(x): NAs introduced by coercion
+
+``` r
 # Fit Model
 m1.4 <- quap(
   alist(
@@ -525,10 +668,11 @@ m1.4 <- quap(
 
 # Plot Precis
 plot(precis(m1.4))
-
 ```
 
-```{r}
+![](../Project/Figures/Smash/m1.4-1.png)<!-- -->
+
+``` r
 # Call link without specifying new data so it uses the original data.
 mu <- link(m1.4)
 
@@ -554,22 +698,27 @@ abline(a = 0, b = 1, lty = 2)
 for (i in 1:nrow(smash1.4)) {
   lines(rep(smash1.4$played[i], 2), mu_PI[,i], col = rangi2)
 }
-
 ```
+
+![](../Project/Figures/Smash/unnamed-chunk-8-1.png)<!-- -->
 
 ### Iteration 5
 
-Since I saw that `grab` was significant, let's just condition on that variable. 
+Since I saw that `grab` was significant, let’s just condition on that
+variable.
 
-```{r m1.5}
-
+``` r
 # Standardize and Index Variables
 smash1.5 <- tibble(
   played = standardize(smash_tidy$per_played),
   grab = standardize(as.numeric(smash_tidy$Grab.Range))
 ) %>% 
   drop_na()
+```
 
+    ## Warning in scale(x): NAs introduced by coercion
+
+``` r
 # Fit Model
 m1.5 <- quap(
   alist(
@@ -583,11 +732,13 @@ m1.5 <- quap(
 
 # Plot Precis
 plot(precis(m1.5))
-
 ```
-So with `grab` all alone we see that it is consistently negative. Looks like perhaps people do not like characters with long grabs.
 
-```{r}
+![](../Project/Figures/Smash/m1.5-1.png)<!-- --> So with `grab` all
+alone we see that it is consistently negative. Looks like perhaps people
+do not like characters with long grabs.
+
+``` r
 # Call link without specifying new data so it uses the original data.
 mu <- link(m1.5)
 
@@ -613,18 +764,19 @@ abline(a = 0, b = 1, lty = 2)
 for (i in 1:nrow(smash1.5)) {
   lines(rep(smash1.5$played[i], 2), mu_PI[,i], col = rangi2)
 }
-
 ```
 
-*Grab* alone is showing a difference in the posterior check. So perhaps this variable will for sure stay in the final model.
+![](../Project/Figures/Smash/unnamed-chunk-9-1.png)<!-- -->
+
+*Grab* alone is showing a difference in the posterior check. So perhaps
+this variable will for sure stay in the final model.
 
 ### Iteration 6
 
-Since I saw that `run` also was slightly significant, let's just condition on that variable. 
+Since I saw that `run` also was slightly significant, let’s just
+condition on that variable.
 
-
-```{r m1.6}
-
+``` r
 # Standardize and Index Variables
 smash1.6 <- tibble(
   played = standardize(smash_tidy$per_played),
@@ -645,12 +797,14 @@ m1.6 <- quap(
 
 # Plot Precis
 plot(precis(m1.6))
-
 ```
 
-So it looks like it has a slightly more positive effect on percentage played.
+![](../Project/Figures/Smash/m1.6-1.png)<!-- -->
 
-```{r}
+So it looks like it has a slightly more positive effect on percentage
+played.
+
+``` r
 # Call link without specifying new data so it uses the original data.
 mu <- link(m1.6)
 
@@ -676,15 +830,16 @@ abline(a = 0, b = 1, lty = 2)
 for (i in 1:nrow(smash1.6)) {
   lines(rep(smash1.6$played[i], 2), mu_PI[,i], col = rangi2)
 }
-
 ```
+
+![](../Project/Figures/Smash/unnamed-chunk-10-1.png)<!-- -->
 
 ### Iteration 7
 
-However, I do need to check if `weight` influences `run`. So I will do one more model conditioning on `weight` and `run`.
+However, I do need to check if `weight` influences `run`. So I will do
+one more model conditioning on `weight` and `run`.
 
-```{r m1.7}
-
+``` r
 # Standardize and Index Variables
 smash1.7 <- tibble(
   played = standardize(smash_tidy$per_played),
@@ -707,12 +862,14 @@ m1.7 <- quap(
 
 # Plot Precis
 plot(precis(m1.7))
-
 ```
 
-Weight does increase slightly here. Lets add an interaction between the two variables.
+![](../Project/Figures/Smash/m1.7-1.png)<!-- -->
 
-```{r}
+Weight does increase slightly here. Lets add an interaction between the
+two variables.
+
+``` r
 # Call link without specifying new data so it uses the original data.
 mu <- link(m1.7)
 
@@ -738,11 +895,11 @@ abline(a = 0, b = 1, lty = 2)
 for (i in 1:nrow(smash1.7)) {
   lines(rep(smash1.7$played[i], 2), mu_PI[,i], col = rangi2)
 }
-
 ```
 
-```{r m1.8}
+![](../Project/Figures/Smash/unnamed-chunk-11-1.png)<!-- -->
 
+``` r
 # Standardize and Index Variables
 smash1.8 <- tibble(
   played = standardize(smash_tidy$per_played),
@@ -766,12 +923,13 @@ m1.8 <- quap(
 
 # Plot Precis
 plot(precis(m1.8))
-
 ```
 
-Well it doesn't look like we need to include this interaction.
+![](../Project/Figures/Smash/m1.8-1.png)<!-- -->
 
-```{r}
+Well it doesn’t look like we need to include this interaction.
+
+``` r
 # Call link without specifying new data so it uses the original data.
 mu <- link(m1.8)
 
@@ -797,12 +955,13 @@ abline(a = 0, b = 1, lty = 2)
 for (i in 1:nrow(smash1.8)) {
   lines(rep(smash1.8$played[i], 2), mu_PI[,i], col = rangi2)
 }
-
 ```
+
+![](../Project/Figures/Smash/unnamed-chunk-12-1.png)<!-- -->
 
 ### Iteration 9
 
-```{r m1.9}
+``` r
 # Standardize and Index Variables
 smash1.9 <- tibble(
   played = standardize(smash_tidy$per_played),
@@ -811,7 +970,11 @@ smash1.9 <- tibble(
   grab = standardize(as.numeric(smash_tidy$Grab.Range))
 ) %>% 
   drop_na()
+```
 
+    ## Warning in scale(x): NAs introduced by coercion
+
+``` r
 # Fit Model
 m1.9 <- quap(
   alist(
@@ -827,10 +990,11 @@ m1.9 <- quap(
 
 # Plot Precis
 plot(precis(m1.9))
-
 ```
 
-```{r}
+![](../Project/Figures/Smash/m1.9-1.png)<!-- -->
+
+``` r
 # Call link without specifying new data so it uses the original data.
 mu <- link(m1.9)
 
@@ -856,15 +1020,16 @@ abline(a = 0, b = 1, lty = 2)
 for (i in 1:nrow(smash1.9)) {
   lines(rep(smash1.9$played[i], 2), mu_PI[,i], col = rangi2)
 }
-
 ```
+
+![](../Project/Figures/Smash/unnamed-chunk-13-1.png)<!-- -->
 
 ### Comparing Models
 
-Let's plot each model (`m1.5`, `m1.6`, `m1.7`, `m1.8`, `m1.9`) next to each other so we can see if there are any hidden effects
+Let’s plot each model (`m1.5`, `m1.6`, `m1.7`, `m1.8`, `m1.9`) next to
+each other so we can see if there are any hidden effects
 
-```{r}
-
+``` r
 # WAIC.
 # plot(compare(m1.1, m1.2, m1.3, m1.4, m1.5, m1.6, m1.7, m1.8, m1.9, func = WAIC))
 # # PSIS.
@@ -872,22 +1037,27 @@ Let's plot each model (`m1.5`, `m1.6`, `m1.7`, `m1.8`, `m1.9`) next to each othe
 
 # Plot all models together
 plot(coeftab(m1.5, m1.6, m1.7, m1.8, m1.9))
-
 ```
 
-Well it looks like perhaps`shorthop` will not be useful for me at this moment. We should try new variables but keep `weight`, `grab` and `run`.
+![](../Project/Figures/Smash/unnamed-chunk-14-1.png)<!-- -->
 
-So I saw that some of the variables I chose to analyze were not effective. So let's look at some new combinations.
+Well it looks like perhaps`shorthop` will not be useful for me at this
+moment. We should try new variables but keep `weight`, `grab` and `run`.
 
-- X = `per_played` the outcome variable
-- H = `fullhop_height`: height of full hop
-- W = `Weight`: weight
-- R = `Run.Speed`: # of frames to pivot dash
-- G = `Grab.Range`: range of grab
+So I saw that some of the variables I chose to analyze were not
+effective. So let’s look at some new combinations.
 
-Now I will create a DAG that I can use to determine my models. This DAG is actually very similar to the other one, just adding in *full hop height* instead of short hop.
+  - X = `per_played` the outcome variable
+  - H = `fullhop_height`: height of full hop
+  - W = `Weight`: weight
+  - R = `Run.Speed`: \# of frames to pivot dash
+  - G = `Grab.Range`: range of grab
 
-```{r dag2}
+Now I will create a DAG that I can use to determine my models. This DAG
+is actually very similar to the other one, just adding in *full hop
+height* instead of short hop.
+
+``` r
 # Create DAG
 dag2 <- dagitty("dag{
     W -> X; 
@@ -906,14 +1076,16 @@ coordinates(dag2) <- list(
 
 # Draw DAG
 drawdag(dag2)
-
 ```
 
-So far our best model was the one with `weight`, `grab` and `run`. So let's just add in `fullhop_height`.
+![](../Project/Figures/Smash/dag2-1.png)<!-- -->
+
+So far our best model was the one with `weight`, `grab` and `run`. So
+let’s just add in `fullhop_height`.
 
 ### Iteration 10
 
-```{r m1.10}
+``` r
 # Standardize and Index Variables
 smash1.10 <- tibble(
   played = standardize(smash_tidy$per_played),
@@ -923,7 +1095,13 @@ smash1.10 <- tibble(
   grab = standardize(as.numeric(smash_tidy$Grab.Range))
 ) %>% 
   drop_na()
+```
 
+    ## Warning in scale(x): NAs introduced by coercion
+    
+    ## Warning in scale(x): NAs introduced by coercion
+
+``` r
 # Fit Model
 m1.10 <- quap(
   alist(
@@ -940,12 +1118,14 @@ m1.10 <- quap(
 
 # Plot Precis
 plot(precis(m1.10))
-
 ```
 
-So we can se that `weight` is now pushed to straddle 0 with `fullhop` in play. Let's take out `weight`.
+![](../Project/Figures/Smash/m1.10-1.png)<!-- -->
 
-```{r}
+So we can se that `weight` is now pushed to straddle 0 with `fullhop` in
+play. Let’s take out `weight`.
+
+``` r
 # Call link without specifying new data so it uses the original data.
 mu <- link(m1.10)
 
@@ -971,13 +1151,13 @@ abline(a = 0, b = 1, lty = 2)
 for (i in 1:nrow(smash1.10)) {
   lines(rep(smash1.10$played[i], 2), mu_PI[,i], col = rangi2)
 }
-
 ```
+
+![](../Project/Figures/Smash/unnamed-chunk-15-1.png)<!-- -->
 
 ### Iteration 11
 
-```{r m1.11}
-
+``` r
 # Standardize and Index Variables
 smash1.11 <- tibble(
   played = standardize(smash_tidy$per_played),
@@ -986,7 +1166,13 @@ smash1.11 <- tibble(
   grab = standardize(as.numeric(smash_tidy$Grab.Range))
 ) %>% 
   drop_na()
+```
 
+    ## Warning in scale(x): NAs introduced by coercion
+    
+    ## Warning in scale(x): NAs introduced by coercion
+
+``` r
 # Fit Model
 m1.11 <- quap(
   alist(
@@ -1002,10 +1188,11 @@ m1.11 <- quap(
 
 # Plot Precis
 plot(precis(m1.11))
-
 ```
 
-```{r}
+![](../Project/Figures/Smash/m1.11-1.png)<!-- -->
+
+``` r
 # Call link without specifying new data so it uses the original data.
 mu <- link(m1.11)
 
@@ -1031,34 +1218,45 @@ abline(a = 0, b = 1, lty = 2)
 for (i in 1:nrow(smash1.11)) {
   lines(rep(smash1.11$played[i], 2), mu_PI[,i], col = rangi2)
 }
-
 ```
+
+![](../Project/Figures/Smash/unnamed-chunk-16-1.png)<!-- -->
 
 ### Compare the models
 
-```{r}
+``` r
 plot(coeftab(m1.1, m1.2, m1.3, m1.4, m1.5, m1.6, m1.7, m1.8, m1.9, m1.10, m1.11), pars = c("bW", "bG", 'bR', 'bH'))
-
 ```
 
-I was questionable about `weight` before so perhaps I just leave it out. What is interesting is that `fullhop_height` was very influential in the all variable model. So there must be an interaction between this variable and another that gives it this effect.
+![](../Project/Figures/Smash/unnamed-chunk-17-1.png)<!-- -->
 
-But the biggest story I am seeing here is the `grab` is influenced by `fullhop`. Once conditioned on `fullhop` we see a big pull towards 0. I thin that `grab` is going to be a variable I will continue to condition in future rounds.
+I was questionable about `weight` before so perhaps I just leave it out.
+What is interesting is that `fullhop_height` was very influential in the
+all variable model. So there must be an interaction between this
+variable and another that gives it this effect.
+
+But the biggest story I am seeing here is the `grab` is influenced by
+`fullhop`. Once conditioned on `fullhop` we see a big pull towards 0. I
+thin that `grab` is going to be a variable I will continue to condition
+in future rounds.
 
 ## Round 3
 
-I am interested in the aerial variables. So let's just look at those and nothing else.
+I am interested in the aerial variables. So let’s just look at those and
+nothing else.
 
-- X  = `per_played` the outcome variable
-- As = `Air.speed`: speed in air
-- F  = `Fast.Fall`: fast fall speed
-- H  = `fullhop_height`: height of full hop
-- S  = `shorthop_height`: height of short hop
-- Ah = `airjump_height`: height of midair jump
+  - X = `per_played` the outcome variable
+  - As = `Air.speed`: speed in air
+  - F = `Fast.Fall`: fast fall speed
+  - H = `fullhop_height`: height of full hop
+  - S = `shorthop_height`: height of short hop
+  - Ah = `airjump_height`: height of midair jump
 
-Now I will create a DAG that I can use to determine my models. This DAG is actually very similar to the other one, just adding in *full hop height* instead of short hop.
+Now I will create a DAG that I can use to determine my models. This DAG
+is actually very similar to the other one, just adding in *full hop
+height* instead of short hop.
 
-```{r dag3}
+``` r
 # Create DAG
 dag3 <- dagitty("dag{
     H -> X; 
@@ -1077,14 +1275,18 @@ coordinates(dag3) <- list(
 
 # Draw DAG
 drawdag(dag3)
-
 ```
 
-So here we see a semi-complex DAG. We have the relationship of *Air Speed* to *Fast Falling* which influence our outcome since it is a common thing to look for how your character moves in the air when performing combos. Separately there is the relationship of different types of jumps; short, full, and air (or double jump). I see these of short and full individually influencing character choice
+![](../Project/Figures/Smash/dag3-1.png)<!-- -->
 
+So here we see a semi-complex DAG. We have the relationship of *Air
+Speed* to *Fast Falling* which influence our outcome since it is a
+common thing to look for how your character moves in the air when
+performing combos. Separately there is the relationship of different
+types of jumps; short, full, and air (or double jump). I see these of
+short and full individually influencing character choice
 
-```{r m1.12}
-
+``` r
 # Standardize and Index Variables
 smash1.12 <- tibble(
   played = standardize(smash_tidy$per_played),
@@ -1095,7 +1297,15 @@ smash1.12 <- tibble(
   airjump = standardize(as.numeric(smash_tidy$airjump_height)),
 ) %>% 
   drop_na()
+```
 
+    ## Warning in scale(x): NAs introduced by coercion
+    
+    ## Warning in scale(x): NAs introduced by coercion
+    
+    ## Warning in scale(x): NAs introduced by coercion
+
+``` r
 # Fit Model
 m1.12 <- quap(
   alist(
@@ -1109,12 +1319,14 @@ m1.12 <- quap(
 
 # Plot Precis
 plot(precis(m1.12))
-
 ```
 
-Glancing at this it looks like `fullhop`, `shorthop`, and `fall` have more impact on model.
+![](../Project/Figures/Smash/m1.12-1.png)<!-- -->
 
-```{r}
+Glancing at this it looks like `fullhop`, `shorthop`, and `fall` have
+more impact on model.
+
+``` r
 # Call link without specifying new data so it uses the original data.
 mu <- link(m1.12)
 
@@ -1140,13 +1352,14 @@ abline(a = 0, b = 1, lty = 2)
 for (i in 1:nrow(smash1.12)) {
   lines(rep(smash1.12$played[i], 2), mu_PI[,i], col = rangi2)
 }
-
 ```
 
-Just to check I need to take out those variables that didn't influence the outcome to see if there are relationships there.
+![](../Project/Figures/Smash/unnamed-chunk-18-1.png)<!-- -->
 
-```{r m1.13}
+Just to check I need to take out those variables that didn’t influence
+the outcome to see if there are relationships there.
 
+``` r
 # Standardize and Index Variables
 smash1.13 <- tibble(
   played = standardize(smash_tidy$per_played),
@@ -1155,7 +1368,13 @@ smash1.13 <- tibble(
   shorthop = standardize(as.numeric(smash_tidy$shorthop_height))
 ) %>% 
   drop_na()
+```
 
+    ## Warning in scale(x): NAs introduced by coercion
+    
+    ## Warning in scale(x): NAs introduced by coercion
+
+``` r
 # Fit Model
 m1.13 <- quap(
   alist(
@@ -1169,12 +1388,14 @@ m1.13 <- quap(
 
 # Plot Precis
 plot(precis(m1.13))
-
 ```
 
-Glancing at this it looks like `fullhop`, `shorthop`, and `fall` have more impact on model.
+![](../Project/Figures/Smash/m1.13-1.png)<!-- -->
 
-```{r}
+Glancing at this it looks like `fullhop`, `shorthop`, and `fall` have
+more impact on model.
+
+``` r
 # Call link without specifying new data so it uses the original data.
 mu <- link(m1.13)
 
@@ -1200,29 +1421,28 @@ abline(a = 0, b = 1, lty = 2)
 for (i in 1:nrow(smash1.13)) {
   lines(rep(smash1.13$played[i], 2), mu_PI[,i], col = rangi2)
 }
-
 ```
 
-Looks like no change, so I should be good to take those variables out of the model.
+![](../Project/Figures/Smash/unnamed-chunk-19-1.png)<!-- -->
+
+Looks like no change, so I should be good to take those variables out of
+the model.
 
 ## Round 4
 
-Combining what I have learned from the last two rounds we can use the best set of variables and see what kind of a model we can make.
+Combining what I have learned from the last two rounds we can use the
+best set of variables and see what kind of a model we can make.
 
-- X  = `per_played` the outcome variable
+  - X = `per_played` the outcome variable
 
-*From Round 2*
-- W = `Weight`: weight
-- R = `Run.Speed`: # of frames to pivot dash
-- G = `Grab.Range`: range of grab
+*From Round 2* - W = `Weight`: weight - R = `Run.Speed`: \# of frames to
+pivot dash - G = `Grab.Range`: range of grab
 
-*From Round 3*
-- F  = `Fast.Fall`: fast fall speed
-- H  = `fullhop_height`: height of full hop
-- S  = `shorthop_height`: height of short hop
+*From Round 3* - F = `Fast.Fall`: fast fall speed - H =
+`fullhop_height`: height of full hop - S = `shorthop_height`: height of
+short hop
 
-
-```{r dag4}
+``` r
 # Create DAG
 dag4 <- dagitty("dag{
     W -> X; 
@@ -1244,13 +1464,19 @@ coordinates(dag4) <- list(
 
 # Draw DAG
 drawdag(dag4)
-
 ```
 
-So this is a pretty interesting DAG. We basically have all these variables that do not pipe into each other and are independent in their influence over the outcome. The reason why I think this is because I have seen from previous models that the interactions did not make a difference. I am however including a new relationship between `weight` and `fall`. The logic is that the heavier characters would fall faster, but this may not be the case always. I mean it is a game afterall...
+![](../Project/Figures/Smash/dag4-1.png)<!-- -->
 
-```{r m1.14}
+So this is a pretty interesting DAG. We basically have all these
+variables that do not pipe into each other and are independent in their
+influence over the outcome. The reason why I think this is because I
+have seen from previous models that the interactions did not make a
+difference. I am however including a new relationship between `weight`
+and `fall`. The logic is that the heavier characters would fall faster,
+but this may not be the case always. I mean it is a game afterall…
 
+``` r
 # Standardize and Index Variables
 smash1.14 <- tibble(
   played = standardize(smash_tidy$per_played),
@@ -1262,7 +1488,15 @@ smash1.14 <- tibble(
   shorthop = standardize(as.numeric(smash_tidy$shorthop_height))
 ) %>% 
   drop_na()
+```
 
+    ## Warning in scale(x): NAs introduced by coercion
+    
+    ## Warning in scale(x): NAs introduced by coercion
+    
+    ## Warning in scale(x): NAs introduced by coercion
+
+``` r
 # Fit Model
 m1.14 <- quap(
   alist(
@@ -1276,10 +1510,11 @@ m1.14 <- quap(
 
 # Plot Precis
 plot(precis(m1.14))
-
 ```
 
-```{r prior1 check}
+![](../Project/Figures/Smash/m1.14-1.png)<!-- -->
+
+``` r
 # Extract the prior (first set.seed).
 set.seed(42)
 prior <- extract.prior(m1.14)
@@ -1301,9 +1536,12 @@ for (i in 1:50) {
 }
 ```
 
-Glancing at this it looks like `fullhop`, `shorthop`, and `fall` have more impact on model.
+![](../Project/Figures/Smash/prior1%20check-1.png)<!-- -->
 
-```{r}
+Glancing at this it looks like `fullhop`, `shorthop`, and `fall` have
+more impact on model.
+
+``` r
 # Call link without specifying new data so it uses the original data.
 mu <- link(m1.14)
 
@@ -1329,17 +1567,18 @@ abline(a = 0, b = 1, lty = 2)
 for (i in 1:nrow(smash1.14)) {
   lines(rep(smash1.14$played[i], 2), mu_PI[,i], col = rangi2)
 }
-
 ```
 
-Let's compare this model with the all variable model
+![](../Project/Figures/Smash/unnamed-chunk-20-1.png)<!-- -->
 
-```{r}
+Let’s compare this model with the all variable model
 
+``` r
 # Plot all models together
 plot(coeftab(m1.0, m1.14), pars = c("bF", "bH", "bS", "bW", "bR", "bG"))
-
 ```
 
-I think I will move onto some more advanced models now in `03_smash_mcmc.Rmd`
+![](../Project/Figures/Smash/unnamed-chunk-21-1.png)<!-- -->
 
+I think I will move onto some more advanced models now in
+`03_smash_mcmc.Rmd`

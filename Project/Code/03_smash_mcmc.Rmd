@@ -5,26 +5,103 @@ author: "Zack Wixom"
 output: github_document
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+```{r opts, echo = FALSE}
+# puts any figures made into this folder
+knitr::opts_chunk$set(
+  fig.path = "../Figures/Project/Smash"
+)
 ```
 
-## R Markdown
+```{r set up, message = FALSE}
+# Packages
+library(tidyverse)
+library(cmdstanr)
+library(posterior)
+library(bayesplot)
+library(rethinking)
+library(dagitty)
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+# Load Data
+smash_tidy <- read_csv(here::here("Project", "Data", "smash_tidy.csv"))[,-1]
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+smash_tidy
 
-```{r cars}
-summary(cars)
+# Set Seed
+set.seed(42)
+
 ```
 
-## Including Plots
+> I might want to check correlation between variables but I want to get started on an MCMC model
 
-You can also embed plots, for example:
+### Round 1
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+Let's look back our latest DAG
+
+- X  = `per_played` the outcome variable
+- W = `Weight`: weight
+- R = `Run.Speed`: # of frames to pivot dash
+- G = `Grab.Range`: range of grab
+- F  = `Fast.Fall`: fast fall speed
+- H  = `fullhop_height`: height of full hop
+- S  = `shorthop_height`: height of short hop
+
+
+```{r dag5}
+# Create DAG
+dag5 <- dagitty("dag{
+    W -> X; 
+    R -> X;
+    G -> X;
+    W -> R;
+    W -> F;
+    
+    F -> X;    
+    H -> X; 
+    S -> X
+}")
+
+# DAG coordinates
+coordinates(dag5) <- list(
+  x = c(X = 1, W = 1, S = 2, G = 1, R = 2, F = 0, H = 0),
+  y = c(X = 1, W = 0, S = 2, G = 2, R = 0, F = 0, H = 2)
+)
+
+# Draw DAG
+drawdag(dag5)
+
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+Let's build an `ulam` model
+
+```{r m2.1}
+
+# Standardize and Index Variables
+smash2.1 <- tibble(
+  played = standardize(smash_tidy$per_played),
+  weight = standardize(smash_tidy$Weight),
+  run = standardize(smash_tidy$Run.Speed),
+  grab = standardize(as.numeric(smash_tidy$Grab.Range)),
+  fall = standardize(smash_tidy$Fast.Fall),
+  fullhop = standardize(as.numeric(smash_tidy$fullhop_height)),
+  shorthop = standardize(as.numeric(smash_tidy$shorthop_height))
+) %>% 
+  drop_na()
+
+# Fit Model
+m2.1 <- ulam(
+  alist(
+    played ~ bnimon(mu, sigma),
+    mu <- a + bW * weight + bR * run + bG * grab + bF * fall + bH * fullhop + bS * shorthop,
+    a ~ dnorm(0, .2),
+    c(bW, bR, bG, bF, bH, bS) ~ dnorm(0, 0.2),
+    sigma ~ dexp(1)
+  ), data = smash2,1
+)
+
+# Plot Precis
+plot(precis(m2.1))
+
+
+```
+
+
