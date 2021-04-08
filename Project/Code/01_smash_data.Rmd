@@ -50,7 +50,7 @@ for (i in 1:14) {
   .[i] %>%
   html_table(fill = TRUE)
   
-  write_csv(as.data.frame(x), paste("smash", i, ".csv", sep = ""))
+  write_csv(as.data.frame(x), here::here("Project", "Data", paste("smash", i, ".csv", sep = ""))
 }
 
 ```
