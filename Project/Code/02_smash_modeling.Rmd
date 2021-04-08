@@ -33,6 +33,9 @@ smash <- read_csv(here::here("Project/Data", "smash_data.csv")) %>%
 
 smash
 
+# Set Seed
+set.seed(42)
+
 ```
 
 Some of the characters do not have all the frame stats available. I might need to take care of this later if having NA's present cause an issue, but for now I will not worry about them. However, I really don't need the rankings per frame stat, so I will just drop those columns.
@@ -57,7 +60,7 @@ There are a lot of variables in this dataset. So I want to make it simple and ju
 - `Weight`: weight
 - `Run.Speed`: # of frames to pivot dash
 - `Grab.Range`: range of grab
-- `Fastest.Move.s.`: Fastest move out of shield
+- `Fastest.Move.s.`: Fastest move out of shield (I need to clean up this variable a little)
 
 > Note: I do not have damage data as of right now. It might be good to incorporate damage data for certain moves as this could be an indicator of character preference, however, the real reason players are good are because they understand the mechanics of their preferred character and know how to use it. So for a pro the actual damage output might not be as important as knowing how to move and time combos, leading to rampping up damage, and delivering a kill.
 
@@ -66,11 +69,102 @@ There are a lot of variables in this dataset. So I want to make it simple and ju
 vars <- c(1, 4, 5, 8, 11, 13, 16:18, 23, 28, 34, 41)
 
 smash_tidy <- smash %>% 
-  select(vars)
+  select(vars) %>% 
+  # Clean up Fastest Move Variable
+  rename(oos_move = Fastest.Move.s.) %>% 
+  separate_rows(oos_move, sep = ",")
+
+unique(smash_tidy$oos_move[order(smash_tidy$oos_move)])
+
+# Recode some of the character values that are different spellijngs
+smash_tidy$oos_move[smash_tidy$oos_move == "Up B"] <- "UpB"
+smash_tidy$oos_move[smash_tidy$oos_move == " Bair"] <- "Bair"
+smash_tidy$oos_move[smash_tidy$oos_move == " Fair"] <- "Fair"
+smash_tidy$oos_move[smash_tidy$oos_move == " Uair"] <- "Uair"
+smash_tidy$oos_move[smash_tidy$oos_move == " Usmash"] <- "Usmash"
+smash_tidy$oos_move[smash_tidy$oos_move == "USmash"] <- "Usmash"
+smash_tidy$oos_move[smash_tidy$oos_move == "NAir"] <- "Nair"
+smash_tidy$oos_move[smash_tidy$oos_move == " NeutralB (Air)"] <- "B"
+smash_tidy$oos_move[smash_tidy$oos_move == " DownB (Air)"] <- "DownB"
+smash_tidy$oos_move[smash_tidy$oos_move == "DownB (Air)"] <- "DownB"
+smash_tidy$oos_move[smash_tidy$oos_move == "UpB(3)"] <- "UpB"
+smash_tidy$oos_move[smash_tidy$oos_move == "UpB(2) or Echo Reflector (air)"] <- "UpB"
+smash_tidy$oos_move[smash_tidy$oos_move == "UpB (air)"] <- "UpB"
+smash_tidy$oos_move[smash_tidy$oos_move == "UpB (Air)"] <- "UpB"
+smash_tidy$oos_move[smash_tidy$oos_move == "Uair or Fair"] <- "Fair"
+smash_tidy$oos_move[is.na(smash_tidy$oos_move)] <- "none"
+  
 
 ```
 
-### Drawing First DAG
+## All variables model
+
+Just for fun, let's put in all the variables and see what happens.
+
+- `string1`: character is first string choice
+- `base_accel`: base acceleration 
+- `Air.speed`: speed in air
+- `Fast.Fall`: fast fall speed
+- `fullhop_height`: height of full hop
+- `shorthop_height`: height of short hop
+- `airjump_height`: height of midair jump
+- `Weight`: weight
+- `Run.Speed`: # of frames to pivot dash
+- `Grab.Range`: range of grab
+- `oos_move`: Fastest move out of shield
+
+```{r}
+# Standardize and Index Variables
+smash1 <- tibble(
+  played = standardize(smash_tidy$per_played),
+  accel = standardize(as.numeric(smash_tidy$base_accel)),
+  air = standardize(smash_tidy$Air.speed),
+  fall = standardize(smash_tidy$Fast.Fall),
+  fullhop = standardize(as.numeric(smash_tidy$fullhop_height)),
+  shorthop = standardize(as.numeric(smash_tidy$shorthop_height)),
+  airjump = standardize(as.numeric(smash_tidy$airjump_height)),
+  weight = standardize(smash_tidy$Weight),
+  run = standardize(smash_tidy$Run.Speed),
+  grab = standardize(as.numeric(smash_tidy$Grab.Range)),
+  oosmove = as.integer(factor(smash_tidy$oos_move))
+) %>% 
+  drop_na()
+```
+
+```{r m1.0}
+
+# Fit Model
+m1.0 <- quap(
+  alist(
+    played ~ dnorm(mu, sigma),
+    mu <- a + 
+      bA * accel + 
+      bAr * air + 
+      bF * fall + 
+      bH * fullhop + 
+      bS * shorthop + 
+      bAj * airjump + 
+      bW * weight + 
+      bR * run + 
+      bG * grab,
+    a ~ dnorm(0, .2),
+    c(bA, bAr, bF, bH, bS, bAj, bW, bR, bG) ~ dnorm(0, 0.5),
+    sigma ~ dexp(1)
+  ), data = smash1
+)
+
+# Plot Precis
+plot(precis(m1.0))
+
+```
+
+So this is pretty interesting. There are a few variables that are really influencing the model. Namely, `fullhop_height`, `shorthop_height`, `airjump_height`, and `Fast.Fall`. Perhaps this is because aerials attacks and movement is key for competitive play.  
+
+I haven't tried putting in the categorical variable of `oos_move`. I will deal with adding that later.
+
+So let's do some iterations to understand what each of these variables are doing.
+
+## First Set of Variables
 
 Now I will create a DAG that I can use to determine my models. here are my variables that I am going to start with:
 
@@ -81,7 +175,6 @@ Now I will create a DAG that I can use to determine my models. here are my varia
 - R = `Run.Speed`
 
 These are pretty basic components that should be considered when picking a character. These are *Grab Range*, *Run Speed*, *Short Hop*, and *Weight*. Weight is related to a lot of the other variables, besides Grab. 
-
 
 ```{r dag1}
 # Create DAG
@@ -119,16 +212,7 @@ Here are the variables I will standardize
 - grab = `Grab.Range` make numeric to get rid of ~'s
 - run = `Run.Speed`
 
-```{r standardize data}
-
-# Standardize and Index Variables
-smash1 <- tibble(
-  played = standardize(smash_tidy$per_played),
-  weight = standardize(smash_tidy$Weight),
-  shorthop = standardize(as.numeric(smash_tidy$shorthop_height)),
-  grab = standardize(as.numeric(smash_tidy$Grab.Range)),
-  run = standardize(smash_tidy$Run.Speed)
-)
+```{r}
 
 # Initial Density Graphs
 dens(smash1$played)
@@ -146,10 +230,6 @@ I also do not have any discrete varables at the moment. In a later iteration thi
 ### Build Model
 
 ```{r m1}
-
-# Omit NA's
-smash1 <- smash1 %>% 
-  na.omit()
 
 # Fit Model
 m1.1 <- quap(
@@ -174,25 +254,7 @@ So we can see that there the variables are straddling 0 but there is some pull f
 
 ### Iteration 2
 
-I want to see if I don't include some variables if it changes things.
-
-```{r}
-
-# Standardize and Index Variables
-smash1.2 <- tibble(
-  played = standardize(smash_tidy$per_played),
-  shorthop = standardize(as.numeric(smash_tidy$shorthop_height)),
-  grab = standardize(as.numeric(smash_tidy$Grab.Range)),
-  run = standardize(smash_tidy$Run.Speed)
-)
-
-# Initial Density Graphs
-dens(smash1.2$played)
-dens(smash1.2$shorthop)
-dens(smash1.2$grab)
-dens(smash1.2$run)
-
-```
+I want to see if I don't include the `weight` variable if it changes things.
 
 There are a couple of outliers happening in grab and run. I think this is because there are a few characters that are known to have this extreme stats. So it is not surprising, but I might need to log these two variables.
 
@@ -201,10 +263,6 @@ I also do not have any discrete varables at the moment. In a later iteration thi
 ### Build Model
 
 ```{r m1.2}
-
-# Omit NA's
-smash1.2 <- smash1.2 %>% 
-  na.omit()
 
 # Fit Model
 m1.2 <- quap(
@@ -216,7 +274,7 @@ m1.2 <- quap(
     bG ~ dnorm(0, .5),
     bR ~ dnorm(0, .5),
     sigma ~ dexp(1)
-  ), data = smash1.2
+  ), data = smash1
 )
 
 # Plot Precis
@@ -228,20 +286,7 @@ No difference. So let's look at some new variables.
 
 ### Iteration 3
 
-```{r}
-
-# Standardize and Index Variables
-smash1.3 <- tibble(
-  played = standardize(smash_tidy$per_played),
-  weight = standardize(smash_tidy$Weight),
-  shorthop = standardize(as.numeric(smash_tidy$shorthop_height)),
-  grab = standardize(as.numeric(smash_tidy$Grab.Range)),
-  run = standardize(smash_tidy$Run.Speed),
-  character = smash_tidy$character
-) %>% 
-  drop_na()
-
-```
+Let's try with just `weight` variable.
 
 ```{r m1.3}
 
@@ -253,7 +298,7 @@ m1.3 <- quap(
     a ~ dnorm(0, .2),
     bW ~ dnorm(0, .5),
     sigma ~ dexp(1)
-  ), data = smash1.3
+  ), data = smash1
 )
 
 # Plot Precis
@@ -261,4 +306,254 @@ plot(precis(m1.3))
 
 ```
 
+
+### Iteration 4
+
+Let's look at just the `shorthop` variable.
+
+```{r m1.4}
+
+# Fit Model
+m1.4 <- quap(
+  alist(
+    played ~ dnorm(mu, sigma),
+    mu <- a + bS * shorthop,
+    a ~ dnorm(0, .2),
+    bS ~ dnorm(0, .5),
+    sigma ~ dexp(1)
+  ), data = smash1
+)
+
+# Plot Precis
+plot(precis(m1.4))
+
+```
+
+### Iteration 5
+
+Since I saw that `grab` was significant, let's just condition on that variable. 
+
+```{r m1.5}
+
+# Fit Model
+m1.5 <- quap(
+  alist(
+    played ~ dnorm(mu, sigma),
+    mu <- a + bG * grab,
+    a ~ dnorm(0, .2),
+    bG ~ dnorm(0, .5),
+    sigma ~ dexp(1)
+  ), data = smash1
+)
+
+# Plot Precis
+plot(precis(m1.5))
+
+```
+So with `grab` all alone we see that it is consistently negative. Looks like perhaps people do not like characters with long grabs.
+
+### Iteration 6
+
+Since I saw that `run` also was slightly significant, let's just condition on that variable. 
+
+
+```{r m1.6}
+
+# Fit Model
+m1.6 <- quap(
+  alist(
+    played ~ dnorm(mu, sigma),
+    mu <- a + bR * run,
+    a ~ dnorm(0, .2),
+    bR ~ dnorm(0, .5),
+    sigma ~ dexp(1)
+  ), data = smash1
+)
+
+# Plot Precis
+plot(precis(m1.6))
+
+```
+
+So it looks like it has a slightly more positive effect on percentage played.
+
+### Iteration 7
+
+However, I do need to check if `weight` influences `run`. So I will do one more model conditioning on `weight` and `run`.
+
+```{r m1.7}
+
+# Fit Model
+m1.7 <- quap(
+  alist(
+    played ~ dnorm(mu, sigma),
+    mu <- a + bW * weight + bR * run,
+    a ~ dnorm(0, .2),
+    bW ~ dnorm(0, 0.5),
+    bR ~ dnorm(0, .5),
+    sigma ~ dexp(1)
+  ), data = smash1
+)
+
+# Plot Precis
+plot(precis(m1.7))
+
+```
+
+Weight does increase slightly here. Lets add an interaction between the two variables.
+
+```{r m1.8}
+
+# Fit Model
+m1.8 <- quap(
+  alist(
+    played ~ dnorm(mu, sigma),
+    mu <- a + bW * weight + bR * run + bWR * weight * run,
+    a ~ dnorm(0, .2),
+    bW ~ dnorm(0, 0.5),
+    bR ~ dnorm(0, .5),
+    bWR ~ dnorm(0, 0.5),
+    sigma ~ dexp(1)
+  ), data = smash1
+)
+
+# Plot Precis
+plot(precis(m1.8))
+
+```
+
+Well it doesn't look like we need to include this interaction.
+
+### Iteration 9
+
+```{r m1.9}
+
+# Fit Model
+m1.9 <- quap(
+  alist(
+    played ~ dnorm(mu, sigma),
+    mu <- a + bW * weight + bR * run + bG * grab,
+    a ~ dnorm(0, .2),
+    bW ~ dnorm(0, 0.5),
+    bR ~ dnorm(0, .5),
+    bG ~ dnorm(0, 0.5),
+    sigma ~ dexp(1)
+  ), data = smash1
+)
+
+# Plot Precis
+plot(precis(m1.9))
+
+```
+
+### Comparing Models
+
+Let's plot each model next to each other so we can see if there are any hidden effects
+
+```{r}
+
+# WAIC.
+plot(compare(m1.1, m1.2, m1.3, m1.4, m1.5, m1.6, m1.7, m1.8, m1.9, func = WAIC))
+# PSIS.
+plot(compare(m1.1, m1.2, m1.3, m1.4, m1.5, m1.6, m1.7, m1.8, m1.9, func = PSIS))
+
+# Plot all models together
+plot(coeftab(m1.5, m1.6, m1.7, m1.8, m1.9))
+
+```
+
+Well it looks like perhaps`shorthop` will not be useful for me at this moment. We should try new variables but keep `weight`, `grab` and `run`.
+
+## New Variables
+
+So I saw that some of the variables I chose to analyze were not effective. So let's look at some new combinations.
+
+- X = `per_played` the outcome variable
+- H = `fullhop_height`: height of full hop
+- W = `Weight`: weight
+- R = `Run.Speed`: # of frames to pivot dash
+- G = `Grab.Range`: range of grab
+
+Now I will create a DAG that I can use to determine my models. This DAG is actually very similar to the other one, just adding in *full hop height* instead of short hop.
+
+```{r dag2}
+# Create DAG
+dag2 <- dagitty("dag{
+    W -> X; 
+    H -> X;
+    G -> X;
+    R -> X;
+    W -> H;
+    W -> R
+}")
+
+# DAG coordinates
+coordinates(dag2) <- list(
+  x = c(X = 2, W = 2, H = 3, G = 1, R = 1),
+  y = c(X = 2, W = 0, H = 0, G = 2, R = 0)
+)
+
+# Draw DAG
+drawdag(dag2)
+
+```
+
+So far our best model was the one with `weight`, `grab` and `run`. So let's just add in `fullhop_height`.
+
+### Iteration 10
+
+```{r m1.10}
+
+# Fit Model
+m1.10 <- quap(
+  alist(
+    played ~ dnorm(mu, sigma),
+    mu <- a + bW * weight + bR * run + bG * grab + bH * fullhop,
+    a ~ dnorm(0, .2),
+    bW ~ dnorm(0, 0.5),
+    bR ~ dnorm(0, .5),
+    bG ~ dnorm(0, 0.5),
+    bH ~ dnorm(0, 0.5),
+    sigma ~ dexp(1)
+  ), data = smash1
+)
+
+# Plot Precis
+plot(precis(m1.10))
+
+```
+
+So we can se that `weight` is now pushed to straddle 0 with `fullhop` in play. Let's take out `weight`.
+
+### Iteration 11
+
+```{r m1.11}
+
+# Fit Model
+m1.11 <- quap(
+  alist(
+    played ~ dnorm(mu, sigma),
+    mu <- a + bR * run + bG * grab + bH * fullhop,
+    a ~ dnorm(0, .2),
+    bR ~ dnorm(0, .5),
+    bG ~ dnorm(0, 0.5),
+    bH ~ dnorm(0, 0.5),
+    sigma ~ dexp(1)
+  ), data = smash1
+)
+
+# Plot Precis
+plot(precis(m1.11))
+
+```
+
+### Compare the models
+
+```{r}
+
+plot(coeftab(m1.10, m1.11))
+
+```
+
+I was questionable about `weight` before so perhaps I just leave it out.
 

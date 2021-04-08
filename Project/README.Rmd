@@ -37,7 +37,7 @@ The sample size is automatically embodied in the posterior (i.e., no “degrees 
 
 `02_smash_modeling.Rmd` The beginning of my modeling process, mostly creating DAG's and simple linear models.
 
-`03_smash_MCMCmodeling.Rmd` Moving onto MCMC modeling and more complex models.
+`03_smash_mcmc.Rmd` Moving onto MCMC modeling and more complex models.
 
 `04_smash_iterations.Rmd` More Iterations on Project with different models.
 
