@@ -43,9 +43,9 @@ smash
     ##  5 Ganondorf   224           109       2.1       36      43      30 0.01      
     ##  6 Young Li…   213           129       2.49      26      32      71 0.02      
     ##  7 Snake       199            97       1.87      39      24      34 0.01      
-    ##  8 Marth       194            93       1.79      31      39      23 0.01      
-    ##  9 Inkling     194            95       1.83      35      29      31 0.01      
-    ## 10 Roy         193            95       1.83      26      46      23 0.02      
+    ##  8 Inkling     194            95       1.83      35      29      31 0.01      
+    ##  9 Roy         193            95       1.83      26      46      23 0.02      
+    ## 10 Marth       192            92       1.77      31      38      23 0.01      
     ## # … with 86 more rows, and 44 more variables: additional_accel <chr>,
     ## #   max_accel <chr>, Air.speed <dbl>, Regular.Fall <dbl>, Fast.Fall <dbl>,
     ## #   X..Increase <chr>, Gravity <dbl>, fullhop_height <chr>,
@@ -233,7 +233,7 @@ m1.0 <- quap(
 plot(precis(m1.0))
 ```
 
-![](../Project/Figures/Smash/m1.0-1.png)<!-- -->
+![](../Figures/Smash/m1.0-1.png)<!-- -->
 
 So this is pretty interesting. There are a few variables that are really
 influencing the model. Namely, `fullhop_height`, `shorthop_height`,
@@ -276,7 +276,7 @@ for (i in 1:50) {
 }
 ```
 
-![](../Project/Figures/Smash/prior0%20check-1.png)<!-- -->
+![](../Figures/Smash/prior0%20check-1.png)<!-- -->
 
 I can’t really remember how to interpret this chart. It doesn’t look too
 crazy but is still not really reasonable.
@@ -304,7 +304,7 @@ for (i in 1:nrow(smash1)) {
 }
 ```
 
-![](../Project/Figures/Smash/unnamed-chunk-2-1.png)<!-- -->
+![](../Figures/Smash/unnamed-chunk-2-1.png)<!-- -->
 
 Well I am worried I might be over fitting, since this is pretty accurate
 predictions.
@@ -351,7 +351,7 @@ coordinates(dag1) <- list(
 drawdag(dag1)
 ```
 
-![](../Project/Figures/Smash/dag1-1.png)<!-- -->
+![](../Figures/Smash/dag1-1.png)<!-- -->
 
 There are a few interactions that we need to watch. Since it is a fork
 from W to X, S, and R we will condition all the variables in the model.
@@ -376,31 +376,31 @@ Here are the variables I will standardize
 dens(smash1$played)
 ```
 
-![](../Project/Figures/Smash/unnamed-chunk-3-1.png)<!-- -->
+![](../Figures/Smash/unnamed-chunk-3-1.png)<!-- -->
 
 ``` r
 dens(smash1$weight)
 ```
 
-![](../Project/Figures/Smash/unnamed-chunk-3-2.png)<!-- -->
+![](../Figures/Smash/unnamed-chunk-3-2.png)<!-- -->
 
 ``` r
 dens(smash1$shorthop)
 ```
 
-![](../Project/Figures/Smash/unnamed-chunk-3-3.png)<!-- -->
+![](../Figures/Smash/unnamed-chunk-3-3.png)<!-- -->
 
 ``` r
 dens(smash1$grab)
 ```
 
-![](../Project/Figures/Smash/unnamed-chunk-3-4.png)<!-- -->
+![](../Figures/Smash/unnamed-chunk-3-4.png)<!-- -->
 
 ``` r
 dens(smash1$run)
 ```
 
-![](../Project/Figures/Smash/unnamed-chunk-3-5.png)<!-- -->
+![](../Figures/Smash/unnamed-chunk-3-5.png)<!-- -->
 
 There are a couple of outliers happening in grab and run. I think this
 is because there are a few characters that are known to have this
@@ -447,7 +447,7 @@ m1.1 <- quap(
 plot(precis(m1.1))
 ```
 
-![](../Project/Figures/Smash/m1-1.png)<!-- -->
+![](../Figures/Smash/m1-1.png)<!-- -->
 
 So we can see that there the variables are straddling 0 but there is
 some pull for *Grab* and *Run Speed*. However, I think that I still need
@@ -471,7 +471,7 @@ for (i in 1:50) {
 }
 ```
 
-![](../Project/Figures/Smash/unnamed-chunk-4-1.png)<!-- -->
+![](../Figures/Smash/unnamed-chunk-4-1.png)<!-- -->
 
 ``` r
 # Call link without specifying new data so it uses the original data.
@@ -496,7 +496,7 @@ for (i in 1:nrow(smash1.1)) {
 }
 ```
 
-![](../Project/Figures/Smash/unnamed-chunk-5-1.png)<!-- -->
+![](../Figures/Smash/unnamed-chunk-5-1.png)<!-- -->
 
 Alright so it looks like that without a lot of the variables we can’t
 get a good prediction. There must be an optimal set of variables that
@@ -551,7 +551,7 @@ m1.2 <- quap(
 plot(precis(m1.2))
 ```
 
-![](../Project/Figures/Smash/m1.2-1.png)<!-- -->
+![](../Figures/Smash/m1.2-1.png)<!-- -->
 
 ``` r
 # Call link without specifying new data so it uses the original data.
@@ -576,7 +576,7 @@ for (i in 1:nrow(smash1.2)) {
 }
 ```
 
-![](../Project/Figures/Smash/unnamed-chunk-6-1.png)<!-- -->
+![](../Figures/Smash/unnamed-chunk-6-1.png)<!-- -->
 
 No difference. So let’s look at some new variables.
 
@@ -607,7 +607,7 @@ m1.3 <- quap(
 plot(precis(m1.3))
 ```
 
-![](../Project/Figures/Smash/m1.3-1.png)<!-- -->
+![](../Figures/Smash/m1.3-1.png)<!-- -->
 
 ``` r
 # Call link without specifying new data so it uses the original data.
@@ -637,7 +637,7 @@ for (i in 1:nrow(smash1.3)) {
 }
 ```
 
-![](../Project/Figures/Smash/unnamed-chunk-7-1.png)<!-- -->
+![](../Figures/Smash/unnamed-chunk-7-1.png)<!-- -->
 
 ### Iteration 4
 
@@ -670,7 +670,7 @@ m1.4 <- quap(
 plot(precis(m1.4))
 ```
 
-![](../Project/Figures/Smash/m1.4-1.png)<!-- -->
+![](../Figures/Smash/m1.4-1.png)<!-- -->
 
 ``` r
 # Call link without specifying new data so it uses the original data.
@@ -700,7 +700,7 @@ for (i in 1:nrow(smash1.4)) {
 }
 ```
 
-![](../Project/Figures/Smash/unnamed-chunk-8-1.png)<!-- -->
+![](../Figures/Smash/unnamed-chunk-8-1.png)<!-- -->
 
 ### Iteration 5
 
@@ -734,9 +734,9 @@ m1.5 <- quap(
 plot(precis(m1.5))
 ```
 
-![](../Project/Figures/Smash/m1.5-1.png)<!-- --> So with `grab` all
-alone we see that it is consistently negative. Looks like perhaps people
-do not like characters with long grabs.
+![](../Figures/Smash/m1.5-1.png)<!-- --> So with `grab` all alone we see
+that it is consistently negative. Looks like perhaps people do not like
+characters with long grabs.
 
 ``` r
 # Call link without specifying new data so it uses the original data.
@@ -766,7 +766,7 @@ for (i in 1:nrow(smash1.5)) {
 }
 ```
 
-![](../Project/Figures/Smash/unnamed-chunk-9-1.png)<!-- -->
+![](../Figures/Smash/unnamed-chunk-9-1.png)<!-- -->
 
 *Grab* alone is showing a difference in the posterior check. So perhaps
 this variable will for sure stay in the final model.
@@ -799,7 +799,7 @@ m1.6 <- quap(
 plot(precis(m1.6))
 ```
 
-![](../Project/Figures/Smash/m1.6-1.png)<!-- -->
+![](../Figures/Smash/m1.6-1.png)<!-- -->
 
 So it looks like it has a slightly more positive effect on percentage
 played.
@@ -832,7 +832,7 @@ for (i in 1:nrow(smash1.6)) {
 }
 ```
 
-![](../Project/Figures/Smash/unnamed-chunk-10-1.png)<!-- -->
+![](../Figures/Smash/unnamed-chunk-10-1.png)<!-- -->
 
 ### Iteration 7
 
@@ -864,7 +864,7 @@ m1.7 <- quap(
 plot(precis(m1.7))
 ```
 
-![](../Project/Figures/Smash/m1.7-1.png)<!-- -->
+![](../Figures/Smash/m1.7-1.png)<!-- -->
 
 Weight does increase slightly here. Lets add an interaction between the
 two variables.
@@ -897,7 +897,7 @@ for (i in 1:nrow(smash1.7)) {
 }
 ```
 
-![](../Project/Figures/Smash/unnamed-chunk-11-1.png)<!-- -->
+![](../Figures/Smash/unnamed-chunk-11-1.png)<!-- -->
 
 ``` r
 # Standardize and Index Variables
@@ -925,7 +925,7 @@ m1.8 <- quap(
 plot(precis(m1.8))
 ```
 
-![](../Project/Figures/Smash/m1.8-1.png)<!-- -->
+![](../Figures/Smash/m1.8-1.png)<!-- -->
 
 Well it doesn’t look like we need to include this interaction.
 
@@ -957,7 +957,7 @@ for (i in 1:nrow(smash1.8)) {
 }
 ```
 
-![](../Project/Figures/Smash/unnamed-chunk-12-1.png)<!-- -->
+![](../Figures/Smash/unnamed-chunk-12-1.png)<!-- -->
 
 ### Iteration 9
 
@@ -992,7 +992,7 @@ m1.9 <- quap(
 plot(precis(m1.9))
 ```
 
-![](../Project/Figures/Smash/m1.9-1.png)<!-- -->
+![](../Figures/Smash/m1.9-1.png)<!-- -->
 
 ``` r
 # Call link without specifying new data so it uses the original data.
@@ -1022,7 +1022,7 @@ for (i in 1:nrow(smash1.9)) {
 }
 ```
 
-![](../Project/Figures/Smash/unnamed-chunk-13-1.png)<!-- -->
+![](../Figures/Smash/unnamed-chunk-13-1.png)<!-- -->
 
 ### Comparing Models
 
@@ -1039,7 +1039,7 @@ each other so we can see if there are any hidden effects
 plot(coeftab(m1.5, m1.6, m1.7, m1.8, m1.9))
 ```
 
-![](../Project/Figures/Smash/unnamed-chunk-14-1.png)<!-- -->
+![](../Figures/Smash/unnamed-chunk-14-1.png)<!-- -->
 
 Well it looks like perhaps`shorthop` will not be useful for me at this
 moment. We should try new variables but keep `weight`, `grab` and `run`.
@@ -1078,7 +1078,7 @@ coordinates(dag2) <- list(
 drawdag(dag2)
 ```
 
-![](../Project/Figures/Smash/dag2-1.png)<!-- -->
+![](../Figures/Smash/dag2-1.png)<!-- -->
 
 So far our best model was the one with `weight`, `grab` and `run`. So
 let’s just add in `fullhop_height`.
@@ -1120,7 +1120,7 @@ m1.10 <- quap(
 plot(precis(m1.10))
 ```
 
-![](../Project/Figures/Smash/m1.10-1.png)<!-- -->
+![](../Figures/Smash/m1.10-1.png)<!-- -->
 
 So we can se that `weight` is now pushed to straddle 0 with `fullhop` in
 play. Let’s take out `weight`.
@@ -1153,7 +1153,7 @@ for (i in 1:nrow(smash1.10)) {
 }
 ```
 
-![](../Project/Figures/Smash/unnamed-chunk-15-1.png)<!-- -->
+![](../Figures/Smash/unnamed-chunk-15-1.png)<!-- -->
 
 ### Iteration 11
 
@@ -1190,7 +1190,7 @@ m1.11 <- quap(
 plot(precis(m1.11))
 ```
 
-![](../Project/Figures/Smash/m1.11-1.png)<!-- -->
+![](../Figures/Smash/m1.11-1.png)<!-- -->
 
 ``` r
 # Call link without specifying new data so it uses the original data.
@@ -1220,7 +1220,7 @@ for (i in 1:nrow(smash1.11)) {
 }
 ```
 
-![](../Project/Figures/Smash/unnamed-chunk-16-1.png)<!-- -->
+![](../Figures/Smash/unnamed-chunk-16-1.png)<!-- -->
 
 ### Compare the models
 
@@ -1228,7 +1228,7 @@ for (i in 1:nrow(smash1.11)) {
 plot(coeftab(m1.1, m1.2, m1.3, m1.4, m1.5, m1.6, m1.7, m1.8, m1.9, m1.10, m1.11), pars = c("bW", "bG", 'bR', 'bH'))
 ```
 
-![](../Project/Figures/Smash/unnamed-chunk-17-1.png)<!-- -->
+![](../Figures/Smash/unnamed-chunk-17-1.png)<!-- -->
 
 I was questionable about `weight` before so perhaps I just leave it out.
 What is interesting is that `fullhop_height` was very influential in the
@@ -1277,7 +1277,7 @@ coordinates(dag3) <- list(
 drawdag(dag3)
 ```
 
-![](../Project/Figures/Smash/dag3-1.png)<!-- -->
+![](../Figures/Smash/dag3-1.png)<!-- -->
 
 So here we see a semi-complex DAG. We have the relationship of *Air
 Speed* to *Fast Falling* which influence our outcome since it is a
@@ -1321,7 +1321,7 @@ m1.12 <- quap(
 plot(precis(m1.12))
 ```
 
-![](../Project/Figures/Smash/m1.12-1.png)<!-- -->
+![](../Figures/Smash/m1.12-1.png)<!-- -->
 
 Glancing at this it looks like `fullhop`, `shorthop`, and `fall` have
 more impact on model.
@@ -1354,7 +1354,7 @@ for (i in 1:nrow(smash1.12)) {
 }
 ```
 
-![](../Project/Figures/Smash/unnamed-chunk-18-1.png)<!-- -->
+![](../Figures/Smash/unnamed-chunk-18-1.png)<!-- -->
 
 Just to check I need to take out those variables that didn’t influence
 the outcome to see if there are relationships there.
@@ -1390,7 +1390,7 @@ m1.13 <- quap(
 plot(precis(m1.13))
 ```
 
-![](../Project/Figures/Smash/m1.13-1.png)<!-- -->
+![](../Figures/Smash/m1.13-1.png)<!-- -->
 
 Glancing at this it looks like `fullhop`, `shorthop`, and `fall` have
 more impact on model.
@@ -1423,7 +1423,7 @@ for (i in 1:nrow(smash1.13)) {
 }
 ```
 
-![](../Project/Figures/Smash/unnamed-chunk-19-1.png)<!-- -->
+![](../Figures/Smash/unnamed-chunk-19-1.png)<!-- -->
 
 Looks like no change, so I should be good to take those variables out of
 the model.
@@ -1466,7 +1466,7 @@ coordinates(dag4) <- list(
 drawdag(dag4)
 ```
 
-![](../Project/Figures/Smash/dag4-1.png)<!-- -->
+![](../Figures/Smash/dag4-1.png)<!-- -->
 
 So this is a pretty interesting DAG. We basically have all these
 variables that do not pipe into each other and are independent in their
@@ -1512,7 +1512,7 @@ m1.14 <- quap(
 plot(precis(m1.14))
 ```
 
-![](../Project/Figures/Smash/m1.14-1.png)<!-- -->
+![](../Figures/Smash/m1.14-1.png)<!-- -->
 
 ``` r
 # Extract the prior (first set.seed).
@@ -1536,7 +1536,7 @@ for (i in 1:50) {
 }
 ```
 
-![](../Project/Figures/Smash/prior1%20check-1.png)<!-- -->
+![](../Figures/Smash/prior1%20check-1.png)<!-- -->
 
 Glancing at this it looks like `fullhop`, `shorthop`, and `fall` have
 more impact on model.
@@ -1569,7 +1569,7 @@ for (i in 1:nrow(smash1.14)) {
 }
 ```
 
-![](../Project/Figures/Smash/unnamed-chunk-20-1.png)<!-- -->
+![](../Figures/Smash/unnamed-chunk-20-1.png)<!-- -->
 
 Let’s compare this model with the all variable model
 
@@ -1578,7 +1578,7 @@ Let’s compare this model with the all variable model
 plot(coeftab(m1.0, m1.14), pars = c("bF", "bH", "bS", "bW", "bR", "bG"))
 ```
 
-![](../Project/Figures/Smash/unnamed-chunk-21-1.png)<!-- -->
+![](../Figures/Smash/unnamed-chunk-21-1.png)<!-- -->
 
 I think I will move onto some more advanced models now in
 `03_smash_mcmc.Rmd`
