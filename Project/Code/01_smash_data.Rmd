@@ -12,7 +12,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-![Super Smash Logo](/Users/zwixom/School/Marketing/Quant Analytics/Repo/zack-wixom/Project/Figures/Smash/super-smash-bros-ultimate.png)
+![Super Smash Logo](/Users/zwixom/School/Marketing/Quant Analytics/Repo/zack-wixom/Project/Figures/Smash/super-smash-bros-ultimate.PNG)
 
 ```{r packages, message = FALSE}
 # Load Packages

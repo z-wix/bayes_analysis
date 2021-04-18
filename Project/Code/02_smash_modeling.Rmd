@@ -12,7 +12,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-![Super Smash Logo](/Users/zwixom/School/Marketing/Quant Analytics/Repo/zack-wixom/Project/Figures/Smash/super-smash-bros-ultimate.png)
+![Super Smash Logo](/Users/zwixom/School/Marketing/Quant Analytics/Repo/zack-wixom/Project/Figures/Smash/super-smash-bros-ultimate.PNG)
 
 Now that I have data and a success metric that I want to model on. I can start to build out some models. I am going to start with a simple model using quadratic approximation before moving onto a `ulam()`.
 
