@@ -1,8 +1,9 @@
 Character,Hard.Land,Soft.Land..Universal.
 Mario,4,2
-DK,5,2
+Donkey Kong,5,2
 Link,5,2
-Samus/Dark Samus,4,2
+Samus,4,2
+Dark Samus,4,2
 Yoshi,4,2
 Banjo & Kazooie,4,2
 Kirby,4,2
@@ -12,7 +13,8 @@ Luigi,4,2
 Ness,4,2
 Captain Falcon,4,2
 Jigglypuff,4,2
-Peach/Daisy,4,2
+Peach,4,2
+Daisy,4,2
 Bowser,6,2
 Ice Climbers,4,2
 Sheik,4,2
@@ -20,15 +22,18 @@ Zelda,4,2
 Dr. Mario,4,2
 Pichu,3,2
 Falco,5,2
-Marth/Lucina,4,2
+Marth,4,2
+Lucina,4,2
 Young Link,4,2
 Ganondorf,5,2
 Hero,4,2
 Mewtwo,5,2
-Roy/Chrom,5,2
+Roy,5,2
+Chrom,5,2
 Mr. Game & Watch,4,2
 Meta Knight,4,2
-Pit/Dark Pit,5,2
+Pit,5,2
+Dark Pit,5,2
 Zero Suit Samus,4,2
 Wario,4,2
 Snake,4,2
@@ -59,13 +64,15 @@ Robin,4,2
 Shulk,4,2
 Bowser Jr.,4,2
 Duck Hunt,4,2
-Ryu/Ken,4,2
+Ryu,4,2
+Ken,4,2
 Cloud,4,2
 Corrin,4,2
 Bayonetta,4,2
 Inkling,4,2
 Ridley,4,2
-Simon/Richter,4,2
+Simon,4,2
+Richter,4,2
 King K. Rool,6,2
 Isabelle,4,2
 Incineroar,4,2

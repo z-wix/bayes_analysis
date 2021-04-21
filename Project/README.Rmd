@@ -1,8 +1,46 @@
 ---
-title: "Project"
+title: "Project Overview"
 author: "Zack Wixom"
 output: github_document
 ---
+
+![Super Smash Logo](/Users/zwixom/School/Marketing/Quant Analytics/Repo/zack-wixom/Project/Figures/Smash/super-smash-bros-ultimate.png)
+
+## Project Results
+
+Overall, I think that there are two main drivers that are affecting choice of character. Character aerial movement from fullhops and shorthops. These were impacting other variables such as fast falling and weight. From my linear models in `02_smash_modeling.Rmd` we see a few interesting choices that players are making:
+
+1. shorthop is a big consideration when choosing a character. They want a high shorthop because shorthops allow you to land low aerial attacks that are key to string together combos.
+
+2. fullhops negatively affect choices. This contrast the idea of shorthops in the sense that characters that have really big normal jumps are not desireable since it is too big to control and time attacks on enemies.
+
+3. Fast falling speed is just as important as shorthops because it allows you to continue combos and not float in the air too long. So this has a positive effect on choice, especially when conditioning on fullhop and shorthop. 
+
+4. weight has an overall negative impact on choice.
+
+Weight was another important factor that I wanted to explore more and get some discrete variables and models out of. From our models in `03_smash_mcmc.Rmd` We see that although weight has a negative effect, weight class has some revelations. 
+
+1. *Medium* class characters perform better. perhaps this is showing that more well rounded characters that are *Medium*. I think that these characters are so to speak "safer" are so picked more often. *Medium* weight class, with average aerial abilities are chosen because they are perhaps easier to learn and be fairly good at playing with them. 
+
+2. *Heavy* and *Light* are equally more less desirable. They both have their disadvantages which might be causing this impact. *Heavy* characters are generally slower, but more powerful. It takes skill to learn how to be competitive with the disadvantage of slowness. *Light* character are really floaty and can easily be juggled in the air and consequentially KO'd faster. However, they are faster on the ground, but this also takes more skill to learn how to be effective with them.
+
+In the future I am looking to incorporate the weight classes into the original model that helped me discover the effect of the fullhop and shorthop. 
+
+## Project Organization
+
+`01_smash_data.Rmd` goes through my data collection process which includes webscrapping tables, cleaning data, and combining datasets to make a single source to model on as well as formulating the data story. Also includes some failed attempts at gathering data before moving to different source.
+
+`02_smash_modeling.Rmd` The beginning of my modeling process, mostly creating DAG's and simple linear models.
+
+`03_smash_mcmc.Rmd` Moving onto MCMC modeling and more complex models.
+
+`01_fortnite_data.Rmd` First attempt at project to use an API to extract data on fortnite players. However, my data source ended up not having enough data to do a proper analysis.
+
+`01_twitch_analysis.Rmd` using data from Twitch dataset from Kaggle. Data import and cleaning.
+
+`02_twitch_analysis.Rmd` start of modeling. DAG and simple linear models.
+
+
 
 ## Project Workflow
 
@@ -30,10 +68,6 @@ The sample size is automatically embodied in the posterior (i.e., no “degrees 
 - Use prior predictive checks and posterior predictive checks to evaluate the model.
 
 - Modeling is iterative. You’ll likely need to revise your story.
-
-## Project Organization
-
-There are certain limitations on the size and type of files that can be pushed to GitHub. There are also certain things that shouldn't be accessible by the public (e.g., data we have a license to access). For these reasons, we have folders and files that are pushed to GitHub and those that are not.
 
 ### Pushed to GitHub
 

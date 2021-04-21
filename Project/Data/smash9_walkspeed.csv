@@ -6,6 +6,7 @@ rank_walkspeed,Character,Walk.Speed
 5-6,Sheik,1.47
 5-6,Zero Suit Samus,1.47
 7,Sonic,1.444
+7,Mythra,1.42
 8,Little Mac,1.386
 9,Donkey Kong,1.365
 10,Falco,1.344
@@ -31,7 +32,7 @@ rank_walkspeed,Character,Walk.Speed
 26-30,Yoshi,1.208
 31,Charizard,1.187
 32,Mr. Game & Watch,1.18
-33,R.O.B.,1.178
+33,R.O.B,1.178
 34-36,Cloud,1.155
 34-36,Mario,1.155
 34-36,Shulk,1.155
@@ -49,7 +50,7 @@ rank_walkspeed,Character,Walk.Speed
 48,Ridley,1.1
 49,Pac-Man,1.097
 50,Villager,1.092
-51,Mii Swordfighter,1.07
+51,Mii Sword Fighter,1.07
 52,King Dedede,1.029
 53,Popo,1.008
 53,Banjo & Kazooie,1.06
@@ -64,6 +65,7 @@ rank_walkspeed,Character,Walk.Speed
 60-62,Bowser Jr.,0.924
 60-62,Peach,0.924
 60-62,Daisy,0.924
+60-62,Pyra,0.92
 63,Dr. Mario,0.917301
 64,Zelda,0.914
 65,Ike,0.912

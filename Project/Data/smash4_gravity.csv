@@ -5,6 +5,7 @@ Greninja,0.18
 Sheik,0.15
 Pichu,0.14
 Piranha Plant,0.14
+Mythra,0.137
 Falco,0.13
 Wolf,0.13
 Squirtle,0.128
@@ -27,7 +28,7 @@ Meta Knight,0.11
 Ganondorf,0.108
 Mega Man,0.107
 Wario,0.107
-Mii Swordfighter,0.106
+Mii Sword Fighter,0.106
 King K. Rool,0.105
 Cloud,0.098
 Mii Gunner,0.098
@@ -42,7 +43,7 @@ Corrin,0.092
 Ike,0.092
 Little Mac,0.09
 Lucas,0.09
-R.O.B.,0.09
+R.O.B,0.09
 Ridley,0.09
 Sonic,0.09
 Wii Fit Trainer,0.09
@@ -65,6 +66,7 @@ Mr. Game & Watch,0.08
 Snake,0.08
 Yoshi,0.08
 Villager,0.078
+Pyra,0.078
 Ness,0.077
 Duck Hunt,0.076
 Dark Samus,0.075
