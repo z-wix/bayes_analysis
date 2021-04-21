@@ -3,7 +3,7 @@ Smash Data Analysis
 Zack Wixom
 
 ![Super Smash
-Logo](/Users/zwixom/School/Marketing/Quant%20Analytics/Repo/zack-wixom/Project/Figures/Smash/super-smash-bros-ultimate.png)
+Logo](/Users/zwixom/School/Marketing/Quant%20Analytics/Repo/zack-wixom/Project/Figures/Smash/super-smash-bros-ultimate.PNG)
 
 Now that I have data and a success metric that I want to model on. I can
 start to build out some models. I am going to start with a simple model
@@ -33,30 +33,30 @@ smash <- read_csv(here::here("Project/Data", "smash_data.csv")) %>%
 smash
 ```
 
-    ## # A tibble: 96 x 52
+    ## # A tibble: 94 x 52
     ##    character score total_players per_played string1 string2 string3 base_accel
     ##    <chr>     <dbl>         <dbl>      <dbl>   <dbl>   <dbl>   <dbl> <chr>     
-    ##  1 Cloud       448           190       3.66     101      56      33 0.01      
+    ##  1 Cloud       449           190       3.66     102      55      33 0.01      
     ##  2 Bayonetta   290           151       2.91      26      87      38 0.01      
     ##  3 Terry       276           135       2.6       46      49      40 <NA>      
-    ##  4 Joker       234           114       2.2       43      34      37 <NA>      
-    ##  5 Ganondorf   224           109       2.1       36      43      30 0.01      
-    ##  6 Young Li…   213           129       2.49      26      32      71 0.02      
+    ##  4 Joker       236           114       2.2       44      34      36 <NA>      
+    ##  5 Ganondorf   223           110       2.12      35      43      32 0.01      
+    ##  6 Young Li…   213           129       2.48      26      32      71 0.02      
     ##  7 Snake       199            97       1.87      39      24      34 0.01      
-    ##  8 Inkling     194            95       1.83      35      29      31 0.01      
-    ##  9 Roy         193            95       1.83      26      46      23 0.02      
-    ## 10 Marth       192            92       1.77      31      38      23 0.01      
-    ## # … with 86 more rows, and 44 more variables: additional_accel <chr>,
+    ##  8 Roy         194            96       1.85      26      46      24 0.02      
+    ##  9 Marth       194            93       1.79      31      39      23 0.01      
+    ## 10 Inkling     194            95       1.83      35      29      31 0.01      
+    ## # … with 84 more rows, and 44 more variables: additional_accel <chr>,
     ## #   max_accel <chr>, Air.speed <dbl>, Regular.Fall <dbl>, Fast.Fall <dbl>,
     ## #   X..Increase <chr>, Gravity <dbl>, fullhop_height <chr>,
     ## #   shorthop_height <chr>, airjump_height <chr>, shorthop_dur <dbl>,
     ## #   fullhop_dur <dbl>, SH.Fast.Fall <dbl>, FH.Fast.Fall <dbl>, Weight <dbl>,
     ## #   Hard.Land <dbl>, Soft.Land..Universal. <dbl>, Walk.Speed <dbl>,
-    ## #   Initial.Dash <chr>, Run.Speed <dbl>, Dash.Frames <chr>,
+    ## #   Initial.Dash <dbl>, Run.Speed <dbl>, Dash.Frames <chr>,
     ## #   Pivot.Dash.Frames <chr>, Fast.Initial.Dash <chr>,
     ## #   Normal.Buffer.Window <chr>, Slow.Full.Dash <chr>, Grab.Range <chr>,
     ## #   Attack.Range <chr>, Attack.Frames <chr>, Neutral.Getup <chr>, Roll <chr>,
-    ## #   Jump <chr>, X.1 <dbl>, Fastest.Move.s. <chr>, X.2 <dbl>,
+    ## #   Jump <chr>, X.1 <chr>, Fastest.Move.s. <chr>, X.2 <dbl>,
     ## #   X2nd.Fastest.Move.s. <chr>, X.3 <dbl>, X3rd.Fastest.Move.s. <chr>,
     ## #   Grab <chr>, Grab..Post.Shieldstun <chr>, Item.Throw.Forward. <chr>,
     ## #   Item.Throw.Back. <chr>, Jump.Z.Drop..Front. <chr>,
@@ -104,7 +104,7 @@ most important to gameplay and are used in strategic moves:
 > combos, leading to rampping up damage, and delivering a kill.
 
 ``` r
-vars <- c(1, 4, 5, 8, 11, 13, 16:18, 23, 28, 34, 41)
+vars <- c(1, 3, 4, 5, 8, 11, 13, 16:18, 23, 28, 34, 41)
 
 smash_tidy <- smash %>% 
   select(vars) %>% 
@@ -156,14 +156,14 @@ Just for fun, let’s put in all the variables and see what happens.
 
 ``` r
 # Load Data
-smash_tidy <- read_csv(here::here("Project", "Data", "smash_tidy.csv"))[,-1]
+smash_tidy <- read_csv(here::here("Project", "Data", "smash_tidy.csv"))
 ```
 
     ## 
     ## ── Column specification ────────────────────────────────────────────────────────
     ## cols(
-    ##   X1 = col_double(),
     ##   character = col_character(),
+    ##   total_players = col_double(),
     ##   per_played = col_double(),
     ##   string1 = col_double(),
     ##   base_accel = col_character(),
@@ -223,7 +223,7 @@ m1.0 <- quap(
       bW * weight + 
       bR * run + 
       bG * grab,
-    a ~ dnorm(0, .2),
+    a ~ dnorm(0, 0.2),
     c(b1, bA, bAr, bF, bH, bS, bAj, bW, bR, bG) ~ dnorm(0, 0.2),
     sigma ~ dexp(1)
   ), data = smash1
@@ -237,11 +237,11 @@ plot(precis(m1.0))
 
 So this is pretty interesting. There are a few variables that are really
 influencing the model. Namely, `fullhop_height`, `shorthop_height`,
-`airjump_height`, and `Fast.Fall`. Perhaps this is because aerials
-attacks and movement is key for competitive play.
+`Fast.Fall`, and `weight`. Perhaps this is because aerials attacks and
+movement is key for competitive play.
 
 `string1` is not surprising. This variable is an indicator of if this
-character is their frist choice and so this directly effects
+character is their first choice and so this directly effects
 `per_played`. I think that perhaps I won’t use this variable in my
 analysis, but in other iterations use `string2` and `string3.` My logic
 being, if a character is someones second or third choice then it might
@@ -304,17 +304,273 @@ for (i in 1:nrow(smash1)) {
 }
 ```
 
-![](../Figures/Smash/unnamed-chunk-2-1.png)<!-- -->
-
-Well I am worried I might be over fitting, since this is pretty accurate
-predictions.
-
-*Anyways*
-
-So let’s do some iterations to understand what each of these variables
-are doing.
+![](../Figures/Smash/pred%20check-1.png)<!-- -->
 
 ## Round 2
+
+I want to see if I just use the variables that were sticking out if they
+will still be significant on their own.
+
+``` r
+# Fit Model
+m0 <- quap(
+  alist(
+    played ~ dnorm(mu, sigma),
+    mu <- a + 
+      b1 * string1 +
+      bF * fall + 
+      bH * fullhop + 
+      bS * shorthop + 
+      bW * weight,
+    a ~ dnorm(0, 0.2),
+    c(b1, bF, bH, bS, bW) ~ dnorm(0, 0.2),
+    sigma ~ dexp(1)
+  ), data = smash1
+)
+
+# Plot Precis
+plot(precis(m0))
+```
+
+![](../Figures/Smash/m0-1.png)<!-- -->
+
+So they are still pretty significant. And if we do a predicitve check
+
+``` r
+# Call link without specifying new data so it uses the original data.
+mu <- link(m0)
+# Summarize samples across cases.
+mu_mean <- apply(mu, 2, mean)
+mu_PI <- apply(mu, 2, PI)
+# Simulate observations (again no new data, so it uses original data).
+smash_sim <- sim(m0, n = 10000)
+smash_PI <- apply(smash_sim, 2, PI)
+# Plot posterior predictions.
+plot(
+  mu_mean ~ smash1$played, 
+  col = rangi2, 
+  ylim=range(mu_PI),
+  xlab = "Observed Player Choice", ylab = "Predicted Player Choice",
+  main = "M0 Posterior Predictive Check"
+)
+abline(a = 0, b = 1, lty = 2)
+for (i in 1:nrow(smash1)) {
+  lines(rep(smash1$played[i], 2), mu_PI[,i], col = rangi2)
+}
+```
+
+![](../Figures/Smash/m0%20pred%20check-1.png)<!-- -->
+
+It looks like these variables are accounting for most of the variation
+happening in the data. But I want to see if I take out `string1` if this
+changes. Since `string1` is so connected to `played` I need to do a
+correlation check.
+
+### Correlation Check
+
+``` r
+# Check Correlation of model
+diag(vcov(m0))
+```
+
+    ##           a          b1          bF          bH          bS          bW 
+    ## 0.002218283 0.002514752 0.002472422 0.004903095 0.004738594 0.002343512 
+    ##       sigma 
+    ## 0.001189993
+
+``` r
+cov2cor(vcov(m0))
+```
+
+    ##                   a           b1          bF          bH          bS
+    ## a      1.0000000000 -0.009228959 -0.03845522  0.02111885 -0.02145840
+    ## b1    -0.0092289595  1.000000000 -0.12465180  0.13419033 -0.06990221
+    ## bF    -0.0384552248 -0.124651800  1.00000000 -0.16842952  0.03612219
+    ## bH     0.0211188479  0.134190327 -0.16842952  1.00000000 -0.74122836
+    ## bS    -0.0214584016 -0.069902214  0.03612219 -0.74122836  1.00000000
+    ## bW     0.0056020499  0.011085443 -0.28473553  0.09557086  0.03188035
+    ## sigma -0.0007660315 -0.136814611 -0.00932384  0.04037139 -0.04624211
+    ##                bW         sigma
+    ## a      0.00560205 -0.0007660315
+    ## b1     0.01108544 -0.1368146108
+    ## bF    -0.28473553 -0.0093238400
+    ## bH     0.09557086  0.0403713908
+    ## bS     0.03188035 -0.0462421130
+    ## bW     1.00000000  0.0187601348
+    ## sigma  0.01876013  1.0000000000
+
+So `fullhop` and `shorthop` are fairly correlated. Let’s do a further
+check, we might not need both, since intuitively if we know the shorthop
+height is low, then the full hop must also be lower. It is similar to
+the right and left leg example from our textbook.
+
+``` r
+post <- extract.samples(m0)
+plot(bH ~ bS,
+     post,
+     col=col.alpha(rangi2,0.1),
+     pch=16,
+    main = "M0 Correlation between Short Hop and Full Hop")
+```
+
+![](../Figures/Smash/corr%20plot-1.png)<!-- -->
+
+So there is a general correlation. Perhaps an interaction between the
+two would be best for the model. Either that, or I will just take
+Fullhop out.
+
+``` r
+# Fit Model
+m0.2 <- quap(
+  alist(
+    played ~ dnorm(mu, sigma),
+    mu <- a + 
+      b1 * string1 +
+      bF * fall + 
+      bH * fullhop +
+      bS * shorthop +
+      bW * weight +
+      bHS * fullhop * shorthop,
+    a ~ dnorm(0, 0.2),
+    c(b1, bF, bH, bS, bW, bHS) ~ dnorm(0, 0.2),
+    sigma ~ dexp(1)
+  ), data = smash1
+)
+
+# Plot Precis
+plot(precis(m0.2))
+```
+
+![](../Figures/Smash/m0.2-1.png)<!-- -->
+
+The interaction didn’t work. So let’s just do Shorthop.
+
+``` r
+# Fit Model
+m0.3 <- quap(
+  alist(
+    played ~ dnorm(mu, sigma),
+    mu <- a + 
+      b1 * string1 +
+      bF * fall + 
+      bS * shorthop +
+      bW * weight,
+    a ~ dnorm(0, 0.2),
+    c(b1, bF, bS, bW) ~ dnorm(0, 0.2),
+    sigma ~ dexp(1)
+  ), data = smash1
+)
+
+# Plot Precis
+plot(precis(m0.3))
+```
+
+![](../Figures/Smash/m0.3-1.png)<!-- -->
+
+Looks like once I get rid of full hop I see a decrease in significance
+for shorthop and even with some other variables. So perhaps keeping
+fullhop and getting rid of shorthop we will see something happen.
+
+``` r
+# Fit Model
+m0.4 <- quap(
+  alist(
+    played ~ dnorm(mu, sigma),
+    mu <- a + 
+      b1 * string1 +
+      bF * fall + 
+      bH * fullhop +
+      bW * weight,
+    a ~ dnorm(0, 0.2),
+    c(b1, bF, bH, bW) ~ dnorm(0, 0.2),
+    sigma ~ dexp(1)
+  ), data = smash1
+)
+
+# Plot Precis
+plot(precis(m0.4))
+```
+
+![](../Figures/Smash/m0.4-1.png)<!-- -->
+
+I will keep both variables. I think that the correlation is not bad, but
+they do influence each other and need to both be conditioned on the
+model.
+
+I am going to do the same thing with weight so I can see if it
+influencing short and full hops and fast fall
+
+``` r
+# Fit Model
+m0.5 <- quap(
+  alist(
+    played ~ dnorm(mu, sigma),
+    mu <- a + 
+      b1 * string1 +
+      bF * fall + 
+      bH * fullhop +
+      bW * weight,
+    a ~ dnorm(0, 0.2),
+    c(b1, bF, bH, bW) ~ dnorm(0, 0.2),
+    sigma ~ dexp(1)
+  ), data = smash1
+)
+
+# Plot Precis
+plot(precis(m0.5))
+```
+
+![](../Figures/Smash/m0.5-1.png)<!-- -->
+
+### DAG
+
+So let’s make a dag for this set of variables.
+
+  - X = `per_played` *the outcome variable*
+  - 1 = `string1`
+  - W = `Weight`
+  - S = `shorthop_height`
+  - H = `fullhop_height`
+  - F = `Fast.fall`
+
+<!-- end list -->
+
+``` r
+# Create DAG
+dag0 <- dagitty("dag{
+    W -> X; 
+    S -> X;
+    H -> X;
+    F -> X;
+    W -> S;
+    W -> H;
+    W -> F;
+    H -> S;
+    S -> H;
+    H -> W;
+    H -> F
+}")
+
+# DAG coordinates
+coordinates(dag0) <- list(
+  x = c(X = 2, W = 2, S = 3, H = 3, F = 1),
+  y = c(X = 2, W = 0, S = 0, H = 2, F = 0)
+)
+
+# Draw DAG
+drawdag(dag0)
+```
+
+![](../Figures/Smash/dag0-1.png)<!-- -->
+
+Our DAG shows how fullhop and shorthop are influencing each other but
+also has the fullhop influence on fast fall and weight.
+
+## Other Rounds
+
+This section shows other iterations that I was doing to see what
+variables were best used. Ultimately I think the most telling are from
+the previous models so that is what my findings are based on.
 
 Now I will create a DAG that I can use to determine my models. here are
 my variables that I am going to start with:
@@ -376,31 +632,31 @@ Here are the variables I will standardize
 dens(smash1$played)
 ```
 
-![](../Figures/Smash/unnamed-chunk-3-1.png)<!-- -->
+![](../Figures/Smash/unnamed-chunk-1-1.png)<!-- -->
 
 ``` r
 dens(smash1$weight)
 ```
 
-![](../Figures/Smash/unnamed-chunk-3-2.png)<!-- -->
+![](../Figures/Smash/unnamed-chunk-1-2.png)<!-- -->
 
 ``` r
 dens(smash1$shorthop)
 ```
 
-![](../Figures/Smash/unnamed-chunk-3-3.png)<!-- -->
+![](../Figures/Smash/unnamed-chunk-1-3.png)<!-- -->
 
 ``` r
 dens(smash1$grab)
 ```
 
-![](../Figures/Smash/unnamed-chunk-3-4.png)<!-- -->
+![](../Figures/Smash/unnamed-chunk-1-4.png)<!-- -->
 
 ``` r
 dens(smash1$run)
 ```
 
-![](../Figures/Smash/unnamed-chunk-3-5.png)<!-- -->
+![](../Figures/Smash/unnamed-chunk-1-5.png)<!-- -->
 
 There are a couple of outliers happening in grab and run. I think this
 is because there are a few characters that are known to have this
@@ -471,7 +727,7 @@ for (i in 1:50) {
 }
 ```
 
-![](../Figures/Smash/unnamed-chunk-4-1.png)<!-- -->
+![](../Figures/Smash/unnamed-chunk-2-1.png)<!-- -->
 
 ``` r
 # Call link without specifying new data so it uses the original data.
@@ -496,7 +752,7 @@ for (i in 1:nrow(smash1.1)) {
 }
 ```
 
-![](../Figures/Smash/unnamed-chunk-5-1.png)<!-- -->
+![](../Figures/Smash/unnamed-chunk-3-1.png)<!-- -->
 
 Alright so it looks like that without a lot of the variables we can’t
 get a good prediction. There must be an optimal set of variables that
@@ -576,7 +832,7 @@ for (i in 1:nrow(smash1.2)) {
 }
 ```
 
-![](../Figures/Smash/unnamed-chunk-6-1.png)<!-- -->
+![](../Figures/Smash/unnamed-chunk-4-1.png)<!-- -->
 
 No difference. So let’s look at some new variables.
 
@@ -637,7 +893,7 @@ for (i in 1:nrow(smash1.3)) {
 }
 ```
 
-![](../Figures/Smash/unnamed-chunk-7-1.png)<!-- -->
+![](../Figures/Smash/unnamed-chunk-5-1.png)<!-- -->
 
 ### Iteration 4
 
@@ -700,7 +956,7 @@ for (i in 1:nrow(smash1.4)) {
 }
 ```
 
-![](../Figures/Smash/unnamed-chunk-8-1.png)<!-- -->
+![](../Figures/Smash/unnamed-chunk-6-1.png)<!-- -->
 
 ### Iteration 5
 
@@ -766,7 +1022,7 @@ for (i in 1:nrow(smash1.5)) {
 }
 ```
 
-![](../Figures/Smash/unnamed-chunk-9-1.png)<!-- -->
+![](../Figures/Smash/unnamed-chunk-7-1.png)<!-- -->
 
 *Grab* alone is showing a difference in the posterior check. So perhaps
 this variable will for sure stay in the final model.
@@ -832,7 +1088,7 @@ for (i in 1:nrow(smash1.6)) {
 }
 ```
 
-![](../Figures/Smash/unnamed-chunk-10-1.png)<!-- -->
+![](../Figures/Smash/unnamed-chunk-8-1.png)<!-- -->
 
 ### Iteration 7
 
@@ -897,7 +1153,7 @@ for (i in 1:nrow(smash1.7)) {
 }
 ```
 
-![](../Figures/Smash/unnamed-chunk-11-1.png)<!-- -->
+![](../Figures/Smash/unnamed-chunk-9-1.png)<!-- -->
 
 ``` r
 # Standardize and Index Variables
@@ -957,7 +1213,7 @@ for (i in 1:nrow(smash1.8)) {
 }
 ```
 
-![](../Figures/Smash/unnamed-chunk-12-1.png)<!-- -->
+![](../Figures/Smash/unnamed-chunk-10-1.png)<!-- -->
 
 ### Iteration 9
 
@@ -1022,7 +1278,7 @@ for (i in 1:nrow(smash1.9)) {
 }
 ```
 
-![](../Figures/Smash/unnamed-chunk-13-1.png)<!-- -->
+![](../Figures/Smash/unnamed-chunk-11-1.png)<!-- -->
 
 ### Comparing Models
 
@@ -1039,7 +1295,7 @@ each other so we can see if there are any hidden effects
 plot(coeftab(m1.5, m1.6, m1.7, m1.8, m1.9))
 ```
 
-![](../Figures/Smash/unnamed-chunk-14-1.png)<!-- -->
+![](../Figures/Smash/unnamed-chunk-12-1.png)<!-- -->
 
 Well it looks like perhaps`shorthop` will not be useful for me at this
 moment. We should try new variables but keep `weight`, `grab` and `run`.
@@ -1153,7 +1409,7 @@ for (i in 1:nrow(smash1.10)) {
 }
 ```
 
-![](../Figures/Smash/unnamed-chunk-15-1.png)<!-- -->
+![](../Figures/Smash/unnamed-chunk-13-1.png)<!-- -->
 
 ### Iteration 11
 
@@ -1220,7 +1476,7 @@ for (i in 1:nrow(smash1.11)) {
 }
 ```
 
-![](../Figures/Smash/unnamed-chunk-16-1.png)<!-- -->
+![](../Figures/Smash/unnamed-chunk-14-1.png)<!-- -->
 
 ### Compare the models
 
@@ -1228,7 +1484,7 @@ for (i in 1:nrow(smash1.11)) {
 plot(coeftab(m1.1, m1.2, m1.3, m1.4, m1.5, m1.6, m1.7, m1.8, m1.9, m1.10, m1.11), pars = c("bW", "bG", 'bR', 'bH'))
 ```
 
-![](../Figures/Smash/unnamed-chunk-17-1.png)<!-- -->
+![](../Figures/Smash/unnamed-chunk-15-1.png)<!-- -->
 
 I was questionable about `weight` before so perhaps I just leave it out.
 What is interesting is that `fullhop_height` was very influential in the
@@ -1354,7 +1610,7 @@ for (i in 1:nrow(smash1.12)) {
 }
 ```
 
-![](../Figures/Smash/unnamed-chunk-18-1.png)<!-- -->
+![](../Figures/Smash/unnamed-chunk-16-1.png)<!-- -->
 
 Just to check I need to take out those variables that didn’t influence
 the outcome to see if there are relationships there.
@@ -1423,7 +1679,7 @@ for (i in 1:nrow(smash1.13)) {
 }
 ```
 
-![](../Figures/Smash/unnamed-chunk-19-1.png)<!-- -->
+![](../Figures/Smash/unnamed-chunk-17-1.png)<!-- -->
 
 Looks like no change, so I should be good to take those variables out of
 the model.
@@ -1569,7 +1825,7 @@ for (i in 1:nrow(smash1.14)) {
 }
 ```
 
-![](../Figures/Smash/unnamed-chunk-20-1.png)<!-- -->
+![](../Figures/Smash/unnamed-chunk-18-1.png)<!-- -->
 
 Let’s compare this model with the all variable model
 
@@ -1578,7 +1834,7 @@ Let’s compare this model with the all variable model
 plot(coeftab(m1.0, m1.14), pars = c("bF", "bH", "bS", "bW", "bR", "bG"))
 ```
 
-![](../Figures/Smash/unnamed-chunk-21-1.png)<!-- -->
+![](../Figures/Smash/unnamed-chunk-19-1.png)<!-- -->
 
 I think I will move onto some more advanced models now in
 `03_smash_mcmc.Rmd`

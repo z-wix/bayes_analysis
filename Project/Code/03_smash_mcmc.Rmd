@@ -15,6 +15,9 @@ knitr::opts_chunk$set(
 ![Super Smash Logo](/Users/zwixom/School/Marketing/Quant Analytics/Repo/zack-wixom/Project/Figures/Smash/super-smash-bros-ultimate.PNG)
 
 
+> First of all, I want to state that this is not finished. There is still so much to explore and understand with this data. I believe I have come up with a general idea of what is going on, however, I didn't have enough time to finish before the end of the semester. I am going to continue working on this as much as I can after the semester since it is something really interesting to me personally.
+
+
 ```{r set up, message = FALSE}
 # Packages
 library(tidyverse)
@@ -34,9 +37,13 @@ set.seed(42)
 
 ```
 
+## Data Manipulation
+
+There is still things I need to tidy and manipulate in order to get some of the models I want to use to work.
+
 I am going to try to make weight a discrete variable by classifying characters into weight classes. *Heavy*, *Medium*, and *Light*. 
 
-```{r weight class}
+```{r weight class variable}
 
 # Find tertiles
 vTert = quantile(smash_tidy$Weight, c(0:3/3), na.rm = T)
@@ -54,12 +61,7 @@ smash_tidy %>%
 
 ```
 
-
-## Binomial Model
-
-However I need to conver the outcome varialbe `played` into a count. Since the data is in the form of percentage played I know that this data comes from 5,436 players. So I will be able to calculate the count easily.
-
-```{r}
+```{r weight density}
 # Create player count variable
 weightclasses <- smash_tidy %>%
   group_by(weight_class) %>%                             # group by weightclass and summarize
@@ -72,11 +74,13 @@ weightclasses <- smash_tidy %>%
     w_count = n()
   )
 
+# Find frequency of character
 smash_freq <- as.data.frame(table(smash_tidy$character)) %>% 
   rename(
     character = Var1
   )
 
+# check for counts per unique instance of characters by dividing by frequency of character in data
 smash_freq_count <- smash_tidy %>% 
   group_by(character, weight_class) %>% 
   summarize(
@@ -87,12 +91,14 @@ smash_freq_count <- smash_tidy %>%
     count = x/Freq
   )
 
+# find density per weight class
 smash_density <- smash_freq_count %>% 
   group_by(weight_class) %>% 
   summarize(
     w_density = sum(count)
   )
 
+# finally join and drop na's
 smash_weights <- smash_tidy %>% 
   inner_join(smash_density, by = "weight_class") %>% 
   drop_na(total_players)
@@ -103,9 +109,15 @@ smash_weights
 
 Now that we have the data in the right format, let's try to run this model.
 
+## Binomial Model
+
+> This model is based off the reedfrogs example from the book.
+
+However I need to conver the outcome varialbe `played` into a count. Since the data is in the form of percentage played I know that this data comes from 5,436 players. So I will be able to calculate the count easily.
+
 I am going to run it by indexing on weight class first. Then I will do it by character.
 
-```{r}
+```{r m2.8}
 
 # Standardize and Index Variables
 smash2.8 <- list(
@@ -139,7 +151,7 @@ plot(precis(m2.8, depth = 2))
 
 So we can see from this model that being in the *Medium* weight class is more favorable than the other two. Perhaps this accounts for the fact that *Heavy* characters are slow and *Light* characters can be KO'd faster. 
 
-```{r}
+```{r m2.9}
 # Fit the model with ulam().
 m2.9 <- ulam(
   alist(
@@ -252,11 +264,27 @@ plot(precis(m2.1))
 
 Now let's incorporate some discrete variables such as weight class.
 
-```{r}
+> here is where I want to continue working. I think that this type of model is the best one for my case, however, I am struggling to combine the binomial multilevel model with this model. I have a few different iterations of different model attempts below. I ran into a lot of issues trying to use cmdstan. I think my data was not in the correct format for the model since that is what initially happened with my multilevel binomial model above.
 
+## Results
 
+Overall, I think that there are two main drivers that are affecting choice of character. Character aerial movement from fullhops and shorthops. These were impacting other variables such as fast falling and weight. From my linear models in `02_smash_modeling.Rmd` we see a few interesting choices that players are making:
 
-```
+1. shorthop is a big consideration when choosing a character. They want a high shorthop because shorthops allow you to land low aerial attacks that are key to string together combos.
+
+2. fullhops negatively affect choices. This contrast the idea of shorthops in the sense that characters that have really big normal jumps are not desireable since it is too big to control and time attacks on enemies.
+
+3. Fast falling speed is just as important as shorthops because it allows you to continue combos and not float in the air too long. So this has a positive effect on choice, especially when conditioning on fullhop and shorthop. 
+
+4. weight has an overall negative impact on choice.
+
+Weight was another important factor that I wanted to explore more and get some discrete variables and models out of. From our models in `03_smash_mcmc.Rmd` We see that although weight has a negative effect, weight class has some revelations. 
+
+1. *Medium* class characters perform better. perhaps this is showing that more well rounded characters that are *Medium*. I think that these characters are so to speak "safer" are so picked more often. *Medium* weight class, with average aerial abilities are chosen because they are perhaps easier to learn and be fairly good at playing with them. 
+
+2. *Heavy* and *Light* are equally more less desirable. They both have their disadvantages which might be causing this impact. *Heavy* characters are generally slower, but more powerful. It takes skill to learn how to be competitive with the disadvantage of slowness. *Light* character are really floaty and can easily be juggled in the air and consequentially KO'd faster. However, they are faster on the ground, but this also takes more skill to learn how to be effective with them.
+
+In the future I am looking to incorporate the weight classes into the original model that helped me discover the effect of the fullhop and shorthop. 
 
 ## Other Iterations
 

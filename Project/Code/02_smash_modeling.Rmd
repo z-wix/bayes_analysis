@@ -117,10 +117,10 @@ Just for fun, let's put in all the variables and see what happens.
 - `Grab.Range`: range of grab
 - `oos_move`: Fastest move out of shield
 
-```{r}
+```{r smash_tidy}
 
 # Load Data
-smash_tidy <- read_csv(here::here("Project", "Data", "smash_tidy.csv"))[,-1]
+smash_tidy <- read_csv(here::here("Project", "Data", "smash_tidy.csv"))
 
 # Standardize and Index Variables
 smash1 <- tibble(
@@ -203,7 +203,7 @@ for (i in 1:50) {
 
 I can't really remember how to interpret this chart. It doesn't look too crazy but is still not really reasonable.
 
-```{r}
+```{r pred check}
 # Call link without specifying new data so it uses the original data.
 mu <- link(m1.0)
 # Summarize samples across cases.
@@ -231,7 +231,7 @@ for (i in 1:nrow(smash1)) {
 
 I want to see if I just use the variables that were sticking out if they will still be significant on their own.
 
-```{r}
+```{r m0}
 # Fit Model
 m0 <- quap(
   alist(
@@ -254,7 +254,7 @@ plot(precis(m0))
 
 So they are still pretty significant. And if we do a predicitve check
 
-```{r}
+```{r m0 pred check}
 # Call link without specifying new data so it uses the original data.
 mu <- link(m0)
 # Summarize samples across cases.
@@ -281,7 +281,7 @@ It looks like these variables are accounting for most of the variation happening
 
 ### Correlation Check
 
-```{r}
+```{r m0 vcov}
 
 # Check Correlation of model
 diag(vcov(m0))
@@ -291,7 +291,7 @@ cov2cor(vcov(m0))
 
 So `fullhop` and `shorthop` are fairly correlated. Let's do a further check, we might not need both, since intuitively if we know the shorthop height is low, then the full hop must also be lower. It is similar to the right and left leg example from our textbook.
 
-```{r}
+```{r corr plot}
 
 post <- extract.samples(m0)
 plot(bH ~ bS,
@@ -305,7 +305,7 @@ plot(bH ~ bS,
 
 So there is a general correlation. Perhaps an interaction between the two would be best for the model. Either that, or I will just take Fullhop out.
 
-```{r}
+```{r m0.2}
 
 # Fit Model
 m0.2 <- quap(
@@ -330,7 +330,7 @@ plot(precis(m0.2))
 
 The interaction didn't work. So let's just do Shorthop.
 
-```{r}
+```{r m0.3}
 # Fit Model
 m0.3 <- quap(
   alist(
@@ -352,7 +352,7 @@ plot(precis(m0.3))
 
 Looks like once I get rid of full hop I see a decrease in significance for shorthop and even with some other variables. So perhaps keeping fullhop and getting rid of shorthop we will see something happen.
 
-```{r}
+```{r m0.4}
 # Fit Model
 m0.4 <- quap(
   alist(
@@ -376,9 +376,9 @@ I will keep both variables. I think that the correlation is not bad, but they do
 
 I am going to do the same thing with weight so I can see if it influencing short and full hops and fast fall
 
-```{r}
+```{r m0.5}
 # Fit Model
-m0.4 <- quap(
+m0.5 <- quap(
   alist(
     played ~ dnorm(mu, sigma),
     mu <- a + 
@@ -393,9 +393,8 @@ m0.4 <- quap(
 )
 
 # Plot Precis
-plot(precis(m0.4))
+plot(precis(m0.5))
 ```
-
 
 ### DAG
 
@@ -437,6 +436,8 @@ drawdag(dag0)
 Our DAG shows how fullhop and shorthop are influencing each other but also has the fullhop influence on fast fall and weight.
 
 ## Other Rounds
+
+This section shows other iterations that I was doing to see what variables were best used. Ultimately I think the most telling are from the previous models so that is what my findings are based on.
 
 Now I will create a DAG that I can use to determine my models. here are my variables that I am going to start with:
 
