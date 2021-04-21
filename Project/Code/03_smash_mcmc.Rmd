@@ -460,37 +460,36 @@ There might be an unobserved variable that is causing players choices in choosin
 
 ```{r m2.6}
 
-# Standardize and Index Variables
-smash2.6 <- list(
-  played = standardize(smash_tidy$per_played),
-  w_class = as.integer(smash_tidy$weight_class),
-  grab = standardize(as.numeric(smash_tidy$Grab.Range)),
-  fall = standardize(smash_tidy$Fast.Fall),
-  fullhop = standardize(as.numeric(smash_tidy$fullhop_height)),
-  alpha = rep(2)
-) %>% 
-  drop_na()
-
-# Fit Model
-m2.6 <- ulam(
-  alist(
-    played ~ ordered_logistic(phi, cutpoints),
-    phi <- bW * sum(delta_shell[1:w_class]) + 
-      bG * grab +
-      bF * fall + 
-      bH * fullhop,
-    # # Add interactions
-    # BI <- bI + bIA*A + bIC*C,
-    c(bW, bG, bF, bH) ~ normal(0, 0.5),
-    cutpoints ~ normal(0, 1.5),
-    vector[8]: delta_shell <<- append_row(0, delta),
-    simplex[7]: delta ~ dirichlet(alpha)
-  ),
-  data = smash2.6,
-  chains = 4, 
-  cores = 4,
-  cmdstan = TRUE
-)
+# # Standardize and Index Variables
+# smash2.6 <- list(
+#   played = standardize(smash_tidy$per_played),
+#   w_class = as.integer(smash_tidy$weight_class),
+#   grab = standardize(as.numeric(smash_tidy$Grab.Range)),
+#   fall = standardize(smash_tidy$Fast.Fall),
+#   fullhop = standardize(as.numeric(smash_tidy$fullhop_height)),
+#   alpha = rep(2)
+# )
+# 
+# # Fit Model
+# m2.6 <- ulam(
+#   alist(
+#     played ~ ordered_logistic(phi, cutpoints),
+#     phi <- bW * sum(delta_shell[1:w_class]) + 
+#       bG * grab +
+#       bF * fall + 
+#       bH * fullhop,
+#     # # Add interactions
+#     # BI <- bI + bIA*A + bIC*C,
+#     c(bW, bG, bF, bH) ~ normal(0, 0.5),
+#     cutpoints ~ normal(0, 1.5),
+#     vector[8]: delta_shell <<- append_row(0, delta),
+#     simplex[7]: delta ~ dirichlet(alpha)
+#   ),
+#   data = smash2.6,
+#   chains = 4, 
+#   cores = 4,
+#   cmdstan = TRUE
+# )
 
 
 ```
@@ -500,33 +499,33 @@ Well I got the csv file name error again. Not sure what that means and how to fi
 Maybe I have to just to simplier models for these things to work. I am going to look at weight class with fullhop only and see what I can dig up.
 
 ```{r}
-# Standardize and Index Variables
-smash2.7 <- list(
-  played = standardize(smash_tidy$per_played),
-  w_class = as.integer(smash_tidy$weight_class),
-  fullhop = standardize(as.numeric(smash_tidy$fullhop_height)),
-  alpha = rep(2)
-) %>% 
-  drop_na()
-
-# Fit Model
-m2.7 <- ulam(
-  alist(
-    played ~ ordered_logistic(phi, cutpoints),
-    phi <- bW * sum(delta_shell[1:w_class]) +
-      bH * fullhop,
-    # # Add interactions
-    # BI <- bI + bIA*A + bIC*C,
-    c(bW, bH) ~ normal(0, 0.5),
-    cutpoints ~ normal(0, 1.5),
-    vector[8]: delta_shell <<- append_row(0, delta),
-    simplex[7]: delta ~ dirichlet(alpha)
-  ),
-  data = smash2.7,
-  chains = 4, 
-  cores = 4,
-  cmdstan = TRUE
-)
+# # Standardize and Index Variables
+# smash2.7 <- list(
+#   played = standardize(smash_tidy$per_played),
+#   w_class = as.integer(smash_tidy$weight_class),
+#   fullhop = standardize(as.numeric(smash_tidy$fullhop_height)),
+#   alpha = rep(2)
+# ) %>% 
+#   drop_na()
+# 
+# # Fit Model
+# m2.7 <- ulam(
+#   alist(
+#     played ~ ordered_logistic(phi, cutpoints),
+#     phi <- bW * sum(delta_shell[1:w_class]) +
+#       bH * fullhop,
+#     # # Add interactions
+#     # BI <- bI + bIA*A + bIC*C,
+#     c(bW, bH) ~ normal(0, 0.5),
+#     cutpoints ~ normal(0, 1.5),
+#     vector[8]: delta_shell <<- append_row(0, delta),
+#     simplex[7]: delta ~ dirichlet(alpha)
+#   ),
+#   data = smash2.7,
+#   chains = 4, 
+#   cores = 4,
+#   cmdstan = TRUE
+# )
 
 
 ```
@@ -580,46 +579,46 @@ plot(precis(m3.0))
 
 ```{r}
 
-smash_test<- tibble(
-  character = as.integer(smash_tidy$character),
-  oos_move = as.integer(smash_tidy$oos_move),
-  w_class = as.integer(smash_tidy$weight_class)
-) %>% 
-  drop_na()
+# smash_test<- tibble(
+#   character = as.integer(smash_tidy$character),
+#   oos_move = as.integer(smash_tidy$oos_move),
+#   w_class = as.integer(smash_tidy$weight_class)
+# ) %>% 
+#   drop_na()
+# 
+# 
+# # Fit Model
+# mtest <- ulam(
+#   alist(
+#     character ~ binomial(oos_move, p),
+#     logit(p) <- a[w_class],
+#     a[w_class] ~ normal(-1, 1)
+#   ), 
+#   data = smash_test,
+#   chains = 4, 
+#   cmdstan = TRUE
+# )
+# 
+# # Plot Precis
+# plot(precis(mtest, depth = 2))
 
-
-# Fit Model
-mtest <- ulam(
-  alist(
-    character ~ binomial(oos_move, p),
-    logit(p) <- a[w_class],
-    a[w_class] ~ normal(-1, 1)
-  ), 
-  data = smash_test,
-  chains = 4, 
-  cmdstan = TRUE
-)
-
-# Plot Precis
-plot(precis(mtest, depth = 2))
-
-# Standardize Variables
-data <- tibble(
-  awards = as.integer(d$awards),
-  apps = as.integer(d$applications),
-  gender_id = ifelse(d$gender == "m", 1, 2),
-  discipline = as.integer(d$discipline)
-)
-
-# Fit model
-m1 <- ulam(
-  alist(
-    awards ~ binomial(apps, p),
-    logit(p) <- a[gender_id] + b[discipline],
-    a[gender_id] ~ normal(-1,1),
-    b[discipline] ~ normal(0,1)
-  ), data = data, chains = 4, cmdstan = TRUE
-)
+# # Standardize Variables
+# data <- tibble(
+#   awards = as.integer(d$awards),
+#   apps = as.integer(d$applications),
+#   gender_id = ifelse(d$gender == "m", 1, 2),
+#   discipline = as.integer(d$discipline)
+# )
+# 
+# # Fit model
+# m1 <- ulam(
+#   alist(
+#     awards ~ binomial(apps, p),
+#     logit(p) <- a[gender_id] + b[discipline],
+#     a[gender_id] ~ normal(-1,1),
+#     b[discipline] ~ normal(0,1)
+#   ), data = data, chains = 4, cmdstan = TRUE
+# )
 
 
 
