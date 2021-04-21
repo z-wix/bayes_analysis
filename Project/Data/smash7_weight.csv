@@ -18,7 +18,7 @@ rank_weight,Character,Weight
 12-16,Richter,107
 17-18,Snake,106
 17-18,Banjo & Kazooie,106
-17-18,R.O.B.,106
+17-18,R.O.B,106
 19-22,Link,104
 19-22,Yoshi,104
 19-22,Captain Falcon,104
@@ -33,6 +33,7 @@ rank_weight,Character,Weight
 28-30,Mario,98
 28-30,Dr. Mario,98
 28-30,Corrin,98
+28-30,Pyra,98
 31-33,Byleth,97
 31-33,Luigi,97
 31-33,Shulk,97
@@ -54,6 +55,7 @@ rank_weight,Character,Weight
 46-49,Wolf,92
 46-49,Villager,92
 46-49,Steve,92
+46-49,Mythra,92
 50-51,Toon Link,91
 50-51,Palutena,91
 52-54,Marth,90

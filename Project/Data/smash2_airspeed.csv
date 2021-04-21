@@ -9,6 +9,7 @@ rank_airspeed,Character,Air.speed
 8,Wario,1.271
 9,Zero Suit Samus,1.26
 10,Greninja,1.239
+11,Mythra,1.22
 11,Captain Falcon,1.218
 12-16,Inkling,1.208
 12-16,Sonic,1.208
@@ -24,7 +25,7 @@ rank_airspeed,Character,Air.speed
 19-24,Mega Man,1.155
 19-24,Cloud,1.155
 25,Mii Brawler,1.15
-26-28,R.O.B.,1.134
+26-28,R.O.B,1.134
 26-28,Bowser Jr.,1.134
 26-28,Ike,1.134
 29-30,Ryu,1.12
@@ -35,6 +36,7 @@ rank_airspeed,Character,Air.speed
 33-35,Dark Samus,1.103
 33-35,Charizard,1.103
 36,Joker,1.1
+36,Pyra,1.1
 37-38,Pac-Man,1.092
 37-38,Zelda,1.092
 39-40,Marth,1.071

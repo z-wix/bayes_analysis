@@ -68,7 +68,7 @@ There are a lot of variables in this dataset. So I want to make it simple and ju
 
 ```{r filtering data, eval = FALSE}
 
-vars <- c(1, 4, 5, 8, 11, 13, 16:18, 23, 28, 34, 41)
+vars <- c(1, 3, 4, 5, 8, 11, 13, 16:18, 23, 28, 34, 41)
 
 smash_tidy <- smash %>% 
   select(vars) %>% 
@@ -158,7 +158,7 @@ m1.0 <- quap(
       bW * weight + 
       bR * run + 
       bG * grab,
-    a ~ dnorm(0, .2),
+    a ~ dnorm(0, 0.2),
     c(b1, bA, bAr, bF, bH, bS, bAj, bW, bR, bG) ~ dnorm(0, 0.2),
     sigma ~ dexp(1)
   ), data = smash1
@@ -169,9 +169,9 @@ plot(precis(m1.0))
 
 ```
 
-So this is pretty interesting. There are a few variables that are really influencing the model. Namely, `fullhop_height`, `shorthop_height`, `airjump_height`, and `Fast.Fall`. Perhaps this is because aerials attacks and movement is key for competitive play.
+So this is pretty interesting. There are a few variables that are really influencing the model. Namely, `fullhop_height`, `shorthop_height`, `Fast.Fall`, and `weight`. Perhaps this is because aerials attacks and movement is key for competitive play.
 
-`string1` is not surprising. This variable is an indicator of if this character is their frist choice and so this directly effects `per_played`. I think that perhaps I won't use this variable in my analysis, but in other iterations use `string2` and `string3.` My logic being, if a character is someones second or third choice then it might be an indicator of per_played. But this might give us the same result.
+`string1` is not surprising. This variable is an indicator of if this character is their first choice and so this directly effects `per_played`. I think that perhaps I won't use this variable in my analysis, but in other iterations use `string2` and `string3.` My logic being, if a character is someones second or third choice then it might be an indicator of per_played. But this might give us the same result.
 
 I haven't tried putting in the categorical variable of `oos_move`. I will deal with adding that later.
 
@@ -227,13 +227,216 @@ for (i in 1:nrow(smash1)) {
 
 ```
 
-Well I am worried I might be over fitting, since this is pretty accurate predictions. 
-
-*Anyways*
-
-So let's do some iterations to understand what each of these variables are doing.
-
 ## Round 2
+
+I want to see if I just use the variables that were sticking out if they will still be significant on their own.
+
+```{r}
+# Fit Model
+m0 <- quap(
+  alist(
+    played ~ dnorm(mu, sigma),
+    mu <- a + 
+      b1 * string1 +
+      bF * fall + 
+      bH * fullhop + 
+      bS * shorthop + 
+      bW * weight,
+    a ~ dnorm(0, 0.2),
+    c(b1, bF, bH, bS, bW) ~ dnorm(0, 0.2),
+    sigma ~ dexp(1)
+  ), data = smash1
+)
+
+# Plot Precis
+plot(precis(m0))
+```
+
+So they are still pretty significant. And if we do a predicitve check
+
+```{r}
+# Call link without specifying new data so it uses the original data.
+mu <- link(m0)
+# Summarize samples across cases.
+mu_mean <- apply(mu, 2, mean)
+mu_PI <- apply(mu, 2, PI)
+# Simulate observations (again no new data, so it uses original data).
+smash_sim <- sim(m0, n = 10000)
+smash_PI <- apply(smash_sim, 2, PI)
+# Plot posterior predictions.
+plot(
+  mu_mean ~ smash1$played, 
+  col = rangi2, 
+  ylim=range(mu_PI),
+  xlab = "Observed Player Choice", ylab = "Predicted Player Choice",
+  main = "M0 Posterior Predictive Check"
+)
+abline(a = 0, b = 1, lty = 2)
+for (i in 1:nrow(smash1)) {
+  lines(rep(smash1$played[i], 2), mu_PI[,i], col = rangi2)
+}
+```
+
+It looks like these variables are accounting for most of the variation happening in the data. But I want to see if I take out `string1` if this changes. Since `string1` is so connected to `played` I need to do a correlation check.
+
+### Correlation Check
+
+```{r}
+
+# Check Correlation of model
+diag(vcov(m0))
+cov2cor(vcov(m0))
+
+```
+
+So `fullhop` and `shorthop` are fairly correlated. Let's do a further check, we might not need both, since intuitively if we know the shorthop height is low, then the full hop must also be lower. It is similar to the right and left leg example from our textbook.
+
+```{r}
+
+post <- extract.samples(m0)
+plot(bH ~ bS,
+     post,
+     col=col.alpha(rangi2,0.1),
+     pch=16,
+    main = "M0 Correlation between Short Hop and Full Hop")
+
+
+```
+
+So there is a general correlation. Perhaps an interaction between the two would be best for the model. Either that, or I will just take Fullhop out.
+
+```{r}
+
+# Fit Model
+m0.2 <- quap(
+  alist(
+    played ~ dnorm(mu, sigma),
+    mu <- a + 
+      b1 * string1 +
+      bF * fall + 
+      bH * fullhop +
+      bS * shorthop +
+      bW * weight +
+      bHS * fullhop * shorthop,
+    a ~ dnorm(0, 0.2),
+    c(b1, bF, bH, bS, bW, bHS) ~ dnorm(0, 0.2),
+    sigma ~ dexp(1)
+  ), data = smash1
+)
+
+# Plot Precis
+plot(precis(m0.2))
+```
+
+The interaction didn't work. So let's just do Shorthop.
+
+```{r}
+# Fit Model
+m0.3 <- quap(
+  alist(
+    played ~ dnorm(mu, sigma),
+    mu <- a + 
+      b1 * string1 +
+      bF * fall + 
+      bS * shorthop +
+      bW * weight,
+    a ~ dnorm(0, 0.2),
+    c(b1, bF, bS, bW) ~ dnorm(0, 0.2),
+    sigma ~ dexp(1)
+  ), data = smash1
+)
+
+# Plot Precis
+plot(precis(m0.3))
+```
+
+Looks like once I get rid of full hop I see a decrease in significance for shorthop and even with some other variables. So perhaps keeping fullhop and getting rid of shorthop we will see something happen.
+
+```{r}
+# Fit Model
+m0.4 <- quap(
+  alist(
+    played ~ dnorm(mu, sigma),
+    mu <- a + 
+      b1 * string1 +
+      bF * fall + 
+      bH * fullhop +
+      bW * weight,
+    a ~ dnorm(0, 0.2),
+    c(b1, bF, bH, bW) ~ dnorm(0, 0.2),
+    sigma ~ dexp(1)
+  ), data = smash1
+)
+
+# Plot Precis
+plot(precis(m0.4))
+```
+
+I will keep both variables. I think that the correlation is not bad, but they do influence each other and need to both be conditioned on the model.
+
+I am going to do the same thing with weight so I can see if it influencing short and full hops and fast fall
+
+```{r}
+# Fit Model
+m0.4 <- quap(
+  alist(
+    played ~ dnorm(mu, sigma),
+    mu <- a + 
+      b1 * string1 +
+      bF * fall + 
+      bH * fullhop +
+      bW * weight,
+    a ~ dnorm(0, 0.2),
+    c(b1, bF, bH, bW) ~ dnorm(0, 0.2),
+    sigma ~ dexp(1)
+  ), data = smash1
+)
+
+# Plot Precis
+plot(precis(m0.4))
+```
+
+
+### DAG
+
+So let's make a dag for this set of variables.
+
+- X = `per_played` *the outcome variable*
+- 1 = `string1`
+- W = `Weight`
+- S = `shorthop_height`
+- H = `fullhop_height`
+- F = `Fast.fall`
+
+```{r dag0}
+# Create DAG
+dag0 <- dagitty("dag{
+    W -> X; 
+    S -> X;
+    H -> X;
+    F -> X;
+    W -> S;
+    W -> H;
+    W -> F;
+    H -> S;
+    S -> H;
+    H -> W;
+    H -> F
+}")
+
+# DAG coordinates
+coordinates(dag0) <- list(
+  x = c(X = 2, W = 2, S = 3, H = 3, F = 1),
+  y = c(X = 2, W = 0, S = 0, H = 2, F = 0)
+)
+
+# Draw DAG
+drawdag(dag0)
+```
+
+Our DAG shows how fullhop and shorthop are influencing each other but also has the fullhop influence on fast fall and weight.
+
+## Other Rounds
 
 Now I will create a DAG that I can use to determine my models. here are my variables that I am going to start with:
 
