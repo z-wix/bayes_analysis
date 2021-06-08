@@ -3,7 +3,7 @@ Smash Data Analysis
 Zack Wixom
 
 ![Super Smash
-Logo](/Users/zwixom/School/Marketing/Quant%20Analytics/Repo/zack-wixom/Project/Figures/Smash/super-smash-bros-ultimate.PNG)
+Logo](/Project/Figures/Smash/super-smash-bros-ultimate.PNG)
 
 ``` r
 # Load Packages
