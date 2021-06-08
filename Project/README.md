@@ -3,7 +3,7 @@ Project
 Zack Wixom
 
 ![Super Smash
-Logo](/Users/zwixom/School/Marketing/Quant%20Analytics/Repo/zack-wixom/Project/Figures/Smash/super-smash-bros-ultimate.png)
+Logo](/Project/Figures/Smash/super-smash-bros-ultimate.png)
 
 ## Project Organization
 
