@@ -3,7 +3,7 @@ Smash Data Analysis
 Zack Wixom
 
 ![Super Smash
-Logo](/Users/zwixom/School/Marketing/Quant%20Analytics/Repo/zack-wixom/Project/Figures/Smash/super-smash-bros-ultimate.PNG)
+Logo](/Project/Figures/Smash/super-smash-bros-ultimate.png)
 
 Now that I have data and a success metric that I want to model on. I can
 start to build out some models. I am going to start with a simple model
