@@ -3,12 +3,7 @@ Your Repository
 
 ## Repository Organization
 
-Each of your repositories will have a similar organization. There are
-certain limitations on the size and type of files that can be pushed to
-GitHub. There are also certain things that shouldn’t be accessible by
-the public (e.g., data we have a license to access). For these reasons,
-we have folders and files that are pushed to GitHub and those that are
-not.
+Final project is on Super Smash Bros. Look at `Project` folder for info and markdowns of project analysis, including other attempts at other projects such as using twitch data and fornite data. However, most complete project is on Super Smash.
 
 ### Pushed to GitHub
 
